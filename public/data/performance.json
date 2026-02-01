@@ -4,9 +4,9 @@
     "thisMonth": {
       "month": 2,
       "expected": 2100,
-      "target": 0,
-      "gap": 2100,
-      "rate": 0
+      "target": 7700,
+      "gap": -5600,
+      "rate": 27
     },
     "activeCases": 0
   },
@@ -14,93 +14,107 @@
     {
       "month": 1,
       "expected": 13916,
-      "target": 0,
-      "gap": 13916,
-      "rate": 0
+      "target": 9800,
+      "gap": 4116,
+      "rate": 142
     },
     {
       "month": 2,
       "expected": 2100,
-      "target": 0,
-      "gap": 2100,
-      "rate": 0
+      "target": 7700,
+      "gap": -5600,
+      "rate": 27
     },
     {
       "month": 3,
       "expected": 58602,
-      "target": 0,
-      "gap": 58602,
-      "rate": 0
+      "target": 8800,
+      "gap": 49802,
+      "rate": 666
     },
     {
       "month": 4,
       "expected": 5658,
-      "target": 0,
-      "gap": 5658,
-      "rate": 0
+      "target": 11600,
+      "gap": -5942,
+      "rate": 49
     },
     {
       "month": 5,
       "expected": 2900,
-      "target": 0,
-      "gap": 2900,
-      "rate": 0
+      "target": 9950,
+      "gap": -7050,
+      "rate": 29
     },
     {
       "month": 6,
       "expected": 2212,
-      "target": 0,
-      "gap": 2212,
-      "rate": 0
+      "target": 10600,
+      "gap": -8388,
+      "rate": 21
     },
     {
       "month": 7,
       "expected": 3875,
-      "target": 0,
-      "gap": 3875,
+      "target": 12800,
+      "gap": -8925,
+      "rate": 30
+    },
+    {
+      "month": 8,
+      "expected": 0,
+      "target": 12200,
+      "gap": -12200,
       "rate": 0
     },
     {
       "month": 9,
       "expected": 338,
-      "target": 0,
-      "gap": 338,
-      "rate": 0
+      "target": 15100,
+      "gap": -14762,
+      "rate": 2
     },
     {
       "month": 10,
       "expected": 1400,
-      "target": 0,
-      "gap": 1400,
-      "rate": 0
+      "target": 14600,
+      "gap": -13200,
+      "rate": 10
     },
     {
       "month": 11,
       "expected": 138,
-      "target": 0,
-      "gap": 138,
+      "target": 17700,
+      "gap": -17562,
+      "rate": 1
+    },
+    {
+      "month": 12,
+      "expected": 0,
+      "target": 18800,
+      "gap": -18800,
       "rate": 0
     }
   ],
   "repStats": [
     {
-      "rep": "喬紹恆",
+      "rep": "喬紹恆 (u2625)",
       "totalExpected": 104905,
-      "totalTarget": 0,
-      "rate": 0,
+      "totalTarget": 52650,
+      "rate": 199,
       "caseCount": 334
     },
     {
-      "rep": "待補",
+      "rep": "待補 (TBH-1)",
       "totalExpected": 0,
-      "totalTarget": 0,
+      "totalTarget": 48700,
       "rate": 0,
       "caseCount": 0
     },
     {
-      "rep": "團隊合計",
+      "rep": "待補 (TBH-2)",
       "totalExpected": 0,
-      "totalTarget": 0,
+      "totalTarget": 48300,
       "rate": 0,
       "caseCount": 0
     }
@@ -164,5 +178,5 @@
       "amount": 237091
     }
   ],
-  "updatedAt": "2026-02-01T12:30:06.315441"
+  "updatedAt": "2026-02-01T12:31:50.555491"
 }
