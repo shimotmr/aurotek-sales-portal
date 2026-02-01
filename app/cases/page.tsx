@@ -41,11 +41,13 @@ const stageColors: Record<string, { bg: string; text: string; badge: string }> =
 export default function CasesPage() {
   const searchParams = useSearchParams()
   const stageFilter = searchParams.get('stage')
+  const dealerFilter = searchParams.get('dealer')
   
   const [data, setData] = useState<CasesData | null>(null)
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [selectedStage, setSelectedStage] = useState<string | null>(stageFilter)
+  const [selectedDealer, setSelectedDealer] = useState<string | null>(dealerFilter)
   const [sortField, setSortField] = useState<string>('id')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
 
@@ -61,7 +63,8 @@ export default function CasesPage() {
 
   useEffect(() => {
     setSelectedStage(stageFilter)
-  }, [stageFilter])
+    setSelectedDealer(dealerFilter)
+  }, [stageFilter, dealerFilter])
 
   if (loading) {
     return (
@@ -83,6 +86,9 @@ export default function CasesPage() {
   let filtered = data.cases
   if (selectedStage) {
     filtered = filtered.filter(c => c.stage === selectedStage)
+  }
+  if (selectedDealer) {
+    filtered = filtered.filter(c => c.dealer === selectedDealer)
   }
   if (search) {
     const q = search.toLowerCase()
@@ -176,10 +182,29 @@ export default function CasesPage() {
           />
         </div>
 
-        {/* 結果數 */}
-        <div className="text-sm text-gray-500 mb-4">
-          顯示 {filtered.length} 筆案件
-          {selectedStage && <span className="ml-2">（篩選：{selectedStage}）</span>}
+        {/* 結果數與篩選條件 */}
+        <div className="text-sm text-gray-500 mb-4 flex items-center flex-wrap gap-2">
+          <span>顯示 {filtered.length} 筆案件</span>
+          {selectedStage && (
+            <span className="inline-flex items-center bg-blue-100 text-blue-700 px-2 py-1 rounded">
+              階段：{selectedStage}
+              <button onClick={() => setSelectedStage(null)} className="ml-1 hover:text-blue-900">✕</button>
+            </span>
+          )}
+          {selectedDealer && (
+            <span className="inline-flex items-center bg-green-100 text-green-700 px-2 py-1 rounded">
+              經銷商：{selectedDealer}
+              <button onClick={() => setSelectedDealer(null)} className="ml-1 hover:text-green-900">✕</button>
+            </span>
+          )}
+          {(selectedStage || selectedDealer) && (
+            <button 
+              onClick={() => { setSelectedStage(null); setSelectedDealer(null); }}
+              className="text-red-500 hover:text-red-700 text-xs"
+            >
+              清除所有篩選
+            </button>
+          )}
         </div>
 
         {/* 表格 */}

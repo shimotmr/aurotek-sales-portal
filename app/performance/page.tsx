@@ -279,25 +279,30 @@ export default function PerformancePage() {
             </div>
           </div>
 
-          {/* 經銷商排名 */}
+          {/* 經銷商排名 - 可點擊查看該經銷商已出貨案件 */}
           <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">🏢 經銷商排名（依已出貨）</h2>
+            <h2 className="text-xl font-semibold mb-4">🏢 經銷商排名（依已出貨，點擊查看明細）</h2>
             <div className="space-y-3">
               {data.dealerStats.map((dealer, idx) => (
-                <div key={dealer.dealer} className="flex items-center">
+                <a 
+                  key={dealer.dealer} 
+                  href={`/cases?stage=已出貨&dealer=${encodeURIComponent(dealer.dealer)}`}
+                  className="flex items-center hover:bg-gray-50 rounded-lg p-2 -mx-2 transition-colors cursor-pointer"
+                >
                   <span className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold mr-3 ${
                     idx === 0 ? 'bg-yellow-500' : idx === 1 ? 'bg-gray-400' : idx === 2 ? 'bg-amber-600' : 'bg-gray-300'
                   }`}>
                     {idx + 1}
                   </span>
                   <div className="flex-1">
-                    <div className="font-medium truncate">{dealer.dealer}</div>
+                    <div className="font-medium truncate text-blue-600 hover:underline">{dealer.dealer}</div>
                     <div className="text-sm text-gray-500">
                       <span className="text-green-600 font-semibold">{formatNumber(dealer.shipped)}K</span>
                       <span className="text-gray-400 ml-2">· {dealer.caseCount} 件出貨</span>
                     </div>
                   </div>
-                </div>
+                  <span className="text-gray-400 text-sm">→</span>
+                </a>
               ))}
             </div>
           </div>
