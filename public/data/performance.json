@@ -1,0 +1,168 @@
+{
+  "summary": {
+    "totalCases": 383,
+    "thisMonth": {
+      "month": 2,
+      "expected": 2100,
+      "target": 0,
+      "gap": 2100,
+      "rate": 0
+    },
+    "activeCases": 0
+  },
+  "monthlyStats": [
+    {
+      "month": 1,
+      "expected": 13916,
+      "target": 0,
+      "gap": 13916,
+      "rate": 0
+    },
+    {
+      "month": 2,
+      "expected": 2100,
+      "target": 0,
+      "gap": 2100,
+      "rate": 0
+    },
+    {
+      "month": 3,
+      "expected": 58602,
+      "target": 0,
+      "gap": 58602,
+      "rate": 0
+    },
+    {
+      "month": 4,
+      "expected": 5658,
+      "target": 0,
+      "gap": 5658,
+      "rate": 0
+    },
+    {
+      "month": 5,
+      "expected": 2900,
+      "target": 0,
+      "gap": 2900,
+      "rate": 0
+    },
+    {
+      "month": 6,
+      "expected": 2212,
+      "target": 0,
+      "gap": 2212,
+      "rate": 0
+    },
+    {
+      "month": 7,
+      "expected": 3875,
+      "target": 0,
+      "gap": 3875,
+      "rate": 0
+    },
+    {
+      "month": 9,
+      "expected": 338,
+      "target": 0,
+      "gap": 338,
+      "rate": 0
+    },
+    {
+      "month": 10,
+      "expected": 1400,
+      "target": 0,
+      "gap": 1400,
+      "rate": 0
+    },
+    {
+      "month": 11,
+      "expected": 138,
+      "target": 0,
+      "gap": 138,
+      "rate": 0
+    }
+  ],
+  "repStats": [
+    {
+      "rep": "喬紹恆",
+      "totalExpected": 104905,
+      "totalTarget": 0,
+      "rate": 0,
+      "caseCount": 334
+    },
+    {
+      "rep": "待補",
+      "totalExpected": 0,
+      "totalTarget": 0,
+      "rate": 0,
+      "caseCount": 0
+    },
+    {
+      "rep": "團隊合計",
+      "totalExpected": 0,
+      "totalTarget": 0,
+      "rate": 0,
+      "caseCount": 0
+    }
+  ],
+  "dealerStats": [
+    {
+      "dealer": "nan",
+      "expected": 118545,
+      "caseCount": 7
+    },
+    {
+      "dealer": "傑融科技",
+      "expected": 40125,
+      "caseCount": 160
+    },
+    {
+      "dealer": "智領未來",
+      "expected": 18950,
+      "caseCount": 27
+    },
+    {
+      "dealer": "禾煜科技",
+      "expected": 16299,
+      "caseCount": 32
+    },
+    {
+      "dealer": "谷得智能",
+      "expected": 14600,
+      "caseCount": 37
+    },
+    {
+      "dealer": "季河資訊",
+      "expected": 8590,
+      "caseCount": 44
+    },
+    {
+      "dealer": "禾達工業",
+      "expected": 5650,
+      "caseCount": 32
+    },
+    {
+      "dealer": "傑笙科技",
+      "expected": 5614,
+      "caseCount": 22
+    },
+    {
+      "dealer": "澎湃數位",
+      "expected": 4938,
+      "caseCount": 8
+    },
+    {
+      "dealer": "阜爾運通",
+      "expected": 2370,
+      "caseCount": 2
+    }
+  ],
+  "stageStats": [
+    {
+      "stage": "未分類",
+      "count": 383,
+      "amount": 237091
+    }
+  ],
+  "updatedAt": "2026-02-01T12:30:06.315441"
+}

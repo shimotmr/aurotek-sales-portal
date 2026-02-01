@@ -6,7 +6,14 @@ export default function Home() {
           和椿通路營業管理系統
         </h1>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* 業績管理 - 新增 */}
+          <a href="/performance" className="block p-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow hover:shadow-lg transition text-white">
+            <div className="text-4xl mb-4">📈</div>
+            <h2 className="text-xl font-semibold mb-2">業績管理</h2>
+            <p className="text-blue-100">Pipeline 分析 / 目標達成率</p>
+          </a>
+          
           {/* 樣品借用 */}
           <a href="/samples" className="block p-6 bg-white rounded-lg shadow hover:shadow-lg transition">
             <div className="text-4xl mb-4">📦</div>
@@ -27,6 +34,10 @@ export default function Home() {
             <h2 className="text-xl font-semibold mb-2">庫存查詢</h2>
             <p className="text-gray-600">即時庫存狀態</p>
           </a>
+        </div>
+        
+        <div className="mt-8 text-center text-gray-500 text-sm">
+          <p>資料來源：<a href="https://docs.google.com/spreadsheets/d/1dRbzCeK0oVOt7S52H5lf6mgIR-6O-7hqIgh-2d001N4/" target="_blank" className="text-blue-500 hover:underline">Google Sheets</a></p>
         </div>
       </div>
     </main>
