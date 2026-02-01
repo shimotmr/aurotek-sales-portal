@@ -303,16 +303,16 @@ export default function PerformancePage() {
           </div>
         </div>
 
-        {/* 案件階段分布 */}
+        {/* 案件階段分布 - 可點擊跳轉到案件列表 */}
         <div className="bg-white rounded-lg shadow p-6 mt-8">
-          <h2 className="text-xl font-semibold mb-4">📋 案件階段分布</h2>
+          <h2 className="text-xl font-semibold mb-4">📋 案件階段分布（點擊查看明細）</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {data.stageStats.map(stage => {
               const stageColors: Record<string, string> = {
-                '進行中': 'bg-orange-50 border-orange-200',
-                '待出貨': 'bg-yellow-50 border-yellow-200',
-                '已出貨': 'bg-green-50 border-green-200',
-                '失敗': 'bg-gray-50 border-gray-200'
+                '進行中': 'bg-orange-50 border-orange-200 hover:bg-orange-100 hover:border-orange-300',
+                '待出貨': 'bg-yellow-50 border-yellow-200 hover:bg-yellow-100 hover:border-yellow-300',
+                '已出貨': 'bg-green-50 border-green-200 hover:bg-green-100 hover:border-green-300',
+                '失敗': 'bg-gray-50 border-gray-200 hover:bg-gray-100 hover:border-gray-300'
               }
               const textColors: Record<string, string> = {
                 '進行中': 'text-orange-600',
@@ -321,13 +321,18 @@ export default function PerformancePage() {
                 '失敗': 'text-gray-500'
               }
               return (
-                <div key={stage.stage} className={`p-4 rounded-lg border ${stageColors[stage.stage] || 'bg-gray-50'}`}>
+                <a 
+                  key={stage.stage} 
+                  href={`/cases?stage=${encodeURIComponent(stage.stage)}`}
+                  className={`block p-4 rounded-lg border cursor-pointer transition-all ${stageColors[stage.stage] || 'bg-gray-50 hover:bg-gray-100'}`}
+                >
                   <div className="font-medium">{stage.stage}</div>
                   <div className={`text-2xl font-bold mt-1 ${textColors[stage.stage] || 'text-gray-600'}`}>
                     {stage.count} 件
                   </div>
                   <div className="text-sm text-gray-500">{formatNumber(stage.amount)}K</div>
-                </div>
+                  <div className="text-xs text-blue-500 mt-2">→ 查看明細</div>
+                </a>
               )
             })}
           </div>
