@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 
 interface Case {
@@ -38,7 +38,7 @@ const stageColors: Record<string, { bg: string; text: string; badge: string }> =
   '失敗': { bg: 'bg-gray-50', text: 'text-gray-600', badge: 'bg-gray-400' },
 }
 
-export default function CasesPage() {
+function CasesContent() {
   const searchParams = useSearchParams()
   const stageFilter = searchParams.get('stage')
   const dealerFilter = searchParams.get('dealer')
@@ -278,5 +278,17 @@ export default function CasesPage() {
         )}
       </div>
     </main>
+  )
+}
+
+export default function CasesPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    }>
+      <CasesContent />
+    </Suspense>
   )
 }
