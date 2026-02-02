@@ -54,7 +54,30 @@ interface Case {
   dealer: string
   probability: number
   amount: number
+  shipDate?: string
+  customer?: string
 }
+
+// 警告規則定義
+interface AlertRule {
+  id: string
+  name: string
+  description: string
+  check: (cases: Case[], today: string) => Case[]
+  filterUrl: (cases: Case[]) => string
+}
+
+const ALERT_RULES: AlertRule[] = [
+  {
+    id: 'overdue-in-progress',
+    name: '進行中案件已過期',
+    description: '進行中的案件出貨日早於今天，應調整出貨日或標記失敗',
+    check: (cases, today) => cases.filter(c => 
+      c.stage === '進行中' && c.shipDate && c.shipDate < today
+    ),
+    filterUrl: (cases) => `/cases?stage=進行中&overdue=true`
+  },
+]
 
 interface CasesData {
   cases: Case[]
@@ -153,6 +176,21 @@ export default function PerformancePage() {
     return 60 + 340 * (0.15 + ratio * 0.85)
   }
 
+  // 計算警告
+  const alerts = useMemo(() => {
+    const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD
+    return ALERT_RULES.map(rule => {
+      const violatingCases = rule.check(cases, today)
+      const totalAmount = violatingCases.reduce((sum, c) => sum + (c.amount || 0), 0)
+      return {
+        ...rule,
+        cases: violatingCases,
+        count: violatingCases.length,
+        amount: totalAmount,
+      }
+    }).filter(alert => alert.count > 0)
+  }, [cases])
+
   // 計算每月各成交率的預測金額
   const monthlyForecastByProb = useMemo(() => {
     const result: Record<number, { prob25: number; prob50: number; prob75: number; total: number }> = {}
@@ -227,6 +265,36 @@ export default function PerformancePage() {
             更新時間：{new Date(data.updatedAt).toLocaleString('zh-TW')}
           </div>
         </div>
+
+        {/* ⚠️ 警告區塊 - 規則檢查結果 */}
+        {alerts.length > 0 && (
+          <div className="bg-red-50 border-2 border-red-300 rounded-xl p-4 mb-6">
+            <h2 className="text-lg font-bold text-red-700 mb-3 flex items-center gap-2">
+              ⚠️ 需要處理的問題 ({alerts.reduce((sum, a) => sum + a.count, 0)} 件)
+            </h2>
+            <div className="space-y-2">
+              {alerts.map(alert => (
+                <a
+                  key={alert.id}
+                  href={alert.filterUrl(alert.cases)}
+                  className="block p-3 bg-white border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-medium text-red-700">{alert.name}</div>
+                      <div className="text-sm text-gray-600">{alert.description}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xl font-bold text-red-600">{alert.count} 件</div>
+                      <div className="text-sm text-gray-500">{formatNumber(Math.round(alert.amount))}K</div>
+                    </div>
+                  </div>
+                  <div className="text-xs text-blue-600 mt-2">→ 點擊查看案件明細</div>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -368,15 +436,10 @@ export default function PerformancePage() {
                             <div className="h-full bg-green-500" style={{ width: `${Math.min(actualPct, 100)}%` }}></div>
                           </div>
                           
-                          {/* ⚠️ 警告：過去月份還有預測案件 */}
+                          {/* 過期預測提示（簡化版，詳細警告在頁面頂部） */}
                           {hasStaleForecasts && (
-                            <div className="mt-3 p-3 bg-orange-100 border border-orange-300 rounded-lg">
-                              <div className="flex items-center gap-2 text-orange-700 font-medium text-sm mb-1">
-                                ⚠️ 有 {formatNumber(Math.round(m.forecast))}K 預測案件需要調整！
-                              </div>
-                              <div className="text-xs text-orange-600">
-                                這些案件的預計出貨時間已過期，請更新出貨日期或標記為失敗
-                              </div>
+                            <div className="mt-2 text-xs text-orange-600 text-center">
+                              ⚠️ 有過期預測案件，請查看頁面頂部警告
                             </div>
                           )}
                         </>
