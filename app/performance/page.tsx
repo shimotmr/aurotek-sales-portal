@@ -336,23 +336,31 @@ export default function PerformancePage() {
                         </span>
                       </div>
                       
-                      {/* 第二行：目標 vs 業績 大數字對比 */}
-                      <div className="grid grid-cols-2 gap-4 mb-3">
+                      {/* 第二行：目標 vs 已出貨 vs 預測 */}
+                      <div className="grid grid-cols-3 gap-2 mb-3">
                         <div className="text-center p-2 bg-gray-100 rounded-lg">
                           <div className="text-xs text-gray-500 mb-1">🎯 目標</div>
-                          <div className="text-xl font-bold text-gray-700">{formatNumber(m.target)}K</div>
+                          <div className="text-lg font-bold text-gray-700">{formatNumber(m.target)}K</div>
                         </div>
-                        <div className={`text-center p-2 rounded-lg ${isOver ? 'bg-green-100' : 'bg-red-50'}`}>
-                          <div className="text-xs text-gray-500 mb-1">📈 業績</div>
-                          <div className={`text-xl font-bold ${isOver ? 'text-green-600' : 'text-red-500'}`}>
-                            {formatNumber(Math.round(totalPerformance))}K
+                        <div className="text-center p-2 bg-green-100 rounded-lg">
+                          <div className="text-xs text-gray-500 mb-1">✅ 已出貨</div>
+                          <div className="text-lg font-bold text-green-600">
+                            {m.actual > 0 ? `${formatNumber(m.actual)}K` : '-'}
+                          </div>
+                        </div>
+                        <div className="text-center p-2 bg-purple-50 rounded-lg">
+                          <div className="text-xs text-gray-500 mb-1">📊 預測</div>
+                          <div className="text-lg font-bold text-purple-600">
+                            {m.forecast > 0 ? `${formatNumber(Math.round(m.forecast))}K` : '-'}
                           </div>
                         </div>
                       </div>
                       
-                      {/* 差距標示 */}
-                      <div className={`text-center text-sm font-medium mb-3 ${isOver ? 'text-green-600' : 'text-red-500'}`}>
-                        {isOver ? '▲' : '▼'} 差距 {isOver ? '+' : ''}{formatNumber(Math.round(gap))}K
+                      {/* 合計 vs 目標 差距 */}
+                      <div className={`flex items-center justify-center gap-2 text-sm font-medium mb-3 p-2 rounded-lg ${isOver ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-500'}`}>
+                        <span>合計 {formatNumber(Math.round(totalPerformance))}K</span>
+                        <span>|</span>
+                        <span>{isOver ? '▲' : '▼'} {isOver ? '+' : ''}{formatNumber(Math.round(gap))}K</span>
                       </div>
                       
                       {/* 進度條（簡化版，不顯示數字） */}
