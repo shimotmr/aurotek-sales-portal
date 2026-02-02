@@ -1,6 +1,5 @@
 export default function Home() {
-  // 數位資源庫 Apps Script Web App URL（臨時方案）
-  const resourceLibraryUrl = process.env.NEXT_PUBLIC_RESOURCE_LIBRARY_URL || '#';
+  // 數位資源庫（已整合到 Portal）
   
   return (
     <main className="min-h-screen bg-gray-50">
@@ -17,8 +16,8 @@ export default function Home() {
             <p className="text-blue-100">Pipeline 分析 / 目標達成率</p>
           </a>
           
-          {/* 數位資源庫 - 新增入口 */}
-          <a href={resourceLibraryUrl} target="_blank" className="block p-6 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow hover:shadow-lg transition text-white">
+          {/* 數位資源庫 */}
+          <a href="/marketing" className="block p-6 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow hover:shadow-lg transition text-white">
             <div className="text-4xl mb-4">📚</div>
             <h2 className="text-xl font-semibold mb-2">數位資源庫</h2>
             <p className="text-purple-100">影片案例 / 簡報資源 / 播放清單</p>
