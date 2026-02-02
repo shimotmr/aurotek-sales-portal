@@ -6,15 +6,15 @@
       "month": 2,
       "actual": 0,
       "forecast": 2317,
-      "target": 2700,
+      "target": 7700,
       "gap": 2317,
       "rate": 0,
       "type": "forecast"
     },
     "ytd": {
       "shipped": 8865,
-      "target": 52650,
-      "rate": 16.8
+      "target": 149650,
+      "rate": 5.9
     }
   },
   "monthlyStats": [
@@ -31,7 +31,7 @@
       "month": 2,
       "actual": 0,
       "forecast": 2317,
-      "target": 2700,
+      "target": 7700,
       "gap": 2317,
       "rate": 0,
       "type": "forecast"
@@ -40,7 +40,7 @@
       "month": 3,
       "actual": 0,
       "forecast": 58852,
-      "target": 3500,
+      "target": 8800,
       "gap": 58852,
       "rate": 0,
       "type": "forecast"
@@ -49,7 +49,7 @@
       "month": 4,
       "actual": 0,
       "forecast": 6158,
-      "target": 4000,
+      "target": 11600,
       "gap": 6158,
       "rate": 0,
       "type": "forecast"
@@ -58,7 +58,7 @@
       "month": 5,
       "actual": 0,
       "forecast": 2900,
-      "target": 3550,
+      "target": 9950,
       "gap": 2900,
       "rate": 0,
       "type": "forecast"
@@ -67,7 +67,7 @@
       "month": 6,
       "actual": 0,
       "forecast": 2212,
-      "target": 3600,
+      "target": 10600,
       "gap": 2212,
       "rate": 0,
       "type": "forecast"
@@ -76,7 +76,7 @@
       "month": 7,
       "actual": 0,
       "forecast": 3875,
-      "target": 4500,
+      "target": 12800,
       "gap": 3875,
       "rate": 0,
       "type": "forecast"
@@ -85,7 +85,7 @@
       "month": 8,
       "actual": 0,
       "forecast": 0,
-      "target": 4400,
+      "target": 12200,
       "gap": 0,
       "rate": 0,
       "type": "forecast"
@@ -94,7 +94,7 @@
       "month": 9,
       "actual": 0,
       "forecast": 338,
-      "target": 5100,
+      "target": 15100,
       "gap": 338,
       "rate": 0,
       "type": "forecast"
@@ -103,7 +103,7 @@
       "month": 10,
       "actual": 0,
       "forecast": 5030,
-      "target": 5000,
+      "target": 14600,
       "gap": 5030,
       "rate": 0,
       "type": "forecast"
@@ -112,7 +112,7 @@
       "month": 11,
       "actual": 0,
       "forecast": 11520,
-      "target": 6100,
+      "target": 17700,
       "gap": 11520,
       "rate": 0,
       "type": "forecast"
@@ -121,7 +121,7 @@
       "month": 12,
       "actual": 0,
       "forecast": 12394,
-      "target": 6800,
+      "target": 18800,
       "gap": 12394,
       "rate": 0,
       "type": "forecast"
