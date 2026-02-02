@@ -419,7 +419,7 @@ export default function PerformancePage() {
           <div className="flex flex-col lg:flex-row gap-8 items-center">
             {/* SVG 漏斗 */}
             <div className="flex-1 flex justify-center">
-              <svg viewBox="0 0 650 250" className="w-full max-w-lg" style={{ height: 'auto' }}>
+              <svg viewBox="0 0 700 250" className="w-full max-w-lg" style={{ height: 'auto' }}>
                 {funnelData.map((stage, index) => {
                   const layerHeight = 250 / funnelData.length
                   const topY = index * layerHeight
@@ -428,10 +428,11 @@ export default function PerformancePage() {
                   const bottomWidth = index < funnelData.length - 1 
                     ? getWidthForAmount(funnelData[index + 1].amount)
                     : 60
-                  const centerX = 250
+                  const centerX = 220
                   
                   const points = `${centerX - topWidth/2},${topY} ${centerX + topWidth/2},${topY} ${centerX + bottomWidth/2},${bottomY} ${centerX - bottomWidth/2},${bottomY}`
-                  const labelX = centerX + topWidth/2 + 20
+                  // 固定文字位置在右側，統一對齊
+                  const labelX = 500
                   const labelY = topY + layerHeight/2
                   
                   return (
@@ -442,10 +443,10 @@ export default function PerformancePage() {
                         className="cursor-pointer transition-opacity hover:opacity-80"
                         onClick={() => handleFunnelClick(stage)}
                       />
-                      <text x={labelX} y={labelY - 6} fill={stage.color} fontSize="16" fontWeight="bold">
-                        {stage.label}
+                      <text x={labelX} y={labelY - 6} fill={stage.color} fontSize="18" fontWeight="bold">
+                        {stage.label}%
                       </text>
-                      <text x={labelX} y={labelY + 14} fill="#666" fontSize="14">
+                      <text x={labelX} y={labelY + 16} fill="#666" fontSize="15">
                         {formatNumber(Math.round(stage.amount))}
                       </text>
                     </g>
