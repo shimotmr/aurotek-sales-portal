@@ -5,50 +5,107 @@ import Link from 'next/link'
 
 export default function AdminPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [currentUser, setCurrentUser] = useState<{ email: string; name: string } | null>(null)
 
   useEffect(() => {
     const auth = localStorage.getItem('admin_auth')
-    if (auth === 'true') setIsLoggedIn(true)
+    const user = localStorage.getItem('admin_user')
+    if (auth === 'true' && user) {
+      setIsLoggedIn(true)
+      setCurrentUser(JSON.parse(user))
+    }
   }, [])
 
-  const handleLogin = () => {
-    // 簡單密碼驗證
-    if (password === 'aurotek2026') {
-      localStorage.setItem('admin_auth', 'true')
-      setIsLoggedIn(true)
-      setError('')
-    } else {
-      setError('密碼錯誤')
+  const handleLogin = async () => {
+    if (!username || !password) {
+      setError('請輸入帳號和密碼')
+      return
     }
+
+    setIsLoading(true)
+    setError('')
+
+    try {
+      const response = await fetch('/api/auth/zimbra', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        localStorage.setItem('admin_auth', 'true')
+        localStorage.setItem('admin_user', JSON.stringify(data.user))
+        setIsLoggedIn(true)
+        setCurrentUser(data.user)
+        setError('')
+      } else {
+        setError(data.message || '登入失敗')
+      }
+    } catch (err) {
+      setError('連線錯誤，請稍後再試')
+    }
+
+    setIsLoading(false)
   }
 
   const handleLogout = () => {
     localStorage.removeItem('admin_auth')
+    localStorage.removeItem('admin_user')
     setIsLoggedIn(false)
+    setCurrentUser(null)
   }
 
   if (!isLoggedIn) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">
-          <h1 className="text-2xl font-bold text-center mb-6">🔐 後台管理系統</h1>
-          <input
-            type="password"
-            placeholder="請輸入管理密碼"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-            className="w-full p-3 border rounded-lg mb-4 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
-          {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+          <h1 className="text-2xl font-bold text-center mb-2">🔐 後台管理系統</h1>
+          <p className="text-center text-gray-500 text-sm mb-6">使用公司郵箱帳號登入</p>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">帳號</label>
+              <input
+                type="text"
+                placeholder="例：williamhsiao 或 williamhsiao@aurotek.com"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">密碼</label>
+              <input
+                type="password"
+                placeholder="郵箱密碼"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+                className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+          </div>
+
+          {error && <p className="text-red-500 text-sm mt-4 text-center">{error}</p>}
+          
           <button
             onClick={handleLogin}
-            className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
+            disabled={isLoading}
+            className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition mt-6 disabled:opacity-50"
           >
-            登入
+            {isLoading ? '驗證中...' : '登入'}
           </button>
+          
+          <p className="text-xs text-gray-400 text-center mt-4">
+            使用和椿 Zimbra 郵箱帳號密碼驗證
+          </p>
+          
           <Link href="/" className="block text-center mt-4 text-gray-500 hover:text-gray-700">
             ← 返回首頁
           </Link>
@@ -64,6 +121,7 @@ export default function AdminPage() {
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-xl font-bold">⚙️ 後台管理系統</h1>
           <div className="flex items-center gap-4">
+            <span className="text-sm text-gray-600">👤 {currentUser?.name || currentUser?.email}</span>
             <Link href="/" className="text-gray-600 hover:text-gray-900">首頁</Link>
             <button
               onClick={handleLogout}
