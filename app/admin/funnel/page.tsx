@@ -115,23 +115,33 @@ export default function FunnelPage() {
   // SVG Funnel dimensions
   const svgWidth = 500
   const svgHeight = 300
-  const funnelTopWidth = 400
-  const funnelBottomWidth = 80
-  const funnelStartX = (svgWidth - funnelTopWidth) / 2
+  const maxFunnelWidth = 400
+  const minFunnelWidth = 60
   const totalLayers = funnelData.length
+  const layerHeight = svgHeight / totalLayers
+
+  // Find max amount for scaling
+  const maxAmount = Math.max(...funnelData.map(d => d.amount), 1)
+
+  // Calculate width based on amount (proportional to max)
+  const getWidthForAmount = (amount: number) => {
+    const ratio = amount / maxAmount
+    // Minimum 15% width, maximum 100%
+    const widthRatio = 0.15 + (ratio * 0.85)
+    return minFunnelWidth + (maxFunnelWidth - minFunnelWidth) * widthRatio
+  }
 
   // Calculate trapezoid points for each layer
+  // Top width = this layer's amount
+  // Bottom width = next layer's amount (or minimum for last layer)
   const getTrapezoidPoints = (index: number) => {
-    const layerHeight = svgHeight / totalLayers
     const topY = index * layerHeight
     const bottomY = (index + 1) * layerHeight
     
-    // Width narrows linearly from top to bottom
-    const topWidthRatio = 1 - (index / totalLayers)
-    const bottomWidthRatio = 1 - ((index + 1) / totalLayers)
-    
-    const topWidth = funnelBottomWidth + (funnelTopWidth - funnelBottomWidth) * topWidthRatio
-    const bottomWidth = funnelBottomWidth + (funnelTopWidth - funnelBottomWidth) * bottomWidthRatio
+    const topWidth = getWidthForAmount(funnelData[index].amount)
+    const bottomWidth = index < totalLayers - 1 
+      ? getWidthForAmount(funnelData[index + 1].amount)
+      : minFunnelWidth // Last layer narrows to minimum
     
     const topLeftX = (svgWidth - topWidth) / 2
     const topRightX = topLeftX + topWidth
@@ -141,11 +151,12 @@ export default function FunnelPage() {
     return `${topLeftX},${topY} ${topRightX},${topY} ${bottomRightX},${bottomY} ${bottomLeftX},${bottomY}`
   }
 
-  // Get label position for each layer
+  // Get label position for each layer (right side)
   const getLabelPosition = (index: number) => {
-    const layerHeight = svgHeight / totalLayers
     const y = index * layerHeight + layerHeight / 2
-    return { x: svgWidth + 20, y }
+    const width = getWidthForAmount(funnelData[index].amount)
+    const rightEdge = (svgWidth + width) / 2
+    return { x: rightEdge + 15, y }
   }
 
   return (
@@ -276,7 +287,7 @@ export default function FunnelPage() {
           </div>
 
           <p className="text-center text-sm text-gray-500 mt-6">
-            💡 點擊漏斗區塊可查看該成交率的案件列表
+            💡 漏斗寬度依金額比例變化，點擊區塊查看案件
           </p>
         </div>
 
