@@ -52,7 +52,7 @@ export default function SlidesPage() {
   }, [])
 
   const categories = useMemo(() => 
-    [...new Set(slides.map(s => s.category))].filter(Boolean).sort(),
+    Array.from(new Set(slides.map(s => s.category))).filter(Boolean).sort(),
     [slides]
   )
 

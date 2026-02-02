@@ -50,12 +50,12 @@ export default function VideosPage() {
   }, [])
 
   const categories = useMemo(() => 
-    [...new Set(videos.map(v => v.category))].filter(Boolean).sort(),
+    Array.from(new Set(videos.map(v => v.category))).filter(Boolean).sort(),
     [videos]
   )
 
   const robotTypes = useMemo(() => 
-    [...new Set(videos.map(v => v.robotType))].filter(Boolean).sort(),
+    Array.from(new Set(videos.map(v => v.robotType))).filter(Boolean).sort(),
     [videos]
   )
 
