@@ -58,9 +58,7 @@ export default function SlidesPage() {
 
   const filteredSlides = useMemo(() => {
     return slides.filter(s => {
-      // 過濾有權限限制的簡報（公開頁面不顯示）
-      if (s.permittedAdmins && s.permittedAdmins.trim() !== '') return false
-      
+      // 已移除權限過濾，顯示所有簡報
       const matchSearch = !searchQuery || 
         s.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         s.client?.toLowerCase().includes(searchQuery.toLowerCase()) ||
