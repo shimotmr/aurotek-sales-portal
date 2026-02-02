@@ -69,7 +69,7 @@ const VALID_DEALERS = ['阜爾運通', '禾煜科技', '智領未來', '禾達�
 // 漏斗階段（只有 25%, 50%, 75%）
 const FUNNEL_STAGES = [
   { label: '25', minProb: 0, maxProb: 25, color: '#5DADE2' },
-  { label: '50', minProb: 26, maxProb: 50, color: '#58D68D' },
+  { label: '50', minProb: 26, maxProb: 50, color: '#E67E22' },
   { label: '75', minProb: 51, maxProb: 75, color: '#F4D03F' },
 ]
 
@@ -288,7 +288,7 @@ export default function PerformancePage() {
           <div className="hidden md:flex flex-wrap gap-4 text-xs mb-4">
             <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 bg-green-500 rounded"></span>已出貨</span>
             <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded" style={{backgroundColor: '#5DADE2'}}></span>25%</span>
-            <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded" style={{backgroundColor: '#58D68D'}}></span>50%</span>
+            <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded" style={{backgroundColor: '#E67E22'}}></span>50%</span>
             <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded" style={{backgroundColor: '#F4D03F'}}></span>75%</span>
           </div>
           
@@ -376,7 +376,7 @@ export default function PerformancePage() {
                             <div className="h-full" style={{ width: `${p25Pct}%`, backgroundColor: '#5DADE2' }}></div>
                           )}
                           {p50Pct > 0 && (
-                            <div className="h-full" style={{ width: `${p50Pct}%`, backgroundColor: '#58D68D' }}></div>
+                            <div className="h-full" style={{ width: `${p50Pct}%`, backgroundColor: '#E67E22' }}></div>
                           )}
                           {p75Pct > 0 && (
                             <div className="h-full" style={{ width: `${p75Pct}%`, backgroundColor: '#F4D03F' }}></div>
@@ -400,8 +400,8 @@ export default function PerformancePage() {
                             </span>
                           )}
                           {mf.prob50 > 0 && (
-                            <span className="flex items-center gap-1 px-2 py-1 rounded-full" style={{backgroundColor: '#58D68D20'}}>
-                              <span className="w-2 h-2 rounded-full" style={{backgroundColor: '#58D68D'}}></span>
+                            <span className="flex items-center gap-1 px-2 py-1 rounded-full" style={{backgroundColor: '#E67E2220'}}>
+                              <span className="w-2 h-2 rounded-full" style={{backgroundColor: '#E67E22'}}></span>
                               50% {formatNumber(Math.round(mf.prob50))}
                             </span>
                           )}
