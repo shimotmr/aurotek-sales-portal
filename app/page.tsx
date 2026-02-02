@@ -1,4 +1,7 @@
 export default function Home() {
+  // 數位資源庫 Apps Script Web App URL（臨時方案）
+  const resourceLibraryUrl = process.env.NEXT_PUBLIC_RESOURCE_LIBRARY_URL || '#';
+  
   return (
     <main className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -6,12 +9,19 @@ export default function Home() {
           和椿通路營業管理系統
         </h1>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* 業績管理 - 新增 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* 業績管理 */}
           <a href="/performance" className="block p-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow hover:shadow-lg transition text-white">
             <div className="text-4xl mb-4">📈</div>
             <h2 className="text-xl font-semibold mb-2">業績管理</h2>
             <p className="text-blue-100">Pipeline 分析 / 目標達成率</p>
+          </a>
+          
+          {/* 數位資源庫 - 新增入口 */}
+          <a href={resourceLibraryUrl} target="_blank" className="block p-6 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow hover:shadow-lg transition text-white">
+            <div className="text-4xl mb-4">📚</div>
+            <h2 className="text-xl font-semibold mb-2">數位資源庫</h2>
+            <p className="text-purple-100">影片案例 / 簡報資源 / 播放清單</p>
           </a>
           
           {/* 樣品借用 */}
@@ -34,10 +44,6 @@ export default function Home() {
             <h2 className="text-xl font-semibold mb-2">庫存查詢</h2>
             <p className="text-gray-600">即時庫存狀態</p>
           </a>
-        </div>
-        
-        <div className="mt-8 text-center text-gray-500 text-sm">
-          <p>資料來源：<a href="https://docs.google.com/spreadsheets/d/1dRbzCeK0oVOt7S52H5lf6mgIR-6O-7hqIgh-2d001N4/" target="_blank" className="text-blue-500 hover:underline">Google Sheets</a></p>
         </div>
       </div>
     </main>
