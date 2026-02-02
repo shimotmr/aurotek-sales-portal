@@ -12,7 +12,7 @@
       "type": "forecast"
     },
     "ytd": {
-      "shipped": 8864,
+      "shipped": 8865,
       "target": 0,
       "rate": 0
     }
@@ -20,10 +20,10 @@
   "monthlyStats": [
     {
       "month": 1,
-      "actual": 8864,
+      "actual": 8865,
       "forecast": 0,
       "target": 0,
-      "gap": 8864,
+      "gap": 8865,
       "rate": 0,
       "type": "actual"
     },
@@ -194,7 +194,7 @@
     {
       "stage": "已出貨",
       "count": 53,
-      "amount": 8864
+      "amount": 8865
     },
     {
       "stage": "失敗",
