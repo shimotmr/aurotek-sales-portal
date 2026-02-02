@@ -193,6 +193,20 @@ export default function AdminPage() {
             <p className="text-gray-600 text-sm">維護經銷商資料與聯絡人</p>
           </Link>
 
+          {/* 影片管理 */}
+          <Link href="/admin/videos" className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition border-l-4 border-red-500">
+            <div className="text-3xl mb-3">🎬</div>
+            <h2 className="text-lg font-bold mb-2">影片管理</h2>
+            <p className="text-gray-600 text-sm">管理影片案例、分類、連結</p>
+          </Link>
+
+          {/* 簡報管理 */}
+          <Link href="/admin/slides" className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition border-l-4 border-yellow-500">
+            <div className="text-3xl mb-3">📑</div>
+            <h2 className="text-lg font-bold mb-2">簡報管理</h2>
+            <p className="text-gray-600 text-sm">管理簡報案例、分類、權限</p>
+          </Link>
+
           {/* 資料同步 */}
           <Link href="/admin/sync" className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition border-l-4 border-orange-500">
             <div className="text-3xl mb-3">🔄</div>
