@@ -7,6 +7,7 @@ export default function AdminPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [rememberMe, setRememberMe] = useState(true)
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [currentUser, setCurrentUser] = useState<{ email: string; name: string } | null>(null)
@@ -14,9 +15,14 @@ export default function AdminPage() {
   useEffect(() => {
     const auth = localStorage.getItem('admin_auth')
     const user = localStorage.getItem('admin_user')
+    const savedUsername = localStorage.getItem('admin_saved_username')
+    
     if (auth === 'true' && user) {
       setIsLoggedIn(true)
       setCurrentUser(JSON.parse(user))
+    }
+    if (savedUsername) {
+      setUsername(savedUsername)
     }
   }, [])
 
@@ -41,6 +47,11 @@ export default function AdminPage() {
       if (data.success) {
         localStorage.setItem('admin_auth', 'true')
         localStorage.setItem('admin_user', JSON.stringify(data.user))
+        if (rememberMe) {
+          localStorage.setItem('admin_saved_username', username)
+        } else {
+          localStorage.removeItem('admin_saved_username')
+        }
         setIsLoggedIn(true)
         setCurrentUser(data.user)
         setError('')
@@ -63,33 +74,62 @@ export default function AdminPage() {
 
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
         <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">
-          <h1 className="text-2xl font-bold text-center mb-2">🔐 後台管理系統</h1>
-          <p className="text-center text-gray-500 text-sm mb-6">使用公司郵箱帳號登入</p>
+          <h1 className="text-xl font-bold text-center text-gray-700 mb-8">
+            請輸入 AD 帳號/密碼登入系統
+          </h1>
           
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">帳號</label>
+            {/* 帳號欄位 */}
+            <div className="relative">
               <input
                 type="text"
-                placeholder="例：williamhsiao 或 williamhsiao@aurotek.com"
+                placeholder="u1612"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full p-4 pr-12 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none text-gray-700"
               />
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">密碼</label>
+
+            {/* 密碼欄位 */}
+            <div className="relative">
               <input
                 type="password"
-                placeholder="郵箱密碼"
+                placeholder="密碼"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-                className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full p-4 pr-12 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none text-gray-700"
               />
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
             </div>
+
+            {/* 記住帳號 */}
+            <label className="flex items-center gap-3 cursor-pointer">
+              <div 
+                onClick={() => setRememberMe(!rememberMe)}
+                className={`w-6 h-6 rounded flex items-center justify-center border-2 transition ${
+                  rememberMe ? 'bg-blue-500 border-blue-500' : 'border-gray-300'
+                }`}
+              >
+                {rememberMe && (
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+              </div>
+              <span className="text-gray-700 font-medium">記住我的帳號</span>
+            </label>
           </div>
 
           {error && <p className="text-red-500 text-sm mt-4 text-center">{error}</p>}
@@ -97,16 +137,12 @@ export default function AdminPage() {
           <button
             onClick={handleLogin}
             disabled={isLoading}
-            className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition mt-6 disabled:opacity-50"
+            className="w-full bg-blue-500 text-white py-4 rounded-lg font-bold text-lg hover:bg-blue-600 transition mt-6 disabled:opacity-50"
           >
-            {isLoading ? '驗證中...' : '登入'}
+            {isLoading ? '驗證中...' : '登 入'}
           </button>
           
-          <p className="text-xs text-gray-400 text-center mt-4">
-            使用和椿 Zimbra 郵箱帳號密碼驗證
-          </p>
-          
-          <Link href="/" className="block text-center mt-4 text-gray-500 hover:text-gray-700">
+          <Link href="/" className="block text-center mt-6 text-gray-400 hover:text-gray-600 text-sm">
             ← 返回首頁
           </Link>
         </div>
