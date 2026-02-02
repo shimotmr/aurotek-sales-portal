@@ -174,10 +174,57 @@ export default function PerformancePage() {
           </div>
         </div>
 
-        {/* 月度趨勢 */}
-        <div className="bg-white rounded-lg shadow p-6 mb-8">
+        {/* 月度趨勢 - 響應式設計 */}
+        <div className="bg-white rounded-lg shadow p-4 md:p-6 mb-8">
           <h2 className="text-xl font-semibold mb-4">📊 月度業績趨勢</h2>
-          <div className="overflow-x-auto">
+          
+          {/* 手機版：卡片式 */}
+          <div className="md:hidden space-y-3">
+            {data.monthlyStats.map(m => {
+              const isActual = m.type === 'actual'
+              const progressPercent = m.target > 0 ? Math.min((m.actual / m.target) * 100, 100) : 0
+              const forecastPercent = m.target > 0 ? Math.min((m.forecast / m.target) * 100, 100 - progressPercent) : 0
+              return (
+                <div key={m.month} className={`p-4 rounded-lg border ${m.month === currentMonth ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}`}>
+                  <div className="flex justify-between items-center mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg font-bold">{monthNames[m.month]}</span>
+                      {m.month === currentMonth && <span className="text-xs bg-blue-500 text-white px-2 py-0.5 rounded">當月</span>}
+                      {isActual ? <span className="text-xs text-gray-400">實際</span> : <span className="text-xs text-purple-500">預測</span>}
+                    </div>
+                    <span className={`text-xl font-bold ${getStatusColor(m.rate)}`}>{m.rate}%</span>
+                  </div>
+                  
+                  {/* 進度條 */}
+                  <div className="w-full bg-gray-200 rounded-full h-3 mb-3 overflow-hidden">
+                    <div className="h-3 flex">
+                      <div className="h-3 bg-green-500" style={{ width: `${progressPercent}%` }}></div>
+                      {m.forecast > 0 && <div className="h-3 bg-purple-300" style={{ width: `${forecastPercent}%` }}></div>}
+                    </div>
+                  </div>
+                  
+                  {/* 數據 */}
+                  <div className="grid grid-cols-3 gap-2 text-center text-sm">
+                    <div>
+                      <div className="text-gray-500">已出貨</div>
+                      <div className="font-bold text-green-600">{formatNumber(m.actual)}</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-500">預測</div>
+                      <div className="font-bold text-purple-600">{m.forecast > 0 ? formatNumber(m.forecast) : '-'}</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-500">目標</div>
+                      <div className="font-bold">{formatNumber(m.target)}</div>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* 桌面版：表格 */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b">
@@ -192,7 +239,6 @@ export default function PerformancePage() {
               </thead>
               <tbody>
                 {data.monthlyStats.map(m => {
-                  const total = m.actual + m.forecast
                   const isActual = m.type === 'actual'
                   return (
                     <tr key={m.month} className={`border-b hover:bg-gray-50 ${m.month === currentMonth ? 'bg-blue-50' : ''}`}>
@@ -217,13 +263,11 @@ export default function PerformancePage() {
                       </td>
                       <td className="py-3 px-4">
                         <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
-                          {/* 已出貨部分 */}
                           <div className="h-4 flex">
                             <div 
                               className="h-4 bg-green-500"
                               style={{ width: `${Math.min(m.actual / m.target * 100, 100)}%` }}
                             ></div>
-                            {/* 預測部分 */}
                             {m.forecast > 0 && (
                               <div 
                                 className="h-4 bg-purple-300"
