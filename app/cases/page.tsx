@@ -45,6 +45,9 @@ function CasesContent() {
   const repFilter = searchParams.get('rep')
   const probMinFilter = searchParams.get('probMin')
   const probMaxFilter = searchParams.get('probMax')
+  const overdueFilter = searchParams.get('overdue') // 過期案件篩選
+  const shipDateFromFilter = searchParams.get('shipDateFrom') // 出貨日起始
+  const shipDateToFilter = searchParams.get('shipDateTo') // 出貨日結束
   
   const [data, setData] = useState<CasesData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -54,8 +57,14 @@ function CasesContent() {
   const [selectedRep, setSelectedRep] = useState<string | null>(repFilter)
   const [probMin, setProbMin] = useState<number | null>(probMinFilter ? parseInt(probMinFilter) : null)
   const [probMax, setProbMax] = useState<number | null>(probMaxFilter ? parseInt(probMaxFilter) : null)
+  const [overdue, setOverdue] = useState<boolean>(overdueFilter === 'true')
+  const [shipDateFrom, setShipDateFrom] = useState<string>(shipDateFromFilter || '')
+  const [shipDateTo, setShipDateTo] = useState<string>(shipDateToFilter || '')
   const [sortField, setSortField] = useState<string>('id')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
+
+  // 今天日期 (YYYY-MM-DD)
+  const today = new Date().toISOString().split('T')[0]
 
   useEffect(() => {
     fetch('/api/cases')
@@ -73,7 +82,10 @@ function CasesContent() {
     setSelectedRep(repFilter)
     setProbMin(probMinFilter ? parseInt(probMinFilter) : null)
     setProbMax(probMaxFilter ? parseInt(probMaxFilter) : null)
-  }, [stageFilter, dealerFilter, repFilter, probMinFilter, probMaxFilter])
+    setOverdue(overdueFilter === 'true')
+    setShipDateFrom(shipDateFromFilter || '')
+    setShipDateTo(shipDateToFilter || '')
+  }, [stageFilter, dealerFilter, repFilter, probMinFilter, probMaxFilter, overdueFilter, shipDateFromFilter, shipDateToFilter])
 
   if (loading) {
     return (
@@ -107,6 +119,17 @@ function CasesContent() {
   }
   if (probMax !== null) {
     filtered = filtered.filter(c => c.probability <= probMax)
+  }
+  // 過期案件篩選（出貨日早於今天）
+  if (overdue) {
+    filtered = filtered.filter(c => c.shipDate && c.shipDate < today)
+  }
+  // 出貨日區間篩選
+  if (shipDateFrom) {
+    filtered = filtered.filter(c => c.shipDate && c.shipDate >= shipDateFrom)
+  }
+  if (shipDateTo) {
+    filtered = filtered.filter(c => c.shipDate && c.shipDate <= shipDateTo)
   }
   if (search) {
     const q = search.toLowerCase()
@@ -189,15 +212,44 @@ function CasesContent() {
           ))}
         </div>
 
-        {/* 搜尋 */}
-        <div className="mb-4">
-          <input
-            type="text"
-            placeholder="搜尋案件編號、經銷商、客戶、業務..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="w-full md:w-96 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
+        {/* 搜尋 + 日期篩選 */}
+        <div className="flex flex-wrap gap-3 mb-4 items-end">
+          <div>
+            <input
+              type="text"
+              placeholder="搜尋案件編號、經銷商、客戶、業務..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="w-full md:w-72 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-gray-600">出貨日：</label>
+            <input
+              type="date"
+              value={shipDateFrom}
+              onChange={e => setShipDateFrom(e.target.value)}
+              className="px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+            />
+            <span className="text-gray-400">~</span>
+            <input
+              type="date"
+              value={shipDateTo}
+              onChange={e => setShipDateTo(e.target.value)}
+              className="px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={overdue}
+              onChange={e => setOverdue(e.target.checked)}
+              className="w-4 h-4 text-red-600 rounded focus:ring-red-500"
+            />
+            <span className={overdue ? 'text-red-600 font-medium' : 'text-gray-600'}>
+              ⚠️ 只顯示過期案件
+            </span>
+          </label>
         </div>
 
         {/* 結果數與篩選條件 */}
@@ -219,6 +271,18 @@ function CasesContent() {
             <span className="inline-flex items-center bg-purple-100 text-purple-700 px-2 py-1 rounded">
               業務：{selectedRep}
               <button onClick={() => setSelectedRep(null)} className="ml-1 hover:text-purple-900">✕</button>
+            </span>
+          )}
+          {overdue && (
+            <span className="inline-flex items-center bg-red-100 text-red-700 px-2 py-1 rounded">
+              ⚠️ 過期案件（出貨日 &lt; {today}）
+              <button onClick={() => setOverdue(false)} className="ml-1 hover:text-red-900">✕</button>
+            </span>
+          )}
+          {(shipDateFrom || shipDateTo) && (
+            <span className="inline-flex items-center bg-cyan-100 text-cyan-700 px-2 py-1 rounded">
+              出貨日：{shipDateFrom || '...'} ~ {shipDateTo || '...'}
+              <button onClick={() => { setShipDateFrom(''); setShipDateTo(''); }} className="ml-1 hover:text-cyan-900">✕</button>
             </span>
           )}
           {(probMin !== null || probMax !== null) && (
