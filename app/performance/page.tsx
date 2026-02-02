@@ -314,11 +314,16 @@ export default function PerformancePage() {
                   const p75Pct = m.target > 0 ? (mf.prob75 / m.target) * 100 : 0
                   const totalPct = actualPct + p25Pct + p50Pct + p75Pct
                   
+                  // 過去月份有預測案件 = 需要警告
+                  const hasStaleForecasts = isActual && m.forecast > 0
+                  
                   return (
                     <div key={m.month} className={`p-4 rounded-xl border-2 ${
-                      m.month === currentMonth 
-                        ? 'border-blue-500 bg-blue-50' 
-                        : isOver ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-white'
+                      hasStaleForecasts
+                        ? 'border-orange-400 bg-orange-50'
+                        : m.month === currentMonth 
+                          ? 'border-blue-500 bg-blue-50' 
+                          : isOver ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-white'
                     }`}>
                       {/* 第一行：月份 + 達成率 */}
                       <div className="flex items-center justify-between mb-3">
@@ -336,82 +341,123 @@ export default function PerformancePage() {
                         </span>
                       </div>
                       
-                      {/* 第二行：目標 vs 已出貨 vs 預測 */}
-                      <div className="grid grid-cols-3 gap-2 mb-3">
-                        <div className="text-center p-2 bg-gray-100 rounded-lg">
-                          <div className="text-xs text-gray-500 mb-1">🎯 目標</div>
-                          <div className="text-lg font-bold text-gray-700">{formatNumber(m.target)}K</div>
-                        </div>
-                        <div className="text-center p-2 bg-green-100 rounded-lg">
-                          <div className="text-xs text-gray-500 mb-1">✅ 已出貨</div>
-                          <div className="text-lg font-bold text-green-600">
-                            {m.actual > 0 ? `${formatNumber(m.actual)}K` : '-'}
+                      {/* 過去月份：只顯示目標 vs 已出貨 */}
+                      {isActual ? (
+                        <>
+                          <div className="grid grid-cols-2 gap-3 mb-3">
+                            <div className="text-center p-3 bg-gray-100 rounded-lg">
+                              <div className="text-xs text-gray-500 mb-1">🎯 目標</div>
+                              <div className="text-xl font-bold text-gray-700">{formatNumber(m.target)}K</div>
+                            </div>
+                            <div className={`text-center p-3 rounded-lg ${m.actual >= m.target ? 'bg-green-100' : 'bg-red-50'}`}>
+                              <div className="text-xs text-gray-500 mb-1">✅ 已出貨</div>
+                              <div className={`text-xl font-bold ${m.actual >= m.target ? 'text-green-600' : 'text-red-500'}`}>
+                                {formatNumber(m.actual)}K
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                        <div className="text-center p-2 bg-purple-50 rounded-lg">
-                          <div className="text-xs text-gray-500 mb-1">📊 預測</div>
-                          <div className="text-lg font-bold text-purple-600">
-                            {m.forecast > 0 ? `${formatNumber(Math.round(m.forecast))}K` : '-'}
+                          
+                          {/* 差距 */}
+                          <div className={`text-center text-sm font-medium mb-3 p-2 rounded-lg ${m.actual >= m.target ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-500'}`}>
+                            {m.actual >= m.target ? '▲' : '▼'} 差距 {m.actual >= m.target ? '+' : ''}{formatNumber(m.actual - m.target)}K
                           </div>
-                        </div>
-                      </div>
-                      
-                      {/* 合計 vs 目標 差距 */}
-                      <div className={`flex items-center justify-center gap-2 text-sm font-medium mb-3 p-2 rounded-lg ${isOver ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-500'}`}>
-                        <span>合計 {formatNumber(Math.round(totalPerformance))}K</span>
-                        <span>|</span>
-                        <span>{isOver ? '▲' : '▼'} {isOver ? '+' : ''}{formatNumber(Math.round(gap))}K</span>
-                      </div>
-                      
-                      {/* 進度條（簡化版，不顯示數字） */}
-                      <div className="relative h-4 bg-gray-200 rounded-full overflow-hidden mb-2">
-                        {/* 目標線 100% 位置 */}
-                        <div className="absolute right-0 top-0 h-full w-0.5 bg-gray-400 z-10"></div>
-                        {/* 堆疊進度 */}
-                        <div className="h-full flex">
-                          {actualPct > 0 && (
+                          
+                          {/* 進度條 - 只顯示已出貨 */}
+                          <div className="relative h-4 bg-gray-200 rounded-full overflow-hidden mb-2">
+                            <div className="absolute right-0 top-0 h-full w-0.5 bg-gray-400 z-10"></div>
                             <div className="h-full bg-green-500" style={{ width: `${Math.min(actualPct, 100)}%` }}></div>
+                          </div>
+                          
+                          {/* ⚠️ 警告：過去月份還有預測案件 */}
+                          {hasStaleForecasts && (
+                            <div className="mt-3 p-3 bg-orange-100 border border-orange-300 rounded-lg">
+                              <div className="flex items-center gap-2 text-orange-700 font-medium text-sm mb-1">
+                                ⚠️ 有 {formatNumber(Math.round(m.forecast))}K 預測案件需要調整！
+                              </div>
+                              <div className="text-xs text-orange-600">
+                                這些案件的預計出貨時間已過期，請更新出貨日期或標記為失敗
+                              </div>
+                            </div>
                           )}
-                          {p25Pct > 0 && (
-                            <div className="h-full" style={{ width: `${p25Pct}%`, backgroundColor: '#5DADE2' }}></div>
+                        </>
+                      ) : (
+                        <>
+                          {/* 當月/未來：顯示目標 vs 已出貨 vs 預測 */}
+                          <div className="grid grid-cols-3 gap-2 mb-3">
+                            <div className="text-center p-2 bg-gray-100 rounded-lg">
+                              <div className="text-xs text-gray-500 mb-1">🎯 目標</div>
+                              <div className="text-lg font-bold text-gray-700">{formatNumber(m.target)}K</div>
+                            </div>
+                            <div className="text-center p-2 bg-green-100 rounded-lg">
+                              <div className="text-xs text-gray-500 mb-1">✅ 已出貨</div>
+                              <div className="text-lg font-bold text-green-600">
+                                {m.actual > 0 ? `${formatNumber(m.actual)}K` : '-'}
+                              </div>
+                            </div>
+                            <div className="text-center p-2 bg-purple-50 rounded-lg">
+                              <div className="text-xs text-gray-500 mb-1">📊 預測</div>
+                              <div className="text-lg font-bold text-purple-600">
+                                {m.forecast > 0 ? `${formatNumber(Math.round(m.forecast))}K` : '-'}
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* 合計 vs 目標 差距 */}
+                          <div className={`flex items-center justify-center gap-2 text-sm font-medium mb-3 p-2 rounded-lg ${isOver ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-500'}`}>
+                            <span>合計 {formatNumber(Math.round(totalPerformance))}K</span>
+                            <span>|</span>
+                            <span>{isOver ? '▲' : '▼'} {isOver ? '+' : ''}{formatNumber(Math.round(gap))}K</span>
+                          </div>
+                          
+                          {/* 進度條 */}
+                          <div className="relative h-4 bg-gray-200 rounded-full overflow-hidden mb-2">
+                            <div className="absolute right-0 top-0 h-full w-0.5 bg-gray-400 z-10"></div>
+                            <div className="h-full flex">
+                              {actualPct > 0 && (
+                                <div className="h-full bg-green-500" style={{ width: `${Math.min(actualPct, 100)}%` }}></div>
+                              )}
+                              {p25Pct > 0 && (
+                                <div className="h-full" style={{ width: `${p25Pct}%`, backgroundColor: '#5DADE2' }}></div>
+                              )}
+                              {p50Pct > 0 && (
+                                <div className="h-full" style={{ width: `${p50Pct}%`, backgroundColor: '#E67E22' }}></div>
+                              )}
+                              {p75Pct > 0 && (
+                                <div className="h-full" style={{ width: `${p75Pct}%`, backgroundColor: '#F4D03F' }}></div>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {/* 預測明細 */}
+                          {m.forecast > 0 && (
+                            <div className="flex flex-wrap gap-2 text-xs justify-center">
+                              {m.actual > 0 && (
+                                <span className="flex items-center gap-1 px-2 py-1 bg-green-100 rounded-full">
+                                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                                  已出貨 {formatNumber(m.actual)}
+                                </span>
+                              )}
+                              {mf.prob25 > 0 && (
+                                <span className="flex items-center gap-1 px-2 py-1 rounded-full" style={{backgroundColor: '#5DADE220'}}>
+                                  <span className="w-2 h-2 rounded-full" style={{backgroundColor: '#5DADE2'}}></span>
+                                  25% {formatNumber(Math.round(mf.prob25))}
+                                </span>
+                              )}
+                              {mf.prob50 > 0 && (
+                                <span className="flex items-center gap-1 px-2 py-1 rounded-full" style={{backgroundColor: '#E67E2220'}}>
+                                  <span className="w-2 h-2 rounded-full" style={{backgroundColor: '#E67E22'}}></span>
+                                  50% {formatNumber(Math.round(mf.prob50))}
+                                </span>
+                              )}
+                              {mf.prob75 > 0 && (
+                                <span className="flex items-center gap-1 px-2 py-1 rounded-full" style={{backgroundColor: '#F4D03F20'}}>
+                                  <span className="w-2 h-2 rounded-full" style={{backgroundColor: '#F4D03F'}}></span>
+                                  75% {formatNumber(Math.round(mf.prob75))}
+                                </span>
+                              )}
+                            </div>
                           )}
-                          {p50Pct > 0 && (
-                            <div className="h-full" style={{ width: `${p50Pct}%`, backgroundColor: '#E67E22' }}></div>
-                          )}
-                          {p75Pct > 0 && (
-                            <div className="h-full" style={{ width: `${p75Pct}%`, backgroundColor: '#F4D03F' }}></div>
-                          )}
-                        </div>
-                      </div>
-                      
-                      {/* 業績明細（只在有預測時顯示） */}
-                      {(m.actual > 0 || m.forecast > 0) && (
-                        <div className="flex flex-wrap gap-2 text-xs justify-center">
-                          {m.actual > 0 && (
-                            <span className="flex items-center gap-1 px-2 py-1 bg-green-100 rounded-full">
-                              <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                              已出貨 {formatNumber(m.actual)}
-                            </span>
-                          )}
-                          {mf.prob25 > 0 && (
-                            <span className="flex items-center gap-1 px-2 py-1 rounded-full" style={{backgroundColor: '#5DADE220'}}>
-                              <span className="w-2 h-2 rounded-full" style={{backgroundColor: '#5DADE2'}}></span>
-                              25% {formatNumber(Math.round(mf.prob25))}
-                            </span>
-                          )}
-                          {mf.prob50 > 0 && (
-                            <span className="flex items-center gap-1 px-2 py-1 rounded-full" style={{backgroundColor: '#E67E2220'}}>
-                              <span className="w-2 h-2 rounded-full" style={{backgroundColor: '#E67E22'}}></span>
-                              50% {formatNumber(Math.round(mf.prob50))}
-                            </span>
-                          )}
-                          {mf.prob75 > 0 && (
-                            <span className="flex items-center gap-1 px-2 py-1 rounded-full" style={{backgroundColor: '#F4D03F20'}}>
-                              <span className="w-2 h-2 rounded-full" style={{backgroundColor: '#F4D03F'}}></span>
-                              75% {formatNumber(Math.round(mf.prob75))}
-                            </span>
-                          )}
-                        </div>
+                        </>
                       )}
                     </div>
                   )
