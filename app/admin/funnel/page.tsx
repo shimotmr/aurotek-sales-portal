@@ -20,14 +20,12 @@ interface FunnelStage {
   minProb: number
   maxProb: number
   color: string
-  bgColor: string
 }
 
 const FUNNEL_STAGES: FunnelStage[] = [
-  { label: '25%', minProb: 0, maxProb: 25, color: '#ef4444', bgColor: '#fef2f2' },
-  { label: '50%', minProb: 26, maxProb: 50, color: '#f59e0b', bgColor: '#fffbeb' },
-  { label: '75%', minProb: 51, maxProb: 75, color: '#3b82f6', bgColor: '#eff6ff' },
-  { label: '100%', minProb: 76, maxProb: 100, color: '#10b981', bgColor: '#ecfdf5' },
+  { label: '25', minProb: 0, maxProb: 25, color: '#5DADE2' },
+  { label: '50', minProb: 26, maxProb: 50, color: '#58D68D' },
+  { label: '75', minProb: 51, maxProb: 75, color: '#F4D03F' },
 ]
 
 export default function FunnelPage() {
@@ -37,7 +35,6 @@ export default function FunnelPage() {
   const [filterType, setFilterType] = useState<'all' | 'rep' | 'dealer'>('all')
   const [filterValue, setFilterValue] = useState<string>('')
 
-  // Load cases data
   useEffect(() => {
     fetch('/data/cases.json')
       .then(res => res.json())
@@ -48,7 +45,6 @@ export default function FunnelPage() {
       .catch(() => setLoading(false))
   }, [])
 
-  // Get unique reps and dealers
   const { reps, dealers } = useMemo(() => {
     const repSet = new Set<string>()
     const dealerSet = new Set<string>()
@@ -62,7 +58,6 @@ export default function FunnelPage() {
     }
   }, [cases])
 
-  // Filter cases (only 進行中)
   const filteredCases = useMemo(() => {
     return cases.filter(c => {
       if (c.stage !== '進行中') return false
@@ -72,31 +67,25 @@ export default function FunnelPage() {
     })
   }, [cases, filterType, filterValue])
 
-  // Calculate funnel data
   const funnelData = useMemo(() => {
     return FUNNEL_STAGES.map(stage => {
       const stageCases = filteredCases.filter(c => 
         c.probability >= stage.minProb && c.probability <= stage.maxProb
       )
       const totalAmount = stageCases.reduce((sum, c) => sum + (c.amount || 0), 0)
-      const totalExpected = stageCases.reduce((sum, c) => sum + (c.expected || 0), 0)
       return {
         ...stage,
         count: stageCases.length,
         amount: totalAmount,
-        expected: totalExpected
       }
     })
   }, [filteredCases])
 
-  // Max count for width calculation
-  const maxCount = Math.max(...funnelData.map(d => d.count), 1)
-
-  // Handle click on funnel stage
   const handleStageClick = (stage: FunnelStage) => {
     const params = new URLSearchParams()
     params.set('probMin', stage.minProb.toString())
     params.set('probMax', stage.maxProb.toString())
+    params.set('stage', '進行中')
     if (filterType === 'rep' && filterValue) {
       params.set('rep', filterValue)
     }
@@ -106,10 +95,13 @@ export default function FunnelPage() {
     router.push(`/cases?${params.toString()}`)
   }
 
-  // Handle filter change
   const handleFilterTypeChange = (type: 'all' | 'rep' | 'dealer') => {
     setFilterType(type)
     setFilterValue('')
+  }
+
+  const formatAmount = (amount: number) => {
+    return Math.round(amount).toLocaleString('zh-TW')
   }
 
   if (loading) {
@@ -118,6 +110,42 @@ export default function FunnelPage() {
         <div className="text-gray-500">載入中...</div>
       </div>
     )
+  }
+
+  // SVG Funnel dimensions
+  const svgWidth = 500
+  const svgHeight = 300
+  const funnelTopWidth = 400
+  const funnelBottomWidth = 80
+  const funnelStartX = (svgWidth - funnelTopWidth) / 2
+  const totalLayers = funnelData.length
+
+  // Calculate trapezoid points for each layer
+  const getTrapezoidPoints = (index: number) => {
+    const layerHeight = svgHeight / totalLayers
+    const topY = index * layerHeight
+    const bottomY = (index + 1) * layerHeight
+    
+    // Width narrows linearly from top to bottom
+    const topWidthRatio = 1 - (index / totalLayers)
+    const bottomWidthRatio = 1 - ((index + 1) / totalLayers)
+    
+    const topWidth = funnelBottomWidth + (funnelTopWidth - funnelBottomWidth) * topWidthRatio
+    const bottomWidth = funnelBottomWidth + (funnelTopWidth - funnelBottomWidth) * bottomWidthRatio
+    
+    const topLeftX = (svgWidth - topWidth) / 2
+    const topRightX = topLeftX + topWidth
+    const bottomLeftX = (svgWidth - bottomWidth) / 2
+    const bottomRightX = bottomLeftX + bottomWidth
+    
+    return `${topLeftX},${topY} ${topRightX},${topY} ${bottomRightX},${bottomY} ${bottomLeftX},${bottomY}`
+  }
+
+  // Get label position for each layer
+  const getLabelPosition = (index: number) => {
+    const layerHeight = svgHeight / totalLayers
+    const y = index * layerHeight + layerHeight / 2
+    return { x: svgWidth + 20, y }
   }
 
   return (
@@ -134,12 +162,10 @@ export default function FunnelPage() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-8">
+      <main className="max-w-4xl mx-auto px-4 py-8">
         {/* Filter Section */}
         <div className="bg-white p-6 rounded-xl shadow-sm mb-6">
-          <h2 className="text-lg font-bold mb-4">🔍 篩選條件</h2>
           <div className="flex flex-wrap gap-4 items-center">
-            {/* Filter Type */}
             <div className="flex gap-2">
               <button
                 onClick={() => handleFilterTypeChange('all')}
@@ -173,7 +199,6 @@ export default function FunnelPage() {
               </button>
             </div>
 
-            {/* Filter Value Selector */}
             {filterType === 'rep' && (
               <select
                 value={filterValue}
@@ -199,126 +224,76 @@ export default function FunnelPage() {
               </select>
             )}
           </div>
-
-          {/* Current Filter Display */}
-          {(filterType !== 'all' && filterValue) && (
-            <div className="mt-4 text-sm text-gray-600">
-              目前篩選：<span className="font-medium text-blue-600">
-                {filterType === 'rep' ? '營業員' : '經銷商'} - {filterValue}
-              </span>
-            </div>
-          )}
         </div>
 
         {/* Funnel Chart */}
-        <div className="bg-white p-6 rounded-xl shadow-sm mb-6">
-          <h2 className="text-lg font-bold mb-6">🎯 銷售漏斗 (進行中案件)</h2>
+        <div className="bg-white p-8 rounded-xl shadow-sm">
+          <h2 className="text-xl font-bold text-center text-gray-700 mb-8">
+            Funnel分析
+            {filterType === 'rep' && filterValue && `（${filterValue}）`}
+            {filterType === 'dealer' && filterValue && `（${filterValue}）`}
+            {filterType === 'all' && '（通路營業部）'}
+          </h2>
           
-          <div className="flex flex-col items-center gap-2">
-            {funnelData.map((stage, index) => {
-              // Calculate width: top is widest, bottom is narrowest
-              // But width should also reflect the actual count
-              const baseWidth = 100 - (index * 15) // 100%, 85%, 70%, 55%
-              const countRatio = stage.count / maxCount
-              const width = Math.max(baseWidth * countRatio, 20) // minimum 20%
-              
-              return (
-                <div
-                  key={stage.label}
-                  onClick={() => handleStageClick(stage)}
-                  className="relative cursor-pointer transition-all hover:scale-105 hover:shadow-lg"
-                  style={{
-                    width: `${Math.max(85 - index * 15, 40)}%`,
-                    clipPath: index === funnelData.length - 1
-                      ? 'polygon(10% 0%, 90% 0%, 90% 100%, 10% 100%)'
-                      : 'polygon(5% 0%, 95% 0%, 90% 100%, 10% 100%)',
-                  }}
-                >
-                  <div
-                    className="p-4 md:p-6 text-center rounded-lg border-2"
-                    style={{
-                      backgroundColor: stage.bgColor,
-                      borderColor: stage.color,
-                    }}
+          <div className="flex justify-center">
+            <svg 
+              viewBox={`0 0 ${svgWidth + 150} ${svgHeight + 20}`}
+              className="w-full max-w-2xl"
+              style={{ height: 'auto' }}
+            >
+              {/* Funnel layers */}
+              {funnelData.map((stage, index) => (
+                <g key={stage.label}>
+                  {/* Trapezoid */}
+                  <polygon
+                    points={getTrapezoidPoints(index)}
+                    fill={stage.color}
+                    className="cursor-pointer transition-opacity hover:opacity-80"
+                    onClick={() => handleStageClick(stage)}
+                  />
+                  
+                  {/* Right side labels */}
+                  <text
+                    x={getLabelPosition(index).x}
+                    y={getLabelPosition(index).y - 8}
+                    fill={stage.color}
+                    fontSize="18"
+                    fontWeight="bold"
                   >
-                    <div className="flex flex-col md:flex-row justify-between items-center gap-2">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className="text-lg md:text-xl font-bold"
-                          style={{ color: stage.color }}
-                        >
-                          {stage.label}
-                        </span>
-                        <span className="text-gray-600 text-sm">成交率</span>
-                      </div>
-                      
-                      <div className="flex items-center gap-4 md:gap-6">
-                        <div className="text-center">
-                          <div className="text-xl md:text-2xl font-bold" style={{ color: stage.color }}>
-                            {stage.count}
-                          </div>
-                          <div className="text-xs text-gray-500">案件數</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-lg md:text-xl font-bold text-gray-700">
-                            {(stage.amount / 1000).toFixed(0)}K
-                          </div>
-                          <div className="text-xs text-gray-500">金額</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-lg md:text-xl font-bold text-green-600">
-                            {(stage.expected / 1000).toFixed(0)}K
-                          </div>
-                          <div className="text-xs text-gray-500">預估</div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Click hint */}
-                    <div className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 opacity-0 group-hover:opacity-100 transition">
-                      →
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
+                    {stage.label}
+                  </text>
+                  <text
+                    x={getLabelPosition(index).x}
+                    y={getLabelPosition(index).y + 16}
+                    fill="#666"
+                    fontSize="16"
+                  >
+                    {formatAmount(stage.amount)}
+                  </text>
+                </g>
+              ))}
+            </svg>
           </div>
 
-          <p className="text-center text-sm text-gray-500 mt-4">
-            💡 點擊任一區塊可查看該成交率的案件列表
+          <p className="text-center text-sm text-gray-500 mt-6">
+            💡 點擊漏斗區塊可查看該成交率的案件列表
           </p>
         </div>
 
         {/* Summary Stats */}
-        <div className="bg-white p-6 rounded-xl shadow-sm">
-          <h2 className="text-lg font-bold mb-4">📈 漏斗統計</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center p-4 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold text-gray-700">
-                {filteredCases.length}
+        <div className="bg-white p-6 rounded-xl shadow-sm mt-6">
+          <div className="grid grid-cols-3 gap-4 text-center">
+            {funnelData.map(stage => (
+              <div key={stage.label} className="p-4 rounded-lg" style={{ backgroundColor: `${stage.color}20` }}>
+                <div className="text-2xl font-bold" style={{ color: stage.color }}>
+                  {stage.count}
+                </div>
+                <div className="text-sm text-gray-600">{stage.label}% 案件數</div>
+                <div className="text-lg font-medium text-gray-700 mt-1">
+                  {formatAmount(stage.amount)} K
+                </div>
               </div>
-              <div className="text-sm text-gray-600">總案件數</div>
-            </div>
-            <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600">
-                {(filteredCases.reduce((sum, c) => sum + (c.amount || 0), 0) / 1000).toFixed(0)}K
-              </div>
-              <div className="text-sm text-gray-600">總金額</div>
-            </div>
-            <div className="text-center p-4 bg-green-50 rounded-lg">
-              <div className="text-2xl font-bold text-green-600">
-                {(filteredCases.reduce((sum, c) => sum + (c.expected || 0), 0) / 1000).toFixed(0)}K
-              </div>
-              <div className="text-sm text-gray-600">總預估值</div>
-            </div>
-            <div className="text-center p-4 bg-purple-50 rounded-lg">
-              <div className="text-2xl font-bold text-purple-600">
-                {filteredCases.length > 0 
-                  ? Math.round(filteredCases.reduce((sum, c) => sum + (c.probability || 0), 0) / filteredCases.length)
-                  : 0}%
-              </div>
-              <div className="text-sm text-gray-600">平均成交率</div>
-            </div>
+            ))}
           </div>
         </div>
       </main>
