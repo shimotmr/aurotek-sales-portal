@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server'
-import Imap from 'imap'
 
 export async function POST(request: Request) {
   try {
@@ -9,18 +8,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: '請輸入帳號和密碼' }, { status: 400 })
     }
 
-    // 確保是 @aurotek.com 或 @aurotek.co 的帳號
-    const email = username.includes('@') ? username : `${username}@aurotek.com`
+    // 確保帳號格式正確
+    const account = username.includes('@') ? username : `${username}@aurotek.com`
     
-    // 用 IMAP 驗證 Zimbra 帳號
-    const isValid = await verifyZimbraCredentials(email, password)
+    // 用 Zimbra SOAP API 驗證
+    const isValid = await verifyZimbraCredentials(account, password)
     
     if (isValid) {
       return NextResponse.json({ 
         success: true, 
         user: { 
-          email,
-          name: email.split('@')[0]
+          email: account,
+          name: account.split('@')[0]
         }
       })
     } else {
@@ -32,29 +31,48 @@ export async function POST(request: Request) {
   }
 }
 
-function verifyZimbraCredentials(email: string, password: string): Promise<boolean> {
-  return new Promise((resolve) => {
-    const imap = new Imap({
-      user: email,
-      password: password,
-      host: 'mail.aurotek.com',
-      port: 993,
-      tls: true,
-      tlsOptions: { rejectUnauthorized: false },
-      connTimeout: 10000,
-      authTimeout: 10000
+async function verifyZimbraCredentials(account: string, password: string): Promise<boolean> {
+  const zimbraUrl = 'https://webmail.aurotek.com/service/soap'
+  
+  // Zimbra SOAP AuthRequest
+  const soapRequest = `<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">
+  <soap:Body>
+    <AuthRequest xmlns="urn:zimbraAccount">
+      <account by="name">${escapeXml(account)}</account>
+      <password>${escapeXml(password)}</password>
+    </AuthRequest>
+  </soap:Body>
+</soap:Envelope>`
+
+  try {
+    const response = await fetch(zimbraUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/soap+xml; charset=utf-8',
+      },
+      body: soapRequest,
     })
 
-    imap.once('ready', () => {
-      imap.end()
-      resolve(true)
-    })
+    const responseText = await response.text()
+    
+    // 檢查是否驗證成功（回應包含 authToken）
+    if (responseText.includes('authToken') && !responseText.includes('AUTH_FAILED')) {
+      return true
+    }
+    
+    return false
+  } catch (error) {
+    console.error('Zimbra SOAP error:', error)
+    return false
+  }
+}
 
-    imap.once('error', (err: Error) => {
-      console.log('IMAP auth failed:', err.message)
-      resolve(false)
-    })
-
-    imap.connect()
-  })
+function escapeXml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;')
 }
