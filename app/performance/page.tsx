@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 
 interface MonthStat {
   month: number
@@ -46,6 +47,32 @@ interface PerformanceData {
   currentMonth: number
 }
 
+interface Case {
+  id: string
+  stage: string
+  rep: string
+  dealer: string
+  probability: number
+  amount: number
+}
+
+interface CasesData {
+  cases: Case[]
+}
+
+// 目前在職的業務員（與 admin/team 同步）
+const ACTIVE_REPS = ['喬紹恆']
+
+// 經銷商清單（有效的經銷商）
+const VALID_DEALERS = ['阜爾運通', '禾煜科技', '智領未來', '禾達工業', '季河資訊', '鋥承', '鴻匠', '傑融科技', '谷得智能', '瑞興']
+
+// 漏斗階段（只有 25%, 50%, 75%）
+const FUNNEL_STAGES = [
+  { label: '25', minProb: 0, maxProb: 25, color: '#5DADE2' },
+  { label: '50', minProb: 26, maxProb: 50, color: '#58D68D' },
+  { label: '75', minProb: 51, maxProb: 75, color: '#F4D03F' },
+]
+
 function formatNumber(num: number): string {
   return num.toLocaleString('zh-TW')
 }
@@ -63,15 +90,25 @@ function getStatusBg(rate: number): string {
 }
 
 export default function PerformancePage() {
+  const router = useRouter()
   const [data, setData] = useState<PerformanceData | null>(null)
+  const [cases, setCases] = useState<Case[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  
+  // 漏斗篩選
+  const [funnelFilter, setFunnelFilter] = useState<'all' | 'rep' | 'dealer'>('all')
+  const [selectedRep, setSelectedRep] = useState<string>('')
+  const [selectedDealer, setSelectedDealer] = useState<string>('')
 
   useEffect(() => {
-    fetch('/api/performance')
-      .then(res => res.json())
-      .then(data => {
-        setData(data)
+    Promise.all([
+      fetch('/api/performance').then(res => res.json()),
+      fetch('/data/cases.json').then(res => res.json())
+    ])
+      .then(([perfData, casesData]) => {
+        setData(perfData)
+        setCases(casesData.cases || [])
         setLoading(false)
       })
       .catch(err => {
@@ -79,6 +116,42 @@ export default function PerformancePage() {
         setLoading(false)
       })
   }, [])
+
+  // 計算漏斗資料
+  const funnelData = useMemo(() => {
+    const filtered = cases.filter(c => {
+      if (c.stage !== '進行中') return false
+      if (funnelFilter === 'rep' && selectedRep && c.rep !== selectedRep) return false
+      if (funnelFilter === 'dealer' && selectedDealer && c.dealer !== selectedDealer) return false
+      return true
+    })
+
+    return FUNNEL_STAGES.map(stage => {
+      const stageCases = filtered.filter(c => 
+        c.probability >= stage.minProb && c.probability <= stage.maxProb
+      )
+      const totalAmount = stageCases.reduce((sum, c) => sum + (c.amount || 0), 0)
+      return { ...stage, count: stageCases.length, amount: totalAmount }
+    })
+  }, [cases, funnelFilter, selectedRep, selectedDealer])
+
+  // 漏斗點擊跳轉
+  const handleFunnelClick = (stage: typeof FUNNEL_STAGES[0]) => {
+    const params = new URLSearchParams()
+    params.set('probMin', stage.minProb.toString())
+    params.set('probMax', stage.maxProb.toString())
+    params.set('stage', '進行中')
+    if (funnelFilter === 'rep' && selectedRep) params.set('rep', selectedRep)
+    if (funnelFilter === 'dealer' && selectedDealer) params.set('dealer', selectedDealer)
+    router.push(`/cases?${params.toString()}`)
+  }
+
+  // 漏斗 SVG 計算
+  const maxAmount = Math.max(...funnelData.map(d => d.amount), 1)
+  const getWidthForAmount = (amount: number) => {
+    const ratio = amount / maxAmount
+    return 60 + 340 * (0.15 + ratio * 0.85)
+  }
 
   if (loading) {
     return (
@@ -287,6 +360,120 @@ export default function PerformancePage() {
               </tbody>
             </table>
           </div>
+        </div>
+
+        {/* 銷售漏斗 */}
+        <div className="bg-white rounded-lg shadow p-6 mb-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+            <h2 className="text-xl font-semibold">📊 Funnel分析（進行中案件）</h2>
+            
+            {/* 快速篩選 */}
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => { setFunnelFilter('all'); setSelectedRep(''); setSelectedDealer(''); }}
+                className={`px-3 py-1.5 rounded-full text-sm font-medium transition ${
+                  funnelFilter === 'all' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                全部
+              </button>
+              
+              {/* 業務員快速選擇 */}
+              {ACTIVE_REPS.map(rep => (
+                <button
+                  key={rep}
+                  onClick={() => { setFunnelFilter('rep'); setSelectedRep(rep); setSelectedDealer(''); }}
+                  className={`px-3 py-1.5 rounded-full text-sm font-medium transition ${
+                    funnelFilter === 'rep' && selectedRep === rep 
+                      ? 'bg-purple-500 text-white' 
+                      : 'bg-purple-50 text-purple-600 hover:bg-purple-100'
+                  }`}
+                >
+                  👤 {rep}
+                </button>
+              ))}
+              
+              {/* 經銷商下拉 */}
+              <select
+                value={funnelFilter === 'dealer' ? selectedDealer : ''}
+                onChange={(e) => {
+                  if (e.target.value) {
+                    setFunnelFilter('dealer')
+                    setSelectedDealer(e.target.value)
+                    setSelectedRep('')
+                  }
+                }}
+                className={`px-3 py-1.5 rounded-full text-sm font-medium border-0 cursor-pointer transition ${
+                  funnelFilter === 'dealer' ? 'bg-green-500 text-white' : 'bg-green-50 text-green-600'
+                }`}
+              >
+                <option value="">🏢 經銷商</option>
+                {VALID_DEALERS.map(dealer => (
+                  <option key={dealer} value={dealer}>{dealer}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* 漏斗圖 + 統計 */}
+          <div className="flex flex-col lg:flex-row gap-8 items-center">
+            {/* SVG 漏斗 */}
+            <div className="flex-1 flex justify-center">
+              <svg viewBox="0 0 650 250" className="w-full max-w-lg" style={{ height: 'auto' }}>
+                {funnelData.map((stage, index) => {
+                  const layerHeight = 250 / funnelData.length
+                  const topY = index * layerHeight
+                  const bottomY = (index + 1) * layerHeight
+                  const topWidth = getWidthForAmount(stage.amount)
+                  const bottomWidth = index < funnelData.length - 1 
+                    ? getWidthForAmount(funnelData[index + 1].amount)
+                    : 60
+                  const centerX = 250
+                  
+                  const points = `${centerX - topWidth/2},${topY} ${centerX + topWidth/2},${topY} ${centerX + bottomWidth/2},${bottomY} ${centerX - bottomWidth/2},${bottomY}`
+                  const labelX = centerX + topWidth/2 + 20
+                  const labelY = topY + layerHeight/2
+                  
+                  return (
+                    <g key={stage.label}>
+                      <polygon
+                        points={points}
+                        fill={stage.color}
+                        className="cursor-pointer transition-opacity hover:opacity-80"
+                        onClick={() => handleFunnelClick(stage)}
+                      />
+                      <text x={labelX} y={labelY - 6} fill={stage.color} fontSize="16" fontWeight="bold">
+                        {stage.label}
+                      </text>
+                      <text x={labelX} y={labelY + 14} fill="#666" fontSize="14">
+                        {formatNumber(Math.round(stage.amount))}
+                      </text>
+                    </g>
+                  )
+                })}
+              </svg>
+            </div>
+
+            {/* 統計卡片 */}
+            <div className="grid grid-cols-3 gap-3 lg:grid-cols-1 lg:gap-4">
+              {funnelData.map(stage => (
+                <div 
+                  key={stage.label} 
+                  className="p-3 rounded-lg text-center cursor-pointer hover:shadow-md transition"
+                  style={{ backgroundColor: `${stage.color}20` }}
+                  onClick={() => handleFunnelClick(stage)}
+                >
+                  <div className="text-xl font-bold" style={{ color: stage.color }}>{stage.count}</div>
+                  <div className="text-xs text-gray-600">{stage.label}% 案件</div>
+                  <div className="text-sm font-medium text-gray-700">{formatNumber(Math.round(stage.amount))}K</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <p className="text-center text-xs text-gray-400 mt-4">
+            💡 漏斗寬度依金額比例變化，點擊區塊查看案件明細
+          </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
