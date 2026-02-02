@@ -42,12 +42,18 @@ function CasesContent() {
   const searchParams = useSearchParams()
   const stageFilter = searchParams.get('stage')
   const dealerFilter = searchParams.get('dealer')
+  const repFilter = searchParams.get('rep')
+  const probMinFilter = searchParams.get('probMin')
+  const probMaxFilter = searchParams.get('probMax')
   
   const [data, setData] = useState<CasesData | null>(null)
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [selectedStage, setSelectedStage] = useState<string | null>(stageFilter)
   const [selectedDealer, setSelectedDealer] = useState<string | null>(dealerFilter)
+  const [selectedRep, setSelectedRep] = useState<string | null>(repFilter)
+  const [probMin, setProbMin] = useState<number | null>(probMinFilter ? parseInt(probMinFilter) : null)
+  const [probMax, setProbMax] = useState<number | null>(probMaxFilter ? parseInt(probMaxFilter) : null)
   const [sortField, setSortField] = useState<string>('id')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
 
@@ -64,7 +70,10 @@ function CasesContent() {
   useEffect(() => {
     setSelectedStage(stageFilter)
     setSelectedDealer(dealerFilter)
-  }, [stageFilter, dealerFilter])
+    setSelectedRep(repFilter)
+    setProbMin(probMinFilter ? parseInt(probMinFilter) : null)
+    setProbMax(probMaxFilter ? parseInt(probMaxFilter) : null)
+  }, [stageFilter, dealerFilter, repFilter, probMinFilter, probMaxFilter])
 
   if (loading) {
     return (
@@ -89,6 +98,15 @@ function CasesContent() {
   }
   if (selectedDealer) {
     filtered = filtered.filter(c => c.dealer === selectedDealer)
+  }
+  if (selectedRep) {
+    filtered = filtered.filter(c => c.rep === selectedRep)
+  }
+  if (probMin !== null) {
+    filtered = filtered.filter(c => c.probability >= probMin)
+  }
+  if (probMax !== null) {
+    filtered = filtered.filter(c => c.probability <= probMax)
   }
   if (search) {
     const q = search.toLowerCase()
@@ -197,9 +215,27 @@ function CasesContent() {
               <button onClick={() => setSelectedDealer(null)} className="ml-1 hover:text-green-900">✕</button>
             </span>
           )}
-          {(selectedStage || selectedDealer) && (
+          {selectedRep && (
+            <span className="inline-flex items-center bg-purple-100 text-purple-700 px-2 py-1 rounded">
+              業務：{selectedRep}
+              <button onClick={() => setSelectedRep(null)} className="ml-1 hover:text-purple-900">✕</button>
+            </span>
+          )}
+          {(probMin !== null || probMax !== null) && (
+            <span className="inline-flex items-center bg-orange-100 text-orange-700 px-2 py-1 rounded">
+              成交率：{probMin ?? 0}% - {probMax ?? 100}%
+              <button onClick={() => { setProbMin(null); setProbMax(null); }} className="ml-1 hover:text-orange-900">✕</button>
+            </span>
+          )}
+          {(selectedStage || selectedDealer || selectedRep || probMin !== null || probMax !== null) && (
             <button 
-              onClick={() => { setSelectedStage(null); setSelectedDealer(null); }}
+              onClick={() => { 
+                setSelectedStage(null); 
+                setSelectedDealer(null); 
+                setSelectedRep(null);
+                setProbMin(null);
+                setProbMax(null);
+              }}
               className="text-red-500 hover:text-red-700 text-xs"
             >
               清除所有篩選

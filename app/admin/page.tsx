@@ -172,6 +172,13 @@ export default function AdminPage() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* 銷售漏斗 */}
+          <Link href="/admin/funnel" className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition border-l-4 border-indigo-500">
+            <div className="text-3xl mb-3">📊</div>
+            <h2 className="text-lg font-bold mb-2">銷售漏斗</h2>
+            <p className="text-gray-600 text-sm">成交率分層分析、營業員/經銷商篩選</p>
+          </Link>
+
           {/* 目標管理 */}
           <Link href="/admin/targets" className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition border-l-4 border-blue-500">
             <div className="text-3xl mb-3">🎯</div>
