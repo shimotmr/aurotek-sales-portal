@@ -280,160 +280,138 @@ export default function PerformancePage() {
           </div>
         </div>
 
-        {/* 月度趨勢 - 響應式設計 */}
+        {/* 月度趨勢 - 分組長條圖 */}
         <div className="bg-white rounded-lg shadow p-4 md:p-6 mb-8">
-          <h2 className="text-xl font-semibold mb-4">📊 月度業績趨勢</h2>
-          
-          {/* 手機版：卡片式 */}
-          <div className="md:hidden space-y-3">
-            {data.monthlyStats.map(m => {
-              const isActual = m.type === 'actual'
-              const progressPercent = m.target > 0 ? Math.min((m.actual / m.target) * 100, 100) : 0
-              const forecastPercent = m.target > 0 ? Math.min((m.forecast / m.target) * 100, 100 - progressPercent) : 0
-              return (
-                <div key={m.month} className={`p-4 rounded-lg border ${m.month === currentMonth ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}`}>
-                  <div className="flex justify-between items-center mb-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg font-bold">{monthNames[m.month]}</span>
-                      {m.month === currentMonth && <span className="text-xs bg-blue-500 text-white px-2 py-0.5 rounded">當月</span>}
-                      {isActual ? <span className="text-xs text-gray-400">實際</span> : <span className="text-xs text-purple-500">預測</span>}
-                    </div>
-                    <span className={`text-xl font-bold ${getStatusColor(m.rate)}`}>{m.rate}%</span>
-                  </div>
-                  
-                  {/* 進度條 - 按成交率分色 */}
-                  {(() => {
-                    const mf = monthlyForecastByProb[m.month] || { prob25: 0, prob50: 0, prob75: 0, total: 0 }
-                    const total = mf.total || m.forecast
-                    const p25 = total > 0 ? (mf.prob25 / m.target) * 100 : 0
-                    const p50 = total > 0 ? (mf.prob50 / m.target) * 100 : 0
-                    const p75 = total > 0 ? (mf.prob75 / m.target) * 100 : 0
-                    return (
-                      <div className="w-full bg-gray-200 rounded-full h-3 mb-3 overflow-hidden">
-                        <div className="h-3 flex">
-                          <div className="h-3 bg-green-500" style={{ width: `${progressPercent}%` }}></div>
-                          {p25 > 0 && <div className="h-3" style={{ width: `${Math.min(p25, 100-progressPercent)}%`, backgroundColor: '#5DADE2' }}></div>}
-                          {p50 > 0 && <div className="h-3" style={{ width: `${Math.min(p50, 100-progressPercent-p25)}%`, backgroundColor: '#58D68D' }}></div>}
-                          {p75 > 0 && <div className="h-3" style={{ width: `${Math.min(p75, 100-progressPercent-p25-p50)}%`, backgroundColor: '#F4D03F' }}></div>}
-                        </div>
-                      </div>
-                    )
-                  })()}
-                  
-                  {/* 數據 - 顯示各成交率金額 */}
-                  {(() => {
-                    const mf = monthlyForecastByProb[m.month] || { prob25: 0, prob50: 0, prob75: 0, total: 0 }
-                    return (
-                      <div className="grid grid-cols-2 gap-2 text-center text-xs mb-2">
-                        <div>
-                          <div className="text-gray-500">已出貨</div>
-                          <div className="font-bold text-green-600">{formatNumber(m.actual)}</div>
-                        </div>
-                        <div>
-                          <div className="text-gray-500">目標</div>
-                          <div className="font-bold">{formatNumber(m.target)}</div>
-                        </div>
-                      </div>
-                    )
-                  })()}
-                  {m.forecast > 0 && (() => {
-                    const mf = monthlyForecastByProb[m.month] || { prob25: 0, prob50: 0, prob75: 0, total: 0 }
-                    return (
-                      <div className="flex justify-center gap-2 text-xs">
-                        {mf.prob25 > 0 && <span style={{color: '#5DADE2'}}>25%: {formatNumber(Math.round(mf.prob25))}</span>}
-                        {mf.prob50 > 0 && <span style={{color: '#58D68D'}}>50%: {formatNumber(Math.round(mf.prob50))}</span>}
-                        {mf.prob75 > 0 && <span style={{color: '#F4D03F'}}>75%: {formatNumber(Math.round(mf.prob75))}</span>}
-                      </div>
-                    )
-                  })()}
-                </div>
-              )
-            })}
+          <h2 className="text-xl font-semibold mb-2">📊 月度業績趨勢</h2>
+          <div className="flex flex-wrap gap-4 text-xs mb-4">
+            <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 bg-gray-400 rounded"></span>目標</span>
+            <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 bg-green-500 rounded"></span>已出貨</span>
+            <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded" style={{backgroundColor: '#5DADE2'}}></span>預測 25%</span>
+            <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded" style={{backgroundColor: '#58D68D'}}></span>預測 50%</span>
+            <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded" style={{backgroundColor: '#F4D03F'}}></span>預測 75%</span>
           </div>
-
-          {/* 桌面版：表格 */}
-          <div className="hidden md:block overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-2 px-4">月份</th>
-                  <th className="text-right py-2 px-4">已出貨(K)</th>
-                  <th className="text-right py-2 px-4">預測(K)</th>
-                  <th className="text-right py-2 px-4">目標(K)</th>
-                  <th className="text-right py-2 px-4">差距(K)</th>
-                  <th className="text-right py-2 px-4">達成率</th>
-                  <th className="py-2 px-4 w-48">進度</th>
-                </tr>
-              </thead>
-              <tbody>
+          
+          {/* 分組長條圖 */}
+          {(() => {
+            // 計算所有月份的最大值（用於統一比例）
+            const maxValue = Math.max(
+              ...data.monthlyStats.map(m => Math.max(m.target, m.actual + m.forecast))
+            )
+            
+            return (
+              <div className="space-y-4">
                 {data.monthlyStats.map(m => {
+                  const mf = monthlyForecastByProb[m.month] || { prob25: 0, prob50: 0, prob75: 0, total: 0 }
                   const isActual = m.type === 'actual'
+                  const totalPerformance = m.actual + m.forecast
+                  
+                  // 計算長條寬度百分比
+                  const targetWidth = maxValue > 0 ? (m.target / maxValue) * 100 : 0
+                  const actualWidth = maxValue > 0 ? (m.actual / maxValue) * 100 : 0
+                  const p25Width = maxValue > 0 ? (mf.prob25 / maxValue) * 100 : 0
+                  const p50Width = maxValue > 0 ? (mf.prob50 / maxValue) * 100 : 0
+                  const p75Width = maxValue > 0 ? (mf.prob75 / maxValue) * 100 : 0
+                  
+                  // 判斷超標或不足
+                  const isOver = totalPerformance > m.target
+                  const gap = totalPerformance - m.target
+                  
                   return (
-                    <tr key={m.month} className={`border-b hover:bg-gray-50 ${m.month === currentMonth ? 'bg-blue-50' : ''}`}>
-                      <td className="py-3 px-4 font-medium">
-                        {monthNames[m.month]}
-                        {m.month === currentMonth && <span className="ml-2 text-xs bg-blue-500 text-white px-2 py-0.5 rounded">當月</span>}
-                        {isActual && <span className="ml-2 text-xs text-gray-400">實際</span>}
-                        {!isActual && <span className="ml-2 text-xs text-purple-400">預測</span>}
-                      </td>
-                      <td className="text-right py-3 px-4 font-semibold text-green-600">
-                        {formatNumber(m.actual)}
-                      </td>
-                      <td className="text-right py-3 px-4">
-                        {(() => {
-                          const mf = monthlyForecastByProb[m.month] || { prob25: 0, prob50: 0, prob75: 0, total: 0 }
-                          if (m.forecast <= 0) return '-'
-                          return (
-                            <div className="text-xs">
-                              <div className="font-semibold text-gray-700">{formatNumber(m.forecast)}</div>
-                              {mf.prob25 > 0 && <div style={{color: '#5DADE2'}}>25%: {formatNumber(Math.round(mf.prob25))}</div>}
-                              {mf.prob50 > 0 && <div style={{color: '#58D68D'}}>50%: {formatNumber(Math.round(mf.prob50))}</div>}
-                              {mf.prob75 > 0 && <div style={{color: '#F4D03F'}}>75%: {formatNumber(Math.round(mf.prob75))}</div>}
+                    <div key={m.month} className={`p-3 rounded-lg border ${m.month === currentMonth ? 'border-blue-500 bg-blue-50' : 'border-gray-100'}`}>
+                      {/* 月份標題 */}
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-gray-800 w-12">{monthNames[m.month]}</span>
+                          {m.month === currentMonth && <span className="text-xs bg-blue-500 text-white px-2 py-0.5 rounded">當月</span>}
+                          {isActual ? <span className="text-xs text-gray-400">實際</span> : <span className="text-xs text-purple-500">預測</span>}
+                        </div>
+                        <div className="flex items-center gap-3 text-sm">
+                          <span className={`font-bold ${getStatusColor(m.rate)}`}>{m.rate}%</span>
+                          <span className={`text-xs ${isOver ? 'text-green-600' : 'text-red-500'}`}>
+                            {isOver ? '+' : ''}{formatNumber(Math.round(gap))}K
+                          </span>
+                        </div>
+                      </div>
+                      
+                      {/* 雙長條圖 */}
+                      <div className="space-y-1">
+                        {/* 目標長條 */}
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-500 w-14 text-right">目標</span>
+                          <div className="flex-1 bg-gray-100 rounded h-5 relative">
+                            <div 
+                              className="h-5 bg-gray-400 rounded flex items-center justify-end pr-2"
+                              style={{ width: `${Math.max(targetWidth, 1)}%` }}
+                            >
+                              <span className="text-xs text-white font-medium">{formatNumber(m.target)}</span>
                             </div>
-                          )
-                        })()}
-                      </td>
-                      <td className="text-right py-3 px-4">{formatNumber(m.target)}</td>
-                      <td className={`text-right py-3 px-4 ${m.gap >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {m.gap >= 0 ? '+' : ''}{formatNumber(m.gap)}
-                      </td>
-                      <td className={`text-right py-3 px-4 font-semibold ${getStatusColor(m.rate)}`}>
-                        {m.rate}%
-                      </td>
-                      <td className="py-3 px-4">
-                        {(() => {
-                          const mf = monthlyForecastByProb[m.month] || { prob25: 0, prob50: 0, prob75: 0, total: 0 }
-                          const actualPct = Math.min(m.actual / m.target * 100, 100)
-                          const p25Pct = m.target > 0 ? Math.min(mf.prob25 / m.target * 100, 100 - actualPct) : 0
-                          const p50Pct = m.target > 0 ? Math.min(mf.prob50 / m.target * 100, 100 - actualPct - p25Pct) : 0
-                          const p75Pct = m.target > 0 ? Math.min(mf.prob75 / m.target * 100, 100 - actualPct - p25Pct - p50Pct) : 0
-                          
-                          return (
-                            <>
-                              <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
-                                <div className="h-4 flex">
-                                  <div className="h-4 bg-green-500" style={{ width: `${actualPct}%` }}></div>
-                                  {p25Pct > 0 && <div className="h-4" style={{ width: `${p25Pct}%`, backgroundColor: '#5DADE2' }}></div>}
-                                  {p50Pct > 0 && <div className="h-4" style={{ width: `${p50Pct}%`, backgroundColor: '#58D68D' }}></div>}
-                                  {p75Pct > 0 && <div className="h-4" style={{ width: `${p75Pct}%`, backgroundColor: '#F4D03F' }}></div>}
+                          </div>
+                        </div>
+                        
+                        {/* 業績長條（堆疊：已出貨 + 各成交率預測）*/}
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-500 w-14 text-right">業績</span>
+                          <div className="flex-1 bg-gray-100 rounded h-5 relative overflow-hidden">
+                            <div className="h-5 flex">
+                              {/* 已出貨 */}
+                              {actualWidth > 0 && (
+                                <div 
+                                  className="h-5 bg-green-500 flex items-center justify-center"
+                                  style={{ width: `${actualWidth}%` }}
+                                >
+                                  {actualWidth > 8 && <span className="text-xs text-white font-medium">{formatNumber(m.actual)}</span>}
                                 </div>
-                              </div>
-                              <div className="text-xs text-gray-400 mt-1 flex flex-wrap gap-1">
-                                <span><span className="inline-block w-3 h-2 bg-green-500 mr-0.5"></span>出貨</span>
-                                {mf.prob25 > 0 && <span><span className="inline-block w-3 h-2 mr-0.5" style={{backgroundColor: '#5DADE2'}}></span>25%</span>}
-                                {mf.prob50 > 0 && <span><span className="inline-block w-3 h-2 mr-0.5" style={{backgroundColor: '#58D68D'}}></span>50%</span>}
-                                {mf.prob75 > 0 && <span><span className="inline-block w-3 h-2 mr-0.5" style={{backgroundColor: '#F4D03F'}}></span>75%</span>}
-                              </div>
-                            </>
-                          )
-                        })()}
-                      </td>
-                    </tr>
+                              )}
+                              {/* 25% 預測 */}
+                              {p25Width > 0 && (
+                                <div 
+                                  className="h-5 flex items-center justify-center"
+                                  style={{ width: `${p25Width}%`, backgroundColor: '#5DADE2' }}
+                                >
+                                  {p25Width > 6 && <span className="text-xs text-white">{Math.round(mf.prob25)}</span>}
+                                </div>
+                              )}
+                              {/* 50% 預測 */}
+                              {p50Width > 0 && (
+                                <div 
+                                  className="h-5 flex items-center justify-center"
+                                  style={{ width: `${p50Width}%`, backgroundColor: '#58D68D' }}
+                                >
+                                  {p50Width > 6 && <span className="text-xs text-white">{Math.round(mf.prob50)}</span>}
+                                </div>
+                              )}
+                              {/* 75% 預測 */}
+                              {p75Width > 0 && (
+                                <div 
+                                  className="h-5 flex items-center justify-center"
+                                  style={{ width: `${p75Width}%`, backgroundColor: '#F4D03F' }}
+                                >
+                                  {p75Width > 6 && <span className="text-xs text-white">{Math.round(mf.prob75)}</span>}
+                                </div>
+                              )}
+                            </div>
+                            {/* 總計標籤（放在長條外側） */}
+                            {totalPerformance > 0 && (
+                              <span 
+                                className="absolute top-0 h-5 flex items-center text-xs font-medium text-gray-600 pl-1"
+                                style={{ left: `${actualWidth + p25Width + p50Width + p75Width}%` }}
+                              >
+                                {formatNumber(Math.round(totalPerformance))}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   )
                 })}
-              </tbody>
-            </table>
-          </div>
+              </div>
+            )
+          })()}
+          
+          <p className="text-xs text-gray-400 mt-4 text-center">
+            ⚠️ 過去月份顯示實際業績（已出貨），當月及未來顯示預測
+          </p>
         </div>
 
         {/* 銷售漏斗 */}
