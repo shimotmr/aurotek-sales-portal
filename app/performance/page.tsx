@@ -343,16 +343,8 @@ export default function PerformancePage() {
           </div>
         </div>
 
-        {/* 外部連結 */}
-        <div className="mt-8 text-center">
-          <a 
-            href="https://docs.google.com/spreadsheets/d/1dRbzCeK0oVOt7S52H5lf6mgIR-6O-7hqIgh-2d001N4/" 
-            target="_blank"
-            className="text-blue-600 hover:underline"
-          >
-            📊 開啟 Google Sheets 完整資料
-          </a>
-        </div>
+        {/* 底部間距 */}
+        <div className="mt-8"></div>
       </div>
     </main>
   )
