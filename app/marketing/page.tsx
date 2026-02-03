@@ -47,11 +47,11 @@ export default function MarketingPage() {
 
           {/* Walker Docs */}
           <Link 
-            href="/docs/walker-tienkung/docs/intro.html"
+            href="/marketing/walker-docs"
             className="block bg-white/10 backdrop-blur rounded-2xl p-8 text-white hover:bg-white/20 transition transform hover:scale-105"
           >
             <div className="text-6xl mb-4">🤖</div>
-            <h2 className="text-2xl font-bold mb-2">Walker 天空文檔</h2>
+            <h2 className="text-2xl font-bold mb-2">Walker 天工文檔</h2>
             <p className="text-white/80">
               Walker 機器人技術文檔、SDK、用戶手冊
             </p>
