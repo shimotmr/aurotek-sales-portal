@@ -14,7 +14,7 @@ export default function MarketingPage() {
         </div>
 
         {/* Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Videos */}
           <Link 
             href="/marketing/videos"
@@ -42,6 +42,21 @@ export default function MarketingPage() {
             </p>
             <div className="mt-4 text-sm text-white/60">
               Google Slides · 播放清單 · 依序播放
+            </div>
+          </Link>
+
+          {/* Walker Docs */}
+          <Link 
+            href="/docs/walker-tienkung/docs/intro.html"
+            className="block bg-white/10 backdrop-blur rounded-2xl p-8 text-white hover:bg-white/20 transition transform hover:scale-105"
+          >
+            <div className="text-6xl mb-4">🤖</div>
+            <h2 className="text-2xl font-bold mb-2">Walker 天空文檔</h2>
+            <p className="text-white/80">
+              Walker 機器人技術文檔、SDK、用戶手冊
+            </p>
+            <div className="mt-4 text-sm text-white/60">
+              UBTECH · 用戶手冊 · SDK 文檔
             </div>
           </Link>
         </div>
