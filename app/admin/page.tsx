@@ -2,152 +2,36 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 export default function AdminPage() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const [rememberMe, setRememberMe] = useState(true)
-  const [error, setError] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [currentUser, setCurrentUser] = useState<{ email: string; name: string } | null>(null)
+  const router = useRouter()
+  const [currentUser, setCurrentUser] = useState<{ name: string; email: string } | null>(null)
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false)
 
   useEffect(() => {
-    const auth = localStorage.getItem('admin_auth')
-    const user = localStorage.getItem('admin_user')
-    const savedUsername = localStorage.getItem('admin_saved_username')
-    
-    if (auth === 'true' && user) {
-      setIsLoggedIn(true)
-      setCurrentUser(JSON.parse(user))
+    // 從 cookie 讀取用戶資訊
+    const getCookie = (name: string) => {
+      const value = `; ${document.cookie}`
+      const parts = value.split(`; ${name}=`)
+      if (parts.length === 2) return parts.pop()?.split(';').shift()
+      return ''
     }
-    if (savedUsername) {
-      setUsername(savedUsername)
+    
+    const userName = getCookie('user_name')
+    const userEmail = getCookie('user_email')
+    const superAdmin = getCookie('is_super_admin') === 'true'
+    
+    if (userName && userEmail) {
+      setCurrentUser({ name: userName, email: userEmail })
+      setIsSuperAdmin(superAdmin)
     }
   }, [])
 
-  const handleLogin = async () => {
-    if (!username || !password) {
-      setError('請輸入帳號和密碼')
-      return
-    }
-
-    setIsLoading(true)
-    setError('')
-
-    try {
-      const response = await fetch('/api/auth/zimbra', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      })
-
-      const data = await response.json()
-
-      if (data.success) {
-        localStorage.setItem('admin_auth', 'true')
-        localStorage.setItem('admin_user', JSON.stringify(data.user))
-        if (rememberMe) {
-          localStorage.setItem('admin_saved_username', username)
-        } else {
-          localStorage.removeItem('admin_saved_username')
-        }
-        setIsLoggedIn(true)
-        setCurrentUser(data.user)
-        setError('')
-      } else {
-        setError(data.message || '登入失敗')
-      }
-    } catch (err) {
-      setError('連線錯誤，請稍後再試')
-    }
-
-    setIsLoading(false)
-  }
-
-  const handleLogout = () => {
-    localStorage.removeItem('admin_auth')
-    localStorage.removeItem('admin_user')
-    setIsLoggedIn(false)
-    setCurrentUser(null)
-  }
-
-  if (!isLoggedIn) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-        <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">
-          <h1 className="text-xl font-bold text-center text-gray-700 mb-8">
-            請輸入 AD 帳號/密碼登入系統
-          </h1>
-          
-          <div className="space-y-4">
-            {/* 帳號欄位 */}
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="u1612"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="w-full p-4 pr-12 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none text-gray-700"
-              />
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              </div>
-            </div>
-
-            {/* 密碼欄位 */}
-            <div className="relative">
-              <input
-                type="password"
-                placeholder="密碼"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-                className="w-full p-4 pr-12 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none text-gray-700"
-              />
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-              </div>
-            </div>
-
-            {/* 記住帳號 */}
-            <label className="flex items-center gap-3 cursor-pointer">
-              <div 
-                onClick={() => setRememberMe(!rememberMe)}
-                className={`w-6 h-6 rounded flex items-center justify-center border-2 transition ${
-                  rememberMe ? 'bg-blue-500 border-blue-500' : 'border-gray-300'
-                }`}
-              >
-                {rememberMe && (
-                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                  </svg>
-                )}
-              </div>
-              <span className="text-gray-700 font-medium">記住我的帳號</span>
-            </label>
-          </div>
-
-          {error && <p className="text-red-500 text-sm mt-4 text-center">{error}</p>}
-          
-          <button
-            onClick={handleLogin}
-            disabled={isLoading}
-            className="w-full bg-blue-500 text-white py-4 rounded-lg font-bold text-lg hover:bg-blue-600 transition mt-6 disabled:opacity-50"
-          >
-            {isLoading ? '驗證中...' : '登 入'}
-          </button>
-          
-          <Link href="/" className="block text-center mt-6 text-gray-400 hover:text-gray-600 text-sm">
-            ← 返回首頁
-          </Link>
-        </div>
-      </div>
-    )
+  const handleLogout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST' })
+    router.push('/login')
+    router.refresh()
   }
 
   return (
@@ -227,6 +111,22 @@ export default function AdminPage() {
             <h2 className="text-lg font-bold mb-2">系統設定</h2>
             <p className="text-gray-600 text-sm">API 設定、通知設定</p>
           </Link>
+
+          {/* 系統日誌 */}
+          <Link href="/admin/logs" className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition border-l-4 border-cyan-500">
+            <div className="text-3xl mb-3">📋</div>
+            <h2 className="text-lg font-bold mb-2">系統日誌</h2>
+            <p className="text-gray-600 text-sm">查看登入記錄、操作記錄</p>
+          </Link>
+
+          {/* 管理員管理 - 只有超級管理員可見 */}
+          {isSuperAdmin && (
+            <Link href="/admin/admins" className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition border-l-4 border-pink-500">
+              <div className="text-3xl mb-3">👑</div>
+              <h2 className="text-lg font-bold mb-2">管理員管理</h2>
+              <p className="text-gray-600 text-sm">新增、移除管理員帳號</p>
+            </Link>
+          )}
         </div>
 
         {/* 快速統計 */}
