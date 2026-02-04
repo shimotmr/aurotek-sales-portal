@@ -2,51 +2,132 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 
 interface TeamMember {
   id: string
   name: string
+  englishName?: string
   email: string
   phone: string
   region: string
   status: 'active' | 'inactive'
-  ytdShipped: number
-  ytdTarget: number
+  ytdShipped?: number
+  ytdTarget?: number
 }
 
 export default function TeamPage() {
-  const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
-  const [team, setTeam] = useState<TeamMember[]>([
-    { id: 'u2625', name: '喬紹恆', email: 'shaohen@aurotek.com', phone: '0912-345-678', region: '北區', status: 'active', ytdShipped: 8865, ytdTarget: 52650 },
-    { id: 'TBH-1', name: '待補-1', email: '', phone: '', region: '中區', status: 'inactive', ytdShipped: 0, ytdTarget: 48700 },
-    { id: 'TBH-2', name: '待補-2', email: '', phone: '', region: '南區', status: 'inactive', ytdShipped: 0, ytdTarget: 48300 },
-  ])
+  const [isSaving, setIsSaving] = useState(false)
+  const [team, setTeam] = useState<TeamMember[]>([])
   const [editingMember, setEditingMember] = useState<TeamMember | null>(null)
   const [showModal, setShowModal] = useState(false)
+  const [isNew, setIsNew] = useState(false)
+  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
 
+  // 載入資料
   useEffect(() => {
-    // 認證由 middleware 處理，直接載入
-    setIsLoading(false)
+    loadTeam()
   }, [])
+
+  const loadTeam = async () => {
+    try {
+      const res = await fetch('/api/team')
+      const data = await res.json()
+      if (data.success) {
+        setTeam(data.data)
+      }
+    } catch (e) {
+      console.error('Failed to load team:', e)
+      setMessage({ type: 'error', text: '載入失敗' })
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const handleEdit = (member: TeamMember) => {
     setEditingMember({ ...member })
+    setIsNew(false)
     setShowModal(true)
   }
 
-  const handleSave = () => {
-    if (!editingMember) return
-    setTeam(prev => prev.map(m => m.id === editingMember.id ? editingMember : m))
-    setShowModal(false)
-    setEditingMember(null)
+  const handleAdd = () => {
+    setEditingMember({
+      id: '',
+      name: '',
+      englishName: '',
+      email: '',
+      phone: '',
+      region: '全區',
+      status: 'active',
+    })
+    setIsNew(true)
+    setShowModal(true)
   }
 
-  const getAchievementRate = (shipped: number, target: number) => {
+  const handleSave = async () => {
+    if (!editingMember) return
+    
+    if (!editingMember.id || !editingMember.name) {
+      setMessage({ type: 'error', text: '工號和姓名為必填' })
+      return
+    }
+    
+    setIsSaving(true)
+    try {
+      const res = await fetch('/api/team', {
+        method: isNew ? 'POST' : 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editingMember),
+      })
+      
+      const data = await res.json()
+      
+      if (data.success) {
+        setMessage({ type: 'success', text: isNew ? '新增成功' : '更新成功' })
+        setShowModal(false)
+        setEditingMember(null)
+        loadTeam() // 重新載入
+      } else {
+        setMessage({ type: 'error', text: data.message || '儲存失敗' })
+      }
+    } catch (e) {
+      console.error('Failed to save:', e)
+      setMessage({ type: 'error', text: '儲存失敗' })
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('確定要刪除此業務員？')) return
+    
+    try {
+      const res = await fetch(`/api/team?id=${id}`, { method: 'DELETE' })
+      const data = await res.json()
+      
+      if (data.success) {
+        setMessage({ type: 'success', text: '刪除成功' })
+        loadTeam()
+      } else {
+        setMessage({ type: 'error', text: data.message || '刪除失敗' })
+      }
+    } catch (e) {
+      setMessage({ type: 'error', text: '刪除失敗' })
+    }
+  }
+
+  const getAchievementRate = (shipped: number = 0, target: number = 0) => {
     if (target === 0) return 0
     return Math.round((shipped / target) * 100)
   }
+
+  // 清除訊息
+  useEffect(() => {
+    if (message) {
+      const timer = setTimeout(() => setMessage(null), 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [message])
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">載入中...</div>
@@ -61,24 +142,38 @@ export default function TeamPage() {
             <Link href="/admin" className="text-gray-600 hover:text-gray-900">← 返回</Link>
             <h1 className="text-xl font-bold">👥 業務團隊</h1>
           </div>
+          <button
+            onClick={handleAdd}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+          >
+            + 新增業務員
+          </button>
         </div>
       </header>
 
+      {/* 訊息提示 */}
+      {message && (
+        <div className={`fixed top-4 right-4 px-4 py-2 rounded-lg shadow-lg z-50 ${
+          message.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+        }`}>
+          {message.text}
+        </div>
+      )}
+
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8">
-        {/* 團隊卡片 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {team.map(member => (
             <div key={member.id} className="bg-white p-6 rounded-xl shadow-sm">
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h3 className="text-lg font-bold">{member.name}</h3>
+                  <h3 className="text-lg font-bold">{member.name} {member.englishName}</h3>
                   <p className="text-sm text-gray-500">{member.id}</p>
                 </div>
                 <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
                   member.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
                 }`}>
-                  {member.status === 'active' ? '在職' : '待補'}
+                  {member.status === 'active' ? '在職' : '離職'}
                 </span>
               </div>
               
@@ -101,44 +196,68 @@ export default function TeamPage() {
                   />
                 </div>
                 <div className="flex justify-between text-xs text-gray-500 mt-1">
-                  <span>{member.ytdShipped.toLocaleString()}K</span>
-                  <span>{member.ytdTarget.toLocaleString()}K</span>
+                  <span>{(member.ytdShipped || 0).toLocaleString()}K</span>
+                  <span>{(member.ytdTarget || 0).toLocaleString()}K</span>
                 </div>
               </div>
 
-              <button
-                onClick={() => handleEdit(member)}
-                className="w-full bg-gray-100 text-gray-700 py-2 rounded-lg hover:bg-gray-200 transition text-sm"
-              >
-                ✏️ 編輯
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleEdit(member)}
+                  className="flex-1 bg-gray-100 text-gray-700 py-2 rounded-lg hover:bg-gray-200 transition text-sm"
+                >
+                  ✏️ 編輯
+                </button>
+                <button
+                  onClick={() => handleDelete(member.id)}
+                  className="px-3 bg-red-50 text-red-600 py-2 rounded-lg hover:bg-red-100 transition text-sm"
+                >
+                  🗑️
+                </button>
+              </div>
             </div>
           ))}
         </div>
+
+        {team.length === 0 && (
+          <div className="text-center py-12 text-gray-500">
+            尚無業務員資料，請點擊「新增業務員」
+          </div>
+        )}
       </main>
 
-      {/* 編輯 Modal */}
+      {/* 編輯/新增 Modal */}
       {showModal && editingMember && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-xl w-full max-w-md mx-4">
-            <h2 className="text-xl font-bold mb-4">編輯業務員</h2>
+          <div className="bg-white p-6 rounded-xl w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-bold mb-4">{isNew ? '新增業務員' : '編輯業務員'}</h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">工號</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">工號 *</label>
                 <input
                   type="text"
                   value={editingMember.id}
                   onChange={(e) => setEditingMember({ ...editingMember, id: e.target.value })}
                   className="w-full p-2 border rounded-lg"
                   placeholder="例如: u1234"
+                  disabled={!isNew}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">姓名</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">姓名 *</label>
                 <input
                   type="text"
                   value={editingMember.name}
                   onChange={(e) => setEditingMember({ ...editingMember, name: e.target.value })}
+                  className="w-full p-2 border rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">英文名</label>
+                <input
+                  type="text"
+                  value={editingMember.englishName || ''}
+                  onChange={(e) => setEditingMember({ ...editingMember, englishName: e.target.value })}
                   className="w-full p-2 border rounded-lg"
                 />
               </div>
@@ -162,12 +281,16 @@ export default function TeamPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">區域</label>
-                <input
-                  type="text"
+                <select
                   value={editingMember.region}
                   onChange={(e) => setEditingMember({ ...editingMember, region: e.target.value })}
                   className="w-full p-2 border rounded-lg"
-                />
+                >
+                  <option value="全區">全區</option>
+                  <option value="北區">北區</option>
+                  <option value="中區">中區</option>
+                  <option value="南區">南區</option>
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">狀態</label>
@@ -177,22 +300,24 @@ export default function TeamPage() {
                   className="w-full p-2 border rounded-lg"
                 >
                   <option value="active">在職</option>
-                  <option value="inactive">待補</option>
+                  <option value="inactive">離職</option>
                 </select>
               </div>
             </div>
             <div className="flex gap-3 mt-6">
               <button
-                onClick={() => setShowModal(false)}
+                onClick={() => { setShowModal(false); setEditingMember(null); }}
                 className="flex-1 py-2 border rounded-lg hover:bg-gray-50"
+                disabled={isSaving}
               >
                 取消
               </button>
               <button
                 onClick={handleSave}
-                className="flex-1 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                className="flex-1 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                disabled={isSaving}
               >
-                儲存
+                {isSaving ? '儲存中...' : '儲存'}
               </button>
             </div>
           </div>

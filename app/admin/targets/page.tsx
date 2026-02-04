@@ -2,70 +2,140 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+
+interface Target {
+  id: string
+  year: number
+  month: number
+  repId: string
+  repName: string
+  targetAmount: number
+  actualAmount?: number
+}
 
 interface TeamMember {
   id: string
   name: string
-  targets: number[]
-  annual: number
+  englishName?: string
 }
 
 export default function TargetsPage() {
-  const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
-  const [team, setTeam] = useState<TeamMember[]>([
-    { id: 'u2625', name: '喬紹恆', targets: [3400, 2700, 3500, 4000, 3550, 3600, 4500, 4400, 5100, 5000, 6100, 6800], annual: 52650 },
-    { id: 'TBH-1', name: '待補-1', targets: [3200, 2500, 2700, 3800, 3200, 3500, 4300, 3900, 5000, 4800, 5800, 6000], annual: 48700 },
-    { id: 'TBH-2', name: '待補-2', targets: [3200, 2500, 2600, 3800, 3200, 3500, 4000, 3900, 5000, 4800, 5800, 6000], annual: 48300 },
-  ])
-
-  const months = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
+  const [targets, setTargets] = useState<Target[]>([])
+  const [team, setTeam] = useState<TeamMember[]>([])
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
+  const [editingTarget, setEditingTarget] = useState<Target | null>(null)
+  const [showModal, setShowModal] = useState(false)
+  const [isNew, setIsNew] = useState(false)
+  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
 
   useEffect(() => {
-    // 認證由 middleware 處理，直接載入
-    setIsLoading(false)
-  }, [])
+    loadData()
+  }, [selectedYear])
 
-  const updateTarget = (memberId: string, monthIndex: number, value: number) => {
-    setTeam(prev => prev.map(member => {
-      if (member.id === memberId) {
-        const newTargets = [...member.targets]
-        newTargets[monthIndex] = value
-        const newAnnual = newTargets.reduce((a, b) => a + b, 0)
-        return { ...member, targets: newTargets, annual: newAnnual }
+  const loadData = async () => {
+    setIsLoading(true)
+    try {
+      // 載入目標
+      const targetsRes = await fetch(`/api/targets?year=${selectedYear}`)
+      const targetsData = await targetsRes.json()
+      if (targetsData.success) {
+        setTargets(targetsData.data)
       }
-      return member
-    }))
+
+      // 載入業務團隊
+      const teamRes = await fetch('/api/team')
+      const teamData = await teamRes.json()
+      if (teamData.success) {
+        setTeam(teamData.data)
+      }
+    } catch (e) {
+      console.error('Failed to load data:', e)
+      setMessage({ type: 'error', text: '載入失敗' })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const getTeamTotal = (monthIndex: number) => {
-    return team.reduce((sum, member) => sum + member.targets[monthIndex], 0)
+  const handleEdit = (target: Target) => {
+    setEditingTarget({ ...target })
+    setIsNew(false)
+    setShowModal(true)
   }
 
-  const getAnnualTotal = () => {
-    return team.reduce((sum, member) => sum + member.annual, 0)
+  const handleAdd = () => {
+    setEditingTarget({
+      id: '',
+      year: selectedYear,
+      month: new Date().getMonth() + 1,
+      repId: team[0]?.id || '',
+      repName: team[0]?.name || '',
+      targetAmount: 0,
+    })
+    setIsNew(true)
+    setShowModal(true)
   }
 
   const handleSave = async () => {
+    if (!editingTarget) return
+    
+    if (!editingTarget.repId || !editingTarget.targetAmount) {
+      setMessage({ type: 'error', text: '請選擇業務員並輸入目標金額' })
+      return
+    }
+    
+    // 更新 repName
+    const rep = team.find(t => t.id === editingTarget.repId)
+    if (rep) {
+      editingTarget.repName = rep.name
+    }
+    
     setIsSaving(true)
     try {
-      const response = await fetch('/api/admin/targets', {
-        method: 'POST',
+      const res = await fetch('/api/targets', {
+        method: isNew ? 'POST' : 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ team })
+        body: JSON.stringify(editingTarget),
       })
-      if (response.ok) {
-        alert('✅ 目標已儲存！')
+      
+      const data = await res.json()
+      
+      if (data.success) {
+        setMessage({ type: 'success', text: '儲存成功' })
+        setShowModal(false)
+        setEditingTarget(null)
+        loadData()
       } else {
-        alert('❌ 儲存失敗')
+        setMessage({ type: 'error', text: data.message || '儲存失敗' })
       }
-    } catch (error) {
-      alert('❌ 儲存失敗: ' + error)
+    } catch (e) {
+      setMessage({ type: 'error', text: '儲存失敗' })
+    } finally {
+      setIsSaving(false)
     }
-    setIsSaving(false)
   }
+
+  useEffect(() => {
+    if (message) {
+      const timer = setTimeout(() => setMessage(null), 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [message])
+
+  // 按業務員分組
+  const targetsByRep = team.map(member => {
+    const memberTargets = targets.filter(t => t.repId === member.id)
+    const totalTarget = memberTargets.reduce((sum, t) => sum + t.targetAmount, 0)
+    return {
+      ...member,
+      targets: memberTargets,
+      totalTarget,
+    }
+  })
+
+  const months = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+  const years = [2024, 2025, 2026, 2027]
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">載入中...</div>
@@ -73,85 +143,187 @@ export default function TargetsPage() {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-4">
             <Link href="/admin" className="text-gray-600 hover:text-gray-900">← 返回</Link>
-            <h1 className="text-xl font-bold">🎯 目標管理</h1>
+            <h1 className="text-xl font-bold">🎯 目標設定</h1>
           </div>
-          <button
-            onClick={handleSave}
-            disabled={isSaving}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50"
-          >
-            {isSaving ? '儲存中...' : '💾 儲存'}
-          </button>
+          <div className="flex items-center gap-4">
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+              className="p-2 border rounded-lg"
+            >
+              {years.map(y => (
+                <option key={y} value={y}>{y} 年</option>
+              ))}
+            </select>
+            <button
+              onClick={handleAdd}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+            >
+              + 新增目標
+            </button>
+          </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        {/* 年度總覽 */}
-        <div className="bg-white p-6 rounded-xl shadow-sm mb-6">
-          <h2 className="text-lg font-bold mb-4">📊 2026 年度目標總覽</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600">{getAnnualTotal().toLocaleString()}K</div>
-              <div className="text-sm text-gray-600">年度總目標</div>
-            </div>
-            {team.map(member => (
-              <div key={member.id} className="text-center p-4 bg-gray-50 rounded-lg">
-                <div className="text-xl font-bold text-gray-700">{member.annual.toLocaleString()}K</div>
-                <div className="text-sm text-gray-600">{member.name}</div>
-              </div>
-            ))}
-          </div>
+      {message && (
+        <div className={`fixed top-4 right-4 px-4 py-2 rounded-lg shadow-lg z-50 ${
+          message.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+        }`}>
+          {message.text}
         </div>
+      )}
 
-        {/* 月度目標表格 */}
-        <div className="bg-white p-6 rounded-xl shadow-sm overflow-x-auto">
-          <h2 className="text-lg font-bold mb-4">📅 月度目標設定</h2>
-          <table className="w-full min-w-[800px]">
-            <thead>
-              <tr className="border-b">
-                <th className="text-left p-3 bg-gray-50">業務</th>
-                {months.map((month, i) => (
-                  <th key={i} className="text-center p-3 bg-gray-50 text-sm">{month}</th>
+      <main className="max-w-7xl mx-auto px-4 py-8">
+        <div className="bg-white rounded-xl shadow-sm overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600 sticky left-0 bg-gray-50">業務員</th>
+                {months.map(m => (
+                  <th key={m} className="px-4 py-3 text-center text-sm font-semibold text-gray-600 min-w-[80px]">
+                    {m}月
+                  </th>
                 ))}
-                <th className="text-center p-3 bg-blue-50 text-sm font-bold">年度</th>
+                <th className="px-4 py-3 text-center text-sm font-semibold text-gray-600 bg-blue-50">年度總計</th>
               </tr>
             </thead>
-            <tbody>
-              {team.map(member => (
-                <tr key={member.id} className="border-b hover:bg-gray-50">
-                  <td className="p-3 font-semibold">{member.name}</td>
-                  {member.targets.map((target, i) => (
-                    <td key={i} className="p-2 text-center">
-                      <input
-                        type="number"
-                        value={target}
-                        onChange={(e) => updateTarget(member.id, i, parseInt(e.target.value) || 0)}
-                        className="w-16 text-center p-1 border rounded text-sm focus:ring-2 focus:ring-blue-500"
-                      />
-                    </td>
-                  ))}
-                  <td className="p-3 text-center font-bold text-blue-600">{member.annual.toLocaleString()}</td>
+            <tbody className="divide-y">
+              {targetsByRep.map(member => (
+                <tr key={member.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-3 font-medium sticky left-0 bg-white">
+                    {member.name}
+                    <span className="text-xs text-gray-500 ml-1">{member.englishName}</span>
+                  </td>
+                  {months.map(m => {
+                    const target = member.targets.find(t => t.month === m)
+                    return (
+                      <td key={m} className="px-4 py-3 text-center">
+                        {target ? (
+                          <button
+                            onClick={() => handleEdit(target)}
+                            className="text-blue-600 hover:underline"
+                          >
+                            {(target.targetAmount / 1000).toFixed(0)}K
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              setEditingTarget({
+                                id: '',
+                                year: selectedYear,
+                                month: m,
+                                repId: member.id,
+                                repName: member.name,
+                                targetAmount: 0,
+                              })
+                              setIsNew(true)
+                              setShowModal(true)
+                            }}
+                            className="text-gray-400 hover:text-blue-600"
+                          >
+                            +
+                          </button>
+                        )}
+                      </td>
+                    )
+                  })}
+                  <td className="px-4 py-3 text-center font-bold bg-blue-50">
+                    {(member.totalTarget / 1000).toFixed(0)}K
+                  </td>
                 </tr>
               ))}
-              {/* 團隊總計 */}
-              <tr className="bg-blue-50 font-bold">
-                <td className="p-3">團隊總計</td>
-                {months.map((_, i) => (
-                  <td key={i} className="p-3 text-center">{getTeamTotal(i).toLocaleString()}</td>
-                ))}
-                <td className="p-3 text-center text-blue-600">{getAnnualTotal().toLocaleString()}</td>
-              </tr>
             </tbody>
           </table>
-          <p className="text-sm text-gray-500 mt-4">💡 單位：K (千元)</p>
+          
+          {team.length === 0 && (
+            <div className="text-center py-12 text-gray-500">
+              請先新增業務員
+            </div>
+          )}
         </div>
       </main>
+
+      {/* Modal */}
+      {showModal && editingTarget && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-xl w-full max-w-md mx-4">
+            <h2 className="text-xl font-bold mb-4">{isNew ? '新增目標' : '編輯目標'}</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">業務員</label>
+                <select
+                  value={editingTarget.repId}
+                  onChange={(e) => setEditingTarget({ ...editingTarget, repId: e.target.value })}
+                  className="w-full p-2 border rounded-lg"
+                  disabled={!isNew}
+                >
+                  {team.map(m => (
+                    <option key={m.id} value={m.id}>{m.name} ({m.id})</option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">年</label>
+                  <select
+                    value={editingTarget.year}
+                    onChange={(e) => setEditingTarget({ ...editingTarget, year: parseInt(e.target.value) })}
+                    className="w-full p-2 border rounded-lg"
+                    disabled={!isNew}
+                  >
+                    {years.map(y => (
+                      <option key={y} value={y}>{y}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">月</label>
+                  <select
+                    value={editingTarget.month}
+                    onChange={(e) => setEditingTarget({ ...editingTarget, month: parseInt(e.target.value) })}
+                    className="w-full p-2 border rounded-lg"
+                    disabled={!isNew}
+                  >
+                    {months.map(m => (
+                      <option key={m} value={m}>{m}月</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">目標金額 (千元)</label>
+                <input
+                  type="number"
+                  value={editingTarget.targetAmount / 1000}
+                  onChange={(e) => setEditingTarget({ ...editingTarget, targetAmount: parseFloat(e.target.value) * 1000 || 0 })}
+                  className="w-full p-2 border rounded-lg"
+                  placeholder="例如: 5000 (表示 5,000K)"
+                />
+              </div>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => { setShowModal(false); setEditingTarget(null); }}
+                className="flex-1 py-2 border rounded-lg hover:bg-gray-50"
+                disabled={isSaving}
+              >
+                取消
+              </button>
+              <button
+                onClick={handleSave}
+                className="flex-1 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                disabled={isSaving}
+              >
+                {isSaving ? '儲存中...' : '儲存'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
