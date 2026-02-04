@@ -1,17 +1,6 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-
-// 管理員名單（之後可以從 Google Sheets 讀取）
-const ADMINS = [
-  'williamhsiao@aurotek.com',
-  'williamhsiao',
-]
-
-// 超級管理員
-const SUPER_ADMINS = [
-  'williamhsiao@aurotek.com',
-  'williamhsiao',
-]
+import { isAdmin, isSuperAdmin } from '@/lib/admins'
 
 export async function POST(request: Request) {
   try {
@@ -29,17 +18,17 @@ export async function POST(request: Request) {
     const isValid = await verifyZimbraCredentials(account, password)
     
     if (isValid) {
-      // 檢查是否為管理員
-      const isAdmin = ADMINS.includes(account) || ADMINS.includes(accountName)
-      const isSuperAdmin = SUPER_ADMINS.includes(account) || SUPER_ADMINS.includes(accountName)
+      // 檢查是否為管理員（從共用模組讀取）
+      const isUserAdmin = isAdmin(account)
+      const isUserSuperAdmin = isSuperAdmin(account)
       
       // 生成 session token
       const token = generateToken()
       const user = {
         email: account,
         name: accountName,
-        isAdmin,
-        isSuperAdmin,
+        isUserAdmin,
+        isUserSuperAdmin,
         loginTime: new Date().toISOString()
       }
       
@@ -50,7 +39,7 @@ export async function POST(request: Request) {
         timestamp: new Date().toISOString(),
         ip: request.headers.get('x-forwarded-for') || 'unknown',
         userAgent: request.headers.get('user-agent') || 'unknown',
-        details: { isAdmin, isSuperAdmin }
+        details: { isUserAdmin, isUserSuperAdmin }
       })
       
       // 設置 cookies
@@ -78,14 +67,14 @@ export async function POST(request: Request) {
         maxAge
       })
       
-      cookieStore.set('is_admin', isAdmin ? 'true' : 'false', {
+      cookieStore.set('is_admin', isUserAdmin ? 'true' : 'false', {
         httpOnly: false,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
         maxAge
       })
       
-      cookieStore.set('is_super_admin', isSuperAdmin ? 'true' : 'false', {
+      cookieStore.set('is_super_admin', isUserSuperAdmin ? 'true' : 'false', {
         httpOnly: false,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
