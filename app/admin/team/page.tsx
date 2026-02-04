@@ -27,13 +27,9 @@ export default function TeamPage() {
   const [showModal, setShowModal] = useState(false)
 
   useEffect(() => {
-    const auth = localStorage.getItem('admin_auth')
-    if (auth !== 'true') {
-      router.push('/admin')
-      return
-    }
+    // 認證由 middleware 處理，直接載入
     setIsLoading(false)
-  }, [router])
+  }, [])
 
   const handleEdit = (member: TeamMember) => {
     setEditingMember({ ...member })

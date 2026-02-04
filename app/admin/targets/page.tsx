@@ -24,13 +24,9 @@ export default function TargetsPage() {
   const months = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
 
   useEffect(() => {
-    const auth = localStorage.getItem('admin_auth')
-    if (auth !== 'true') {
-      router.push('/admin')
-      return
-    }
+    // 認證由 middleware 處理，直接載入
     setIsLoading(false)
-  }, [router])
+  }, [])
 
   const updateTarget = (memberId: string, monthIndex: number, value: number) => {
     setTeam(prev => prev.map(member => {

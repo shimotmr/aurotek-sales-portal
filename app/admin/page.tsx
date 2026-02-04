@@ -63,18 +63,18 @@ export default function AdminPage() {
             <p className="text-gray-600 text-sm">設定年度目標、月度目標、個人目標</p>
           </Link>
 
-          {/* 業務團隊 - 連結到業績管理頁面 */}
-          <Link href="/performance#rep-stats" className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition border-l-4 border-green-500">
+          {/* 業務團隊 */}
+          <Link href="/admin/team" className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition border-l-4 border-green-500">
             <div className="text-3xl mb-3">👥</div>
             <h2 className="text-lg font-bold mb-2">業務團隊</h2>
-            <p className="text-gray-600 text-sm">查看業務員績效與案件統計</p>
+            <p className="text-gray-600 text-sm">管理業務員資料與績效</p>
           </Link>
 
-          {/* 經銷商管理 - 連結到業績管理頁面 */}
-          <Link href="/performance#dealer-stats" className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition border-l-4 border-purple-500">
+          {/* 經銷商管理 */}
+          <Link href="/admin/dealers" className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition border-l-4 border-purple-500">
             <div className="text-3xl mb-3">🏢</div>
             <h2 className="text-lg font-bold mb-2">經銷商管理</h2>
-            <p className="text-gray-600 text-sm">查看經銷商業績與排名</p>
+            <p className="text-gray-600 text-sm">維護經銷商資料與聯絡人</p>
           </Link>
 
           {/* 影片管理 */}
