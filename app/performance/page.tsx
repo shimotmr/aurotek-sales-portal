@@ -655,7 +655,7 @@ export default function PerformancePage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* 業務績效 */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div id="rep-stats" className="bg-white rounded-lg shadow p-6">
             <h2 className="text-xl font-semibold mb-4">👤 業務績效（依已出貨排名）</h2>
             <div className="space-y-4">
               {data.repStats.map(rep => (
@@ -688,7 +688,7 @@ export default function PerformancePage() {
           </div>
 
           {/* 經銷商排名 - 可點擊查看該經銷商已出貨案件 */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div id="dealer-stats" className="bg-white rounded-lg shadow p-6">
             <h2 className="text-xl font-semibold mb-4">🏢 經銷商排名（依已出貨，點擊查看明細）</h2>
             <div className="space-y-3">
               {data.dealerStats.map((dealer, idx) => (

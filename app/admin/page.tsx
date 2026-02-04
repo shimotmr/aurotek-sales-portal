@@ -56,13 +56,6 @@ export default function AdminPage() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* 銷售漏斗 */}
-          <Link href="/admin/funnel" className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition border-l-4 border-indigo-500">
-            <div className="text-3xl mb-3">📊</div>
-            <h2 className="text-lg font-bold mb-2">銷售漏斗</h2>
-            <p className="text-gray-600 text-sm">成交率分層分析、營業員/經銷商篩選</p>
-          </Link>
-
           {/* 目標管理 */}
           <Link href="/admin/targets" className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition border-l-4 border-blue-500">
             <div className="text-3xl mb-3">🎯</div>
@@ -70,18 +63,18 @@ export default function AdminPage() {
             <p className="text-gray-600 text-sm">設定年度目標、月度目標、個人目標</p>
           </Link>
 
-          {/* 業務團隊 */}
-          <Link href="/admin/team" className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition border-l-4 border-green-500">
+          {/* 業務團隊 - 連結到業績管理頁面 */}
+          <Link href="/performance#rep-stats" className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition border-l-4 border-green-500">
             <div className="text-3xl mb-3">👥</div>
             <h2 className="text-lg font-bold mb-2">業務團隊</h2>
-            <p className="text-gray-600 text-sm">管理業務員資料與績效</p>
+            <p className="text-gray-600 text-sm">查看業務員績效與案件統計</p>
           </Link>
 
-          {/* 經銷商管理 */}
-          <Link href="/admin/dealers" className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition border-l-4 border-purple-500">
+          {/* 經銷商管理 - 連結到業績管理頁面 */}
+          <Link href="/performance#dealer-stats" className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition border-l-4 border-purple-500">
             <div className="text-3xl mb-3">🏢</div>
             <h2 className="text-lg font-bold mb-2">經銷商管理</h2>
-            <p className="text-gray-600 text-sm">維護經銷商資料與聯絡人</p>
+            <p className="text-gray-600 text-sm">查看經銷商業績與排名</p>
           </Link>
 
           {/* 影片管理 */}
@@ -102,14 +95,7 @@ export default function AdminPage() {
           <Link href="/admin/sync" className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition border-l-4 border-orange-500">
             <div className="text-3xl mb-3">🔄</div>
             <h2 className="text-lg font-bold mb-2">資料同步</h2>
-            <p className="text-gray-600 text-sm">同步 Google Sheets 資料</p>
-          </Link>
-
-          {/* 系統設定 */}
-          <Link href="/admin/settings" className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition border-l-4 border-gray-500">
-            <div className="text-3xl mb-3">⚙️</div>
-            <h2 className="text-lg font-bold mb-2">系統設定</h2>
-            <p className="text-gray-600 text-sm">API 設定、通知設定</p>
+            <p className="text-gray-600 text-sm">上傳 Funnel 報表、同步資料</p>
           </Link>
 
           {/* 系統日誌 */}
