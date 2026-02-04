@@ -74,13 +74,16 @@ export async function GET(request: Request) {
 // POST: 新增日誌
 export async function POST(request: Request) {
   try {
+    const cookieStore = await cookies()
+    const userEmail = cookieStore.get('user_email')?.value || 'anonymous'
+    
     const log = await request.json()
     
     const entry = {
       timestamp: log.timestamp || new Date().toISOString(),
       action: log.action,
-      user_email: log.user || log.user_email || 'unknown',
-      ip: log.ip || request.headers.get('x-forwarded-for') || 'unknown',
+      user_email: log.user || log.user_email || userEmail,
+      ip: log.ip || request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
       user_agent: log.userAgent || log.user_agent || request.headers.get('user-agent') || '',
       details: typeof log.details === 'string' ? log.details : JSON.stringify(log.details || {})
     }
@@ -92,8 +95,6 @@ export async function POST(request: Request) {
       .single()
     
     if (error) throw error
-    
-    console.log('[ACTIVITY LOG]', JSON.stringify(entry))
     
     return NextResponse.json({ success: true, id: data?.id })
   } catch (error) {

@@ -12,6 +12,37 @@ interface LogEntry {
   details: string
 }
 
+// 操作類型中文對照和顏色
+const actionConfig: Record<string, { label: string; color: string }> = {
+  login: { label: '登入', color: 'bg-green-100 text-green-700' },
+  login_failed: { label: '登入失敗', color: 'bg-red-100 text-red-700' },
+  logout: { label: '登出', color: 'bg-gray-100 text-gray-700' },
+  page_view: { label: '瀏覽頁面', color: 'bg-blue-100 text-blue-700' },
+  click: { label: '點擊', color: 'bg-indigo-100 text-indigo-700' },
+  team_create: { label: '新增業務員', color: 'bg-emerald-100 text-emerald-700' },
+  team_update: { label: '編輯業務員', color: 'bg-yellow-100 text-yellow-700' },
+  team_delete: { label: '刪除業務員', color: 'bg-red-100 text-red-700' },
+  dealer_create: { label: '新增經銷商', color: 'bg-emerald-100 text-emerald-700' },
+  dealer_update: { label: '編輯經銷商', color: 'bg-yellow-100 text-yellow-700' },
+  dealer_delete: { label: '刪除經銷商', color: 'bg-red-100 text-red-700' },
+  target_create: { label: '新增目標', color: 'bg-emerald-100 text-emerald-700' },
+  target_update: { label: '編輯目標', color: 'bg-yellow-100 text-yellow-700' },
+  video_create: { label: '新增影片', color: 'bg-emerald-100 text-emerald-700' },
+  video_update: { label: '編輯影片', color: 'bg-yellow-100 text-yellow-700' },
+  video_delete: { label: '刪除影片', color: 'bg-red-100 text-red-700' },
+  video_play: { label: '播放影片', color: 'bg-purple-100 text-purple-700' },
+  slide_create: { label: '新增簡報', color: 'bg-emerald-100 text-emerald-700' },
+  slide_update: { label: '編輯簡報', color: 'bg-yellow-100 text-yellow-700' },
+  slide_delete: { label: '刪除簡報', color: 'bg-red-100 text-red-700' },
+  slide_open: { label: '開啟簡報', color: 'bg-purple-100 text-purple-700' },
+  admin_add: { label: '新增管理員', color: 'bg-orange-100 text-orange-700' },
+  admin_remove: { label: '移除管理員', color: 'bg-orange-100 text-orange-700' },
+  sync_upload: { label: '上傳同步', color: 'bg-cyan-100 text-cyan-700' },
+  sync_complete: { label: '同步完成', color: 'bg-cyan-100 text-cyan-700' },
+  system: { label: '系統', color: 'bg-purple-100 text-purple-700' },
+  error: { label: '錯誤', color: 'bg-red-100 text-red-700' },
+}
+
 export default function LogsPage() {
   const [logs, setLogs] = useState<LogEntry[]>([])
   const [filter, setFilter] = useState('')
@@ -22,7 +53,7 @@ export default function LogsPage() {
   const fetchLogs = useCallback(async () => {
     try {
       const params = new URLSearchParams()
-      params.set('limit', '200')
+      params.set('limit', '500')
       if (actionFilter !== 'all') params.set('action', actionFilter)
       if (filter) params.set('user', filter)
       
@@ -46,29 +77,14 @@ export default function LogsPage() {
     return () => clearInterval(interval)
   }, [fetchLogs])
 
-  const filteredLogs = logs.filter(log => {
-    if (filter && !log.user.toLowerCase().includes(filter.toLowerCase())) return false
-    return true
-  })
-
   const getActionBadge = (action: string) => {
-    const badges: Record<string, { color: string; label: string }> = {
-      login: { color: 'bg-green-100 text-green-700', label: '登入' },
-      logout: { color: 'bg-gray-100 text-gray-700', label: '登出' },
-      login_failed: { color: 'bg-red-100 text-red-700', label: '登入失敗' },
-      view: { color: 'bg-blue-100 text-blue-700', label: '查看' },
-      edit: { color: 'bg-yellow-100 text-yellow-700', label: '編輯' },
-      delete: { color: 'bg-red-100 text-red-700', label: '刪除' },
-      system: { color: 'bg-purple-100 text-purple-700', label: '系統' },
-    }
-    const badge = badges[action] || { color: 'bg-gray-100 text-gray-700', label: action }
-    return <span className={`px-2 py-1 rounded-full text-xs ${badge.color}`}>{badge.label}</span>
+    const config = actionConfig[action] || { label: action, color: 'bg-gray-100 text-gray-700' }
+    return <span className={`px-2 py-1 rounded-full text-xs font-medium ${config.color}`}>{config.label}</span>
   }
 
   const formatTime = (timestamp: string) => {
     try {
       return new Date(timestamp).toLocaleString('zh-TW', {
-        year: 'numeric',
         month: '2-digit',
         day: '2-digit',
         hour: '2-digit',
@@ -80,23 +96,49 @@ export default function LogsPage() {
     }
   }
 
+  const parseDetails = (details: string) => {
+    try {
+      const obj = JSON.parse(details)
+      if (obj.pageName) return obj.pageName
+      if (obj.page) return obj.page
+      if (obj.name) return obj.name
+      if (obj.title) return obj.title
+      if (obj.id) return `ID: ${obj.id}`
+      return details
+    } catch {
+      return details
+    }
+  }
+
   const exportCSV = () => {
     const headers = ['時間', '操作', '用戶', 'IP', '詳情']
-    const rows = filteredLogs.map(log => [
+    const rows = logs.map(log => [
       formatTime(log.timestamp),
-      log.action,
+      actionConfig[log.action]?.label || log.action,
       log.user,
       log.ip,
-      log.details
+      parseDetails(log.details)
     ])
     
-    const csv = [headers, ...rows].map(row => row.join(',')).join('\n')
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const csv = [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n')
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
-    link.download = `logs_${new Date().toISOString().split('T')[0]}.csv`
+    link.download = `系統日誌_${new Date().toISOString().split('T')[0]}.csv`
     link.click()
+  }
+
+  // 統計
+  const stats = {
+    total: logs.length,
+    logins: logs.filter(l => l.action === 'login').length,
+    pageViews: logs.filter(l => l.action === 'page_view').length,
+    edits: logs.filter(l => l.action.includes('update') || l.action.includes('create') || l.action.includes('delete')).length,
+  }
+
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center">載入中...</div>
   }
 
   return (
@@ -105,127 +147,138 @@ export default function LogsPage() {
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <Link href="/admin" className="text-gray-600 hover:text-gray-900">← 返回後台</Link>
+            <Link href="/admin" className="text-gray-600 hover:text-gray-900">← 返回</Link>
             <h1 className="text-xl font-bold">📋 系統日誌</h1>
           </div>
           <button
-            onClick={fetchLogs}
-            className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
+            onClick={exportCSV}
+            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition text-sm"
           >
-            🔄 重新整理
+            📥 匯出 CSV
           </button>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-8">
-        {/* 篩選器 */}
-        <div className="bg-white rounded-xl shadow-sm p-4 mb-6 flex gap-4 items-center flex-wrap">
-          <div className="flex-1 min-w-[200px]">
+        {/* 統計卡片 */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white p-4 rounded-lg shadow-sm">
+            <div className="text-2xl font-bold text-gray-800">{stats.total}</div>
+            <div className="text-sm text-gray-500">總記錄數</div>
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow-sm">
+            <div className="text-2xl font-bold text-green-600">{stats.logins}</div>
+            <div className="text-sm text-gray-500">登入次數</div>
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow-sm">
+            <div className="text-2xl font-bold text-blue-600">{stats.pageViews}</div>
+            <div className="text-sm text-gray-500">頁面瀏覽</div>
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow-sm">
+            <div className="text-2xl font-bold text-yellow-600">{stats.edits}</div>
+            <div className="text-sm text-gray-500">編輯操作</div>
+          </div>
+        </div>
+
+        {/* 篩選 */}
+        <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
+          <div className="flex flex-wrap gap-4">
             <input
               type="text"
               placeholder="搜尋用戶..."
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              className="w-full p-2 border rounded-lg focus:border-blue-500 focus:outline-none"
+              className="p-2 border rounded-lg w-48"
             />
+            <select
+              value={actionFilter}
+              onChange={(e) => setActionFilter(e.target.value)}
+              className="p-2 border rounded-lg"
+            >
+              <option value="all">所有操作</option>
+              <optgroup label="認證">
+                <option value="login">登入</option>
+                <option value="login_failed">登入失敗</option>
+                <option value="logout">登出</option>
+              </optgroup>
+              <optgroup label="瀏覽">
+                <option value="page_view">頁面瀏覽</option>
+              </optgroup>
+              <optgroup label="業務團隊">
+                <option value="team_create">新增業務員</option>
+                <option value="team_update">編輯業務員</option>
+                <option value="team_delete">刪除業務員</option>
+              </optgroup>
+              <optgroup label="經銷商">
+                <option value="dealer_create">新增經銷商</option>
+                <option value="dealer_update">編輯經銷商</option>
+                <option value="dealer_delete">刪除經銷商</option>
+              </optgroup>
+              <optgroup label="影片">
+                <option value="video_create">新增影片</option>
+                <option value="video_update">編輯影片</option>
+                <option value="video_delete">刪除影片</option>
+              </optgroup>
+              <optgroup label="簡報">
+                <option value="slide_create">新增簡報</option>
+                <option value="slide_update">編輯簡報</option>
+                <option value="slide_delete">刪除簡報</option>
+              </optgroup>
+            </select>
+            <button
+              onClick={fetchLogs}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              🔄 重新整理
+            </button>
           </div>
-          <select
-            value={actionFilter}
-            onChange={(e) => setActionFilter(e.target.value)}
-            className="p-2 border rounded-lg focus:border-blue-500 focus:outline-none"
-          >
-            <option value="all">所有操作</option>
-            <option value="login">登入</option>
-            <option value="logout">登出</option>
-            <option value="login_failed">登入失敗</option>
-            <option value="view">查看</option>
-            <option value="edit">編輯</option>
-          </select>
-          <button 
-            onClick={exportCSV}
-            className="bg-gray-100 px-4 py-2 rounded-lg hover:bg-gray-200"
-          >
-            📥 匯出 CSV
-          </button>
         </div>
 
+        {/* 日誌列表 */}
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
-            {error}
-          </div>
+          <div className="bg-red-50 text-red-600 p-4 rounded-lg mb-6">{error}</div>
         )}
 
-        {/* 日誌列表 */}
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          {isLoading ? (
-            <div className="p-8 text-center text-gray-500">載入中...</div>
-          ) : filteredLogs.length === 0 ? (
-            <div className="p-8 text-center text-gray-500">
-              <div className="text-4xl mb-2">📭</div>
-              沒有找到符合條件的日誌
-              <p className="text-sm mt-2">日誌會在用戶登入/登出時自動記錄</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">時間</th>
-                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">操作</th>
-                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">用戶</th>
-                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">IP</th>
-                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">詳情</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {filteredLogs.map(log => (
-                    <tr key={log.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">
-                        {formatTime(log.timestamp)}
-                      </td>
-                      <td className="px-6 py-4">{getActionBadge(log.action)}</td>
-                      <td className="px-6 py-4 text-sm font-medium">{log.user}</td>
-                      <td className="px-6 py-4 text-sm text-gray-500 font-mono">{log.ip}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600 max-w-xs truncate">
-                        {log.details}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+          <table className="w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="text-left py-3 px-4 font-semibold text-gray-600 w-36">時間</th>
+                <th className="text-left py-3 px-4 font-semibold text-gray-600 w-32">操作</th>
+                <th className="text-left py-3 px-4 font-semibold text-gray-600">用戶</th>
+                <th className="text-left py-3 px-4 font-semibold text-gray-600">詳情</th>
+                <th className="text-left py-3 px-4 font-semibold text-gray-600 w-28">IP</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {logs.map((log, i) => (
+                <tr key={log.id || i} className="hover:bg-gray-50">
+                  <td className="py-2 px-4 text-sm text-gray-500 font-mono">
+                    {formatTime(log.timestamp)}
+                  </td>
+                  <td className="py-2 px-4">
+                    {getActionBadge(log.action)}
+                  </td>
+                  <td className="py-2 px-4 text-sm">
+                    {log.user?.replace('@aurotek.com', '') || '-'}
+                  </td>
+                  <td className="py-2 px-4 text-sm text-gray-600 truncate max-w-xs" title={log.details}>
+                    {parseDetails(log.details)}
+                  </td>
+                  <td className="py-2 px-4 text-xs text-gray-400 font-mono">
+                    {log.ip?.substring(0, 15) || '-'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          
+          {logs.length === 0 && (
+            <div className="text-center py-12 text-gray-500">
+              暫無日誌記錄
             </div>
           )}
         </div>
-
-        {/* 統計 */}
-        <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white p-4 rounded-xl shadow-sm text-center">
-            <div className="text-2xl font-bold text-green-600">
-              {logs.filter(l => l.action === 'login').length}
-            </div>
-            <div className="text-sm text-gray-500">登入成功</div>
-          </div>
-          <div className="bg-white p-4 rounded-xl shadow-sm text-center">
-            <div className="text-2xl font-bold text-red-600">
-              {logs.filter(l => l.action === 'login_failed').length}
-            </div>
-            <div className="text-sm text-gray-500">登入失敗</div>
-          </div>
-          <div className="bg-white p-4 rounded-xl shadow-sm text-center">
-            <div className="text-2xl font-bold text-blue-600">
-              {logs.filter(l => l.action === 'logout').length}
-            </div>
-            <div className="text-sm text-gray-500">登出</div>
-          </div>
-          <div className="bg-white p-4 rounded-xl shadow-sm text-center">
-            <div className="text-2xl font-bold text-gray-600">{logs.length}</div>
-            <div className="text-sm text-gray-500">總記錄數</div>
-          </div>
-        </div>
-
-        <p className="text-center text-sm text-gray-400 mt-6">
-          💡 日誌每 30 秒自動更新 · 目前使用內存存儲，部署後會重置
-        </p>
       </main>
     </div>
   )
