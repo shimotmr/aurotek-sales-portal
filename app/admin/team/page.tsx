@@ -124,6 +124,16 @@ export default function TeamPage() {
             <h2 className="text-xl font-bold mb-4">編輯業務員</h2>
             <div className="space-y-4">
               <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">工號</label>
+                <input
+                  type="text"
+                  value={editingMember.id}
+                  onChange={(e) => setEditingMember({ ...editingMember, id: e.target.value })}
+                  className="w-full p-2 border rounded-lg"
+                  placeholder="例如: u1234"
+                />
+              </div>
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">姓名</label>
                 <input
                   type="text"
