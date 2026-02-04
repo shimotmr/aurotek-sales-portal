@@ -1,5 +1,12 @@
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 import { supabase } from '@/lib/supabase'
+import { logActivity, LogActions } from '@/lib/logger'
+
+async function getCurrentUser() {
+  const cookieStore = await cookies()
+  return cookieStore.get('user_email')?.value || 'unknown'
+}
 
 export async function GET() {
   try {
@@ -20,6 +27,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
+    const user = await getCurrentUser()
     
     if (!body.name) {
       return NextResponse.json({ success: false, message: '經銷商名稱為必填' }, { status: 400 })
@@ -43,6 +51,12 @@ export async function POST(request: Request) {
     
     if (error) throw error
     
+    await logActivity({
+      action: LogActions.DEALER_CREATE,
+      user,
+      details: { id, name: body.name }
+    })
+    
     return NextResponse.json({ success: true, message: '新增成功', data: { id } })
   } catch (error) {
     console.error('Failed to create dealer:', error)
@@ -53,6 +67,7 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const body = await request.json()
+    const user = await getCurrentUser()
     
     if (!body.id) {
       return NextResponse.json({ success: false, message: '缺少經銷商 ID' }, { status: 400 })
@@ -74,6 +89,12 @@ export async function PUT(request: Request) {
     
     if (error) throw error
     
+    await logActivity({
+      action: LogActions.DEALER_UPDATE,
+      user,
+      details: { id: body.id, name: body.name }
+    })
+    
     return NextResponse.json({ success: true, message: '更新成功' })
   } catch (error) {
     console.error('Failed to update dealer:', error)
@@ -85,6 +106,7 @@ export async function DELETE(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
+    const user = await getCurrentUser()
     
     if (!id) {
       return NextResponse.json({ success: false, message: '缺少經銷商 ID' }, { status: 400 })
@@ -96,6 +118,12 @@ export async function DELETE(request: Request) {
       .eq('id', id)
     
     if (error) throw error
+    
+    await logActivity({
+      action: LogActions.DEALER_DELETE,
+      user,
+      details: { id }
+    })
     
     return NextResponse.json({ success: true, message: '刪除成功' })
   } catch (error) {

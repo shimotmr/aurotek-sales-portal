@@ -1,5 +1,12 @@
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 import { supabase } from '@/lib/supabase'
+import { logActivity, LogActions } from '@/lib/logger'
+
+async function getCurrentUser() {
+  const cookieStore = await cookies()
+  return cookieStore.get('user_email')?.value || 'unknown'
+}
 
 export async function GET() {
   try {
@@ -10,7 +17,6 @@ export async function GET() {
     
     if (error) throw error
     
-    // 轉換欄位名稱
     const slides = (data || []).map(row => ({
       id: row.id,
       title: row.title,
@@ -31,15 +37,16 @@ export async function GET() {
   }
 }
 
-// POST - 新增簡報
 export async function POST(request: Request) {
   try {
     const body = await request.json()
+    const user = await getCurrentUser()
+    const id = body.id || `S${Date.now()}`
     
     const { error } = await supabase
       .from('slides')
       .insert({
-        id: body.id || `S${Date.now()}`,
+        id,
         title: body.title,
         category: body.category,
         sub_category: body.subCategory,
@@ -53,6 +60,12 @@ export async function POST(request: Request) {
     
     if (error) throw error
     
+    await logActivity({
+      action: LogActions.SLIDE_CREATE,
+      user,
+      details: { id, title: body.title }
+    })
+    
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Failed to create slide:', error)
@@ -60,10 +73,10 @@ export async function POST(request: Request) {
   }
 }
 
-// PUT - 更新簡報
 export async function PUT(request: Request) {
   try {
     const body = await request.json()
+    const user = await getCurrentUser()
     
     const { error } = await supabase
       .from('slides')
@@ -82,6 +95,12 @@ export async function PUT(request: Request) {
     
     if (error) throw error
     
+    await logActivity({
+      action: LogActions.SLIDE_UPDATE,
+      user,
+      details: { id: body.id, title: body.title }
+    })
+    
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Failed to update slide:', error)
@@ -89,11 +108,11 @@ export async function PUT(request: Request) {
   }
 }
 
-// DELETE - 刪除簡報
 export async function DELETE(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
+    const user = await getCurrentUser()
     
     const { error } = await supabase
       .from('slides')
@@ -101,6 +120,12 @@ export async function DELETE(request: Request) {
       .eq('id', id)
     
     if (error) throw error
+    
+    await logActivity({
+      action: LogActions.SLIDE_DELETE,
+      user,
+      details: { id }
+    })
     
     return NextResponse.json({ success: true })
   } catch (error) {

@@ -1,18 +1,16 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-
-// 內存日誌存儲（重啟會重置，但 serverless 函數在一段時間內會保持）
-// 未來可改用 Vercel KV 或 Google Sheets
-let activityLogs: LogEntry[] = []
+import { supabase } from '@/lib/supabase'
 
 export interface LogEntry {
-  id: string
+  id?: string
   timestamp: string
   action: string
-  user: string
+  user_email: string
   ip: string
-  userAgent?: string
+  user_agent?: string
   details: string
+  created_at?: string
 }
 
 // GET: 讀取日誌
@@ -29,27 +27,48 @@ export async function GET(request: Request) {
   const action = searchParams.get('action')
   const user = searchParams.get('user')
   
-  let filtered = [...activityLogs]
-  
-  if (action && action !== 'all') {
-    filtered = filtered.filter(log => log.action === action)
+  try {
+    let query = supabase
+      .from('logs')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(limit)
+    
+    if (action && action !== 'all') {
+      query = query.eq('action', action)
+    }
+    
+    if (user) {
+      query = query.ilike('user_email', `%${user}%`)
+    }
+    
+    const { data, error } = await query
+    
+    if (error) throw error
+    
+    // 轉換欄位名稱以兼容前端
+    const logs = (data || []).map(row => ({
+      id: row.id,
+      timestamp: row.timestamp || row.created_at,
+      action: row.action,
+      user: row.user_email,
+      ip: row.ip,
+      userAgent: row.user_agent,
+      details: row.details
+    }))
+    
+    return NextResponse.json({
+      logs,
+      total: logs.length
+    })
+  } catch (error) {
+    console.error('Failed to fetch logs:', error)
+    return NextResponse.json({
+      logs: [],
+      total: 0,
+      error: '讀取日誌失敗'
+    })
   }
-  
-  if (user) {
-    filtered = filtered.filter(log => 
-      log.user.toLowerCase().includes(user.toLowerCase())
-    )
-  }
-  
-  // 最新的在前面
-  filtered.sort((a, b) => 
-    new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-  )
-  
-  return NextResponse.json({
-    logs: filtered.slice(0, limit),
-    total: filtered.length
-  })
 }
 
 // POST: 新增日誌
@@ -57,43 +76,29 @@ export async function POST(request: Request) {
   try {
     const log = await request.json()
     
-    const entry: LogEntry = {
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+    const entry = {
       timestamp: log.timestamp || new Date().toISOString(),
       action: log.action,
-      user: log.user,
+      user_email: log.user || log.user_email || 'unknown',
       ip: log.ip || request.headers.get('x-forwarded-for') || 'unknown',
-      userAgent: log.userAgent,
+      user_agent: log.userAgent || log.user_agent || request.headers.get('user-agent') || '',
       details: typeof log.details === 'string' ? log.details : JSON.stringify(log.details || {})
     }
     
-    // 加到開頭
-    activityLogs.unshift(entry)
+    const { data, error } = await supabase
+      .from('logs')
+      .insert(entry)
+      .select('id')
+      .single()
     
-    // 只保留最近 500 條
-    if (activityLogs.length > 500) {
-      activityLogs = activityLogs.slice(0, 500)
-    }
+    if (error) throw error
     
     console.log('[ACTIVITY LOG]', JSON.stringify(entry))
     
-    return NextResponse.json({ success: true, id: entry.id })
+    return NextResponse.json({ success: true, id: data?.id })
   } catch (error) {
     console.error('Failed to log:', error)
-    return NextResponse.json({ error: 'Failed to log' }, { status: 500 })
+    // 即使日誌失敗也不要影響主流程
+    return NextResponse.json({ success: false, error: 'Failed to log' })
   }
-}
-
-// 初始化一些示範日誌（首次載入時）
-if (activityLogs.length === 0) {
-  activityLogs = [
-    {
-      id: 'init-1',
-      timestamp: new Date().toISOString(),
-      action: 'system',
-      user: 'system',
-      ip: 'server',
-      details: '系統日誌初始化'
-    }
-  ]
 }
