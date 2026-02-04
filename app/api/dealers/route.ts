@@ -1,67 +1,86 @@
 import { NextResponse } from 'next/server'
-import { getDealers, saveDealer, deleteDealer, Dealer } from '@/lib/db'
+import { supabase } from '@/lib/supabase'
 
-// GET - 取得所有經銷商
 export async function GET() {
   try {
-    const dealers = await getDealers()
-    return NextResponse.json({ success: true, data: dealers })
+    const { data, error } = await supabase
+      .from('dealers')
+      .select('*')
+      .order('name')
+    
+    if (error) throw error
+    
+    return NextResponse.json({ success: true, data: data || [] })
   } catch (error) {
     console.error('Failed to get dealers:', error)
     return NextResponse.json({ success: false, message: '載入失敗' }, { status: 500 })
   }
 }
 
-// POST - 新增經銷商
 export async function POST(request: Request) {
   try {
-    const dealer: Dealer = await request.json()
+    const body = await request.json()
     
-    if (!dealer.name) {
+    if (!body.name) {
       return NextResponse.json({ success: false, message: '經銷商名稱為必填' }, { status: 400 })
     }
     
-    // 自動產生 ID
-    if (!dealer.id) {
-      dealer.id = `D${Date.now()}`
-    }
+    const id = body.id || `D${Date.now()}`
     
-    const success = await saveDealer(dealer)
+    const { error } = await supabase
+      .from('dealers')
+      .insert({
+        id,
+        name: body.name,
+        contact: body.contact || '',
+        phone: body.phone || '',
+        email: body.email || '',
+        region: body.region || '北區',
+        status: body.status || 'active',
+        address: body.address || '',
+        notes: body.notes || '',
+      })
     
-    if (success) {
-      return NextResponse.json({ success: true, message: '儲存成功', data: dealer })
-    } else {
-      return NextResponse.json({ success: false, message: '儲存失敗' }, { status: 500 })
-    }
+    if (error) throw error
+    
+    return NextResponse.json({ success: true, message: '新增成功', data: { id } })
   } catch (error) {
-    console.error('Failed to save dealer:', error)
-    return NextResponse.json({ success: false, message: '儲存失敗' }, { status: 500 })
+    console.error('Failed to create dealer:', error)
+    return NextResponse.json({ success: false, message: '新增失敗' }, { status: 500 })
   }
 }
 
-// PUT - 更新經銷商
 export async function PUT(request: Request) {
   try {
-    const dealer: Dealer = await request.json()
+    const body = await request.json()
     
-    if (!dealer.id) {
+    if (!body.id) {
       return NextResponse.json({ success: false, message: '缺少經銷商 ID' }, { status: 400 })
     }
     
-    const success = await saveDealer(dealer)
+    const { error } = await supabase
+      .from('dealers')
+      .update({
+        name: body.name,
+        contact: body.contact || '',
+        phone: body.phone || '',
+        email: body.email || '',
+        region: body.region || '北區',
+        status: body.status || 'active',
+        address: body.address || '',
+        notes: body.notes || '',
+      })
+      .eq('id', body.id)
     
-    if (success) {
-      return NextResponse.json({ success: true, message: '更新成功' })
-    } else {
-      return NextResponse.json({ success: false, message: '更新失敗' }, { status: 500 })
-    }
+    if (error) throw error
+    
+    return NextResponse.json({ success: true, message: '更新成功' })
   } catch (error) {
     console.error('Failed to update dealer:', error)
     return NextResponse.json({ success: false, message: '更新失敗' }, { status: 500 })
   }
 }
 
-// DELETE - 刪除經銷商
 export async function DELETE(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
@@ -71,13 +90,14 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ success: false, message: '缺少經銷商 ID' }, { status: 400 })
     }
     
-    const success = await deleteDealer(id)
+    const { error } = await supabase
+      .from('dealers')
+      .delete()
+      .eq('id', id)
     
-    if (success) {
-      return NextResponse.json({ success: true, message: '刪除成功' })
-    } else {
-      return NextResponse.json({ success: false, message: '刪除失敗' }, { status: 500 })
-    }
+    if (error) throw error
+    
+    return NextResponse.json({ success: true, message: '刪除成功' })
   } catch (error) {
     console.error('Failed to delete dealer:', error)
     return NextResponse.json({ success: false, message: '刪除失敗' }, { status: 500 })

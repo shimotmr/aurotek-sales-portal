@@ -1,10 +1,27 @@
 import { NextResponse } from 'next/server'
-import { getTeamMembers, saveTeamMember, deleteTeamMember, TeamMember } from '@/lib/db'
+import { supabase, TeamMember } from '@/lib/supabase'
 
 // GET - 取得所有業務員
 export async function GET() {
   try {
-    const members = await getTeamMembers()
+    const { data, error } = await supabase
+      .from('team')
+      .select('*')
+      .order('name')
+    
+    if (error) throw error
+    
+    // 轉換欄位名稱 (snake_case -> camelCase)
+    const members = (data || []).map(row => ({
+      id: row.id,
+      name: row.name,
+      englishName: row.english_name,
+      email: row.email,
+      phone: row.phone,
+      region: row.region,
+      status: row.status,
+    }))
+    
     return NextResponse.json({ success: true, data: members })
   } catch (error) {
     console.error('Failed to get team:', error)
@@ -15,41 +32,62 @@ export async function GET() {
 // POST - 新增業務員
 export async function POST(request: Request) {
   try {
-    const member: TeamMember = await request.json()
+    const body = await request.json()
     
-    if (!member.id || !member.name) {
+    if (!body.id || !body.name) {
       return NextResponse.json({ success: false, message: '工號和姓名為必填' }, { status: 400 })
     }
     
-    const success = await saveTeamMember(member)
+    const { error } = await supabase
+      .from('team')
+      .insert({
+        id: body.id,
+        name: body.name,
+        english_name: body.englishName || '',
+        email: body.email || '',
+        phone: body.phone || '',
+        region: body.region || '全區',
+        status: body.status || 'active',
+      })
     
-    if (success) {
-      return NextResponse.json({ success: true, message: '儲存成功' })
-    } else {
-      return NextResponse.json({ success: false, message: '儲存失敗' }, { status: 500 })
+    if (error) {
+      if (error.code === '23505') {
+        return NextResponse.json({ success: false, message: '工號已存在' }, { status: 400 })
+      }
+      throw error
     }
+    
+    return NextResponse.json({ success: true, message: '新增成功' })
   } catch (error) {
-    console.error('Failed to save team member:', error)
-    return NextResponse.json({ success: false, message: '儲存失敗' }, { status: 500 })
+    console.error('Failed to create team member:', error)
+    return NextResponse.json({ success: false, message: '新增失敗' }, { status: 500 })
   }
 }
 
 // PUT - 更新業務員
 export async function PUT(request: Request) {
   try {
-    const member: TeamMember = await request.json()
+    const body = await request.json()
     
-    if (!member.id) {
+    if (!body.id) {
       return NextResponse.json({ success: false, message: '缺少工號' }, { status: 400 })
     }
     
-    const success = await saveTeamMember(member)
+    const { error } = await supabase
+      .from('team')
+      .update({
+        name: body.name,
+        english_name: body.englishName || '',
+        email: body.email || '',
+        phone: body.phone || '',
+        region: body.region || '全區',
+        status: body.status || 'active',
+      })
+      .eq('id', body.id)
     
-    if (success) {
-      return NextResponse.json({ success: true, message: '更新成功' })
-    } else {
-      return NextResponse.json({ success: false, message: '更新失敗' }, { status: 500 })
-    }
+    if (error) throw error
+    
+    return NextResponse.json({ success: true, message: '更新成功' })
   } catch (error) {
     console.error('Failed to update team member:', error)
     return NextResponse.json({ success: false, message: '更新失敗' }, { status: 500 })
@@ -66,13 +104,14 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ success: false, message: '缺少工號' }, { status: 400 })
     }
     
-    const success = await deleteTeamMember(id)
+    const { error } = await supabase
+      .from('team')
+      .delete()
+      .eq('id', id)
     
-    if (success) {
-      return NextResponse.json({ success: true, message: '刪除成功' })
-    } else {
-      return NextResponse.json({ success: false, message: '刪除失敗' }, { status: 500 })
-    }
+    if (error) throw error
+    
+    return NextResponse.json({ success: true, message: '刪除成功' })
   } catch (error) {
     console.error('Failed to delete team member:', error)
     return NextResponse.json({ success: false, message: '刪除失敗' }, { status: 500 })
