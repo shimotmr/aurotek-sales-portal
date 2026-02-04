@@ -337,6 +337,9 @@ function CasesContent() {
                   <th className="text-right py-3 px-4 font-semibold cursor-pointer hover:bg-gray-100" onClick={() => handleSort('expected')}>
                     期望值(K) <SortIcon field="expected" />
                   </th>
+                  <th className="text-left py-3 px-4 font-semibold cursor-pointer hover:bg-gray-100" onClick={() => handleSort('orderDate')}>
+                    訂單日 <SortIcon field="orderDate" />
+                  </th>
                   <th className="text-left py-3 px-4 font-semibold cursor-pointer hover:bg-gray-100" onClick={() => handleSort('shipDate')}>
                     出貨日 <SortIcon field="shipDate" />
                   </th>
@@ -364,6 +367,9 @@ function CasesContent() {
                     </td>
                     <td className="text-right py-3 px-4 text-blue-600 font-medium">
                       {c.expected > 0 ? formatNumber(Math.round(c.expected)) : '-'}
+                    </td>
+                    <td className="py-3 px-4 text-gray-500">
+                      {c.orderDate || '-'}
                     </td>
                     <td className="py-3 px-4 text-gray-500">
                       {c.shipDate || '-'}
