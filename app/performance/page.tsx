@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
+import UserMenu from '../components/UserMenu'
 
 interface MonthStat {
   month: number
@@ -261,8 +262,11 @@ export default function PerformancePage() {
               ⚠️ 過去月份顯示實際業績（已出貨），當月及未來顯示預測
             </p>
           </div>
-          <div className="text-sm text-gray-500">
-            更新時間：{new Date(data.updatedAt).toLocaleString('zh-TW')}
+          <div className="flex items-center gap-4">
+            <div className="text-sm text-gray-500">
+              更新時間：{new Date(data.updatedAt).toLocaleString('zh-TW')}
+            </div>
+            <UserMenu />
           </div>
         </div>
 

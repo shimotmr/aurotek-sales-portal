@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
+import UserMenu from '../components/UserMenu'
 
 interface Case {
   id: string
@@ -182,8 +183,11 @@ function CasesContent() {
             <a href="/performance" className="text-blue-600 hover:underline text-sm">← 返回 Dashboard</a>
             <h1 className="text-3xl font-bold text-gray-900 mt-2">📋 案件列表</h1>
           </div>
-          <div className="text-sm text-gray-500">
-            更新：{new Date(data.updatedAt).toLocaleString('zh-TW')}
+          <div className="flex items-center gap-4">
+            <div className="text-sm text-gray-500">
+              更新：{new Date(data.updatedAt).toLocaleString('zh-TW')}
+            </div>
+            <UserMenu />
           </div>
         </div>
 

@@ -1,21 +1,25 @@
 import Link from 'next/link'
+import UserMenu from './components/UserMenu'
 
 export default function Home() {
   return (
     <main className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header with Admin Link */}
+        {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">
             和椿通路營業管理系統
           </h1>
-          <Link 
-            href="/admin" 
-            className="text-gray-400 hover:text-gray-600 transition"
-            title="後台管理"
-          >
-            ⚙️
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link 
+              href="/admin" 
+              className="text-gray-400 hover:text-gray-600 transition"
+              title="後台管理"
+            >
+              ⚙️
+            </Link>
+            <UserMenu />
+          </div>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

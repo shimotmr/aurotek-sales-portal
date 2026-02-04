@@ -1,9 +1,15 @@
 import Link from 'next/link'
+import UserMenu from '../components/UserMenu'
 
 export default function MarketingPage() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-600">
       <div className="max-w-4xl mx-auto px-4 py-16">
+        {/* User Menu - 右上角 */}
+        <div className="absolute top-4 right-4">
+          <UserMenu />
+        </div>
+        
         {/* Header */}
         <div className="text-center mb-12">
           <Link href="/" className="text-white/80 hover:text-white text-sm">
