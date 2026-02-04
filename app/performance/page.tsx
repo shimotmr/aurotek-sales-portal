@@ -55,6 +55,7 @@ interface Case {
   dealer: string
   probability: number
   amount: number
+  orderDate?: string
   shipDate?: string
   customer?: string
 }
@@ -71,12 +72,21 @@ interface AlertRule {
 const ALERT_RULES: AlertRule[] = [
   {
     id: 'overdue-in-progress',
-    name: '進行中案件已過期',
+    name: '進行中案件出貨日已過期',
     description: '進行中的案件出貨日早於今天，應調整出貨日或標記失敗',
     check: (cases, today) => cases.filter(c => 
       c.stage === '進行中' && c.shipDate && c.shipDate < today
     ),
     filterUrl: (cases) => `/cases?stage=進行中&overdue=true`
+  },
+  {
+    id: 'overdue-order-date',
+    name: '預計取得訂單日已過期',
+    description: '進行中的案件預計取得訂單日早於今天，應調整日期或結案',
+    check: (cases, today) => cases.filter(c => 
+      c.stage === '進行中' && c.orderDate && c.orderDate < today
+    ),
+    filterUrl: (cases) => `/cases?stage=進行中`
   },
 ]
 
