@@ -26,13 +26,9 @@ export default function VideosAdminPage() {
   const [showModal, setShowModal] = useState(false)
 
   useEffect(() => {
-    const auth = localStorage.getItem('admin_auth')
-    if (auth !== 'true') {
-      router.push('/admin')
-      return
-    }
+    // 認證由 middleware 處理，直接載入資料
     fetchVideos()
-  }, [router])
+  }, [])
 
   const fetchVideos = async () => {
     try {
