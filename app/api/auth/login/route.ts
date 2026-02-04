@@ -168,7 +168,7 @@ function escapeXml(str: string): string {
     .replace(/'/g, '&apos;')
 }
 
-// Log 記錄函數 - 寫入 Google Sheets
+// Log 記錄函數
 async function logActivity(log: {
   action: string
   user: string
@@ -178,13 +178,26 @@ async function logActivity(log: {
   details: Record<string, unknown>
 }) {
   try {
-    // 這裡可以寫入 Google Sheets
-    // 暫時先用 console.log
-    console.log('[ACTIVITY LOG]', JSON.stringify(log))
+    // 呼叫內部 logs API
+    const baseUrl = process.env.VERCEL_URL 
+      ? `https://${process.env.VERCEL_URL}` 
+      : 'http://localhost:3000'
     
-    // TODO: 實作 Google Sheets 寫入
-    // const SHEET_ID = 'xxx'
-    // await appendToSheet(SHEET_ID, 'Logs', [[log.timestamp, log.action, log.user, log.ip, JSON.stringify(log.details)]])
+    await fetch(`${baseUrl}/api/logs`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: log.action,
+        user: log.user,
+        timestamp: log.timestamp,
+        ip: log.ip,
+        userAgent: log.userAgent,
+        details: log.details
+      })
+    }).catch(() => {
+      // 如果內部 API 失敗，至少記錄到 console
+      console.log('[ACTIVITY LOG]', JSON.stringify(log))
+    })
   } catch (error) {
     console.error('Failed to log activity:', error)
   }
