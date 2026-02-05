@@ -4,10 +4,19 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
+interface Stats {
+  teamCount: number
+  annualTarget: number
+  dealerCount: number
+  caseCount: number
+}
+
 export default function AdminPage() {
   const router = useRouter()
   const [currentUser, setCurrentUser] = useState<{ name: string; email: string } | null>(null)
   const [isSuperAdmin, setIsSuperAdmin] = useState(false)
+  const [stats, setStats] = useState<Stats>({ teamCount: 0, annualTarget: 0, dealerCount: 0, caseCount: 0 })
+  const [isLoadingStats, setIsLoadingStats] = useState(true)
 
   useEffect(() => {
     // 從 cookie 讀取用戶資訊
@@ -26,7 +35,42 @@ export default function AdminPage() {
       setCurrentUser({ name: userName, email: userEmail })
       setIsSuperAdmin(superAdmin)
     }
+    
+    // 載入統計數據
+    loadStats()
   }, [])
+
+  const loadStats = async () => {
+    setIsLoadingStats(true)
+    try {
+      const currentYear = new Date().getFullYear()
+      
+      // 並行載入所有資料
+      const [teamRes, targetsRes, dealersRes, casesRes] = await Promise.all([
+        fetch('/api/team'),
+        fetch(`/api/targets?year=${currentYear}`),
+        fetch('/api/dealers'),
+        fetch('/api/cases')
+      ])
+      
+      const teamData = await teamRes.json()
+      const targetsData = await targetsRes.json()
+      const dealersData = await dealersRes.json()
+      const casesData = await casesRes.json()
+      
+      // 計算統計
+      const teamCount = teamData.success ? (teamData.data?.filter((t: any) => t.status === 'active')?.length || 0) : 0
+      const annualTarget = targetsData.success ? (targetsData.data?.reduce((sum: number, t: any) => sum + (t.targetAmount || 0), 0) || 0) : 0
+      const dealerCount = dealersData.success ? (dealersData.data?.filter((d: any) => d.status === 'active')?.length || 0) : 0
+      const caseCount = casesData.success ? (casesData.data?.length || 0) : 0
+      
+      setStats({ teamCount, annualTarget, dealerCount, caseCount })
+    } catch (e) {
+      console.error('Failed to load stats:', e)
+    } finally {
+      setIsLoadingStats(false)
+    }
+  }
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' })
@@ -120,19 +164,27 @@ export default function AdminPage() {
           <h2 className="text-lg font-bold mb-4">📊 系統概覽</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600">3</div>
+              <div className="text-2xl font-bold text-blue-600">
+                {isLoadingStats ? '...' : stats.teamCount}
+              </div>
               <div className="text-sm text-gray-600">業務人員</div>
             </div>
             <div className="text-center p-4 bg-green-50 rounded-lg">
-              <div className="text-2xl font-bold text-green-600">149,650K</div>
+              <div className="text-2xl font-bold text-green-600">
+                {isLoadingStats ? '...' : stats.annualTarget.toLocaleString('zh-TW')}
+              </div>
               <div className="text-sm text-gray-600">年度目標</div>
             </div>
             <div className="text-center p-4 bg-purple-50 rounded-lg">
-              <div className="text-2xl font-bold text-purple-600">10+</div>
+              <div className="text-2xl font-bold text-purple-600">
+                {isLoadingStats ? '...' : stats.dealerCount}
+              </div>
               <div className="text-sm text-gray-600">經銷商</div>
             </div>
             <div className="text-center p-4 bg-orange-50 rounded-lg">
-              <div className="text-2xl font-bold text-orange-600">853</div>
+              <div className="text-2xl font-bold text-orange-600">
+                {isLoadingStats ? '...' : stats.caseCount}
+              </div>
               <div className="text-sm text-gray-600">案件數</div>
             </div>
           </div>
