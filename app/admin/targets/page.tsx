@@ -134,6 +134,17 @@ export default function TargetsPage() {
     }
   })
 
+  // 計算每月合計
+  const monthlyTotals = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(m => {
+    return targets.filter(t => t.month === m).reduce((sum, t) => sum + t.targetAmount, 0)
+  })
+  const grandTotal = monthlyTotals.reduce((sum, t) => sum + t, 0)
+
+  // 格式化數字（加千分位）
+  const formatNumber = (num: number) => {
+    return num.toLocaleString('zh-TW')
+  }
+
   const months = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
   const years = [2024, 2025, 2026, 2027]
 
@@ -207,7 +218,7 @@ export default function TargetsPage() {
                             onClick={() => handleEdit(target)}
                             className="text-blue-600 hover:underline"
                           >
-                            {(target.targetAmount / 1000).toFixed(0)}K
+                            {formatNumber(target.targetAmount)}
                           </button>
                         ) : (
                           <button
@@ -231,12 +242,25 @@ export default function TargetsPage() {
                       </td>
                     )
                   })}
-                  <td className="px-4 py-3 text-center font-bold bg-blue-50">
-                    {(member.totalTarget / 1000).toFixed(0)}K
+                  <td className="px-4 py-3 text-center font-bold bg-blue-50 text-blue-700">
+                    {formatNumber(member.totalTarget)}
                   </td>
                 </tr>
               ))}
             </tbody>
+            <tfoot className="bg-amber-50 border-t-2 border-amber-200">
+              <tr>
+                <td className="px-4 py-3 font-bold sticky left-0 bg-amber-50">合計</td>
+                {months.map((m, idx) => (
+                  <td key={m} className="px-4 py-3 text-center font-bold text-amber-700">
+                    {formatNumber(monthlyTotals[idx])}
+                  </td>
+                ))}
+                <td className="px-4 py-3 text-center font-bold bg-amber-100 text-amber-800 text-lg">
+                  {formatNumber(grandTotal)}
+                </td>
+              </tr>
+            </tfoot>
           </table>
           
           {team.length === 0 && (
@@ -295,14 +319,15 @@ export default function TargetsPage() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">目標金額 (千元)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">目標金額</label>
                 <input
                   type="number"
-                  value={editingTarget.targetAmount / 1000}
-                  onChange={(e) => setEditingTarget({ ...editingTarget, targetAmount: parseFloat(e.target.value) * 1000 || 0 })}
+                  value={editingTarget.targetAmount || ''}
+                  onChange={(e) => setEditingTarget({ ...editingTarget, targetAmount: parseFloat(e.target.value) || 0 })}
                   className="w-full p-2 border rounded-lg"
-                  placeholder="例如: 5000 (表示 5,000K)"
+                  placeholder="例如: 3400 (單位：千元)"
                 />
+                <p className="text-xs text-gray-500 mt-1">單位：千元（例如輸入 3400 表示 340 萬）</p>
               </div>
             </div>
             <div className="flex gap-3 mt-6">
