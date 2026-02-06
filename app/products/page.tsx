@@ -13,6 +13,7 @@ interface ProductListItem {
   material_type_name: string | null
   product_types: string[] | null
   list_price: number | null
+  dealer_price: number | null
   total_qty: number
 }
 
@@ -57,35 +58,37 @@ function TableSkeleton({ rows = 5 }: { rows?: number }) {
     <>
       {Array.from({ length: rows }).map((_, i) => (
         <tr key={i} className="animate-pulse">
-          <td className="border-b p-2.5"><div className="h-4 bg-gray-200 rounded w-20" /></td>
-          <td className="border-b p-2.5"><div className="h-4 bg-gray-200 rounded w-32" /></td>
-          <td className="border-b p-2.5 hidden md:table-cell"><div className="h-4 bg-gray-200 rounded w-28" /></td>
-          <td className="border-b p-2.5 hidden md:table-cell"><div className="h-4 bg-gray-200 rounded w-16" /></td>
-          <td className="border-b p-2.5 hidden lg:table-cell"><div className="h-4 bg-gray-200 rounded w-16" /></td>
-          <td className="border-b p-2.5"><div className="h-4 bg-gray-200 rounded w-20 ml-auto" /></td>
-          <td className="border-b p-2.5 hidden sm:table-cell"><div className="h-4 bg-gray-200 rounded w-10 ml-auto" /></td>
-          <td className="border-b p-2.5"><div className="h-4 bg-gray-200 rounded w-10 mx-auto" /></td>
+          <td className="border-b p-2"><div className="h-4 bg-gray-200 rounded w-20" /></td>
+          <td className="border-b p-2"><div className="h-4 bg-gray-200 rounded w-28" /></td>
+          <td className="border-b p-2 hidden lg:table-cell"><div className="h-4 bg-gray-200 rounded w-24" /></td>
+          <td className="border-b p-2 hidden md:table-cell"><div className="h-4 bg-gray-200 rounded w-12" /></td>
+          <td className="border-b p-2"><div className="h-4 bg-gray-200 rounded w-16 ml-auto" /></td>
+          <td className="border-b p-2"><div className="h-4 bg-gray-200 rounded w-16 ml-auto" /></td>
+          <td className="border-b p-2 hidden sm:table-cell"><div className="h-4 bg-gray-200 rounded w-8 ml-auto" /></td>
+          <td className="border-b p-2"><div className="h-4 bg-gray-200 rounded w-4 mx-auto" /></td>
         </tr>
       ))}
     </>
   )
 }
 
-// 手機版卡片骨架
+// 手機版卡片骨架（緊湊版）
 function CardSkeleton({ count = 5 }: { count?: number }) {
   return (
     <>
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="bg-white border rounded-xl p-4 animate-pulse">
-          <div className="flex justify-between items-start mb-2">
-            <div className="h-4 bg-gray-200 rounded w-24" />
-            <div className="h-5 bg-gray-200 rounded w-16" />
+        <div key={i} className="bg-white border rounded-lg px-3 py-2.5 animate-pulse">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="h-3 bg-gray-200 rounded w-20" />
+            <div className="h-3 bg-gray-200 rounded w-10" />
           </div>
-          <div className="h-5 bg-gray-200 rounded w-3/4 mb-2" />
-          <div className="h-4 bg-gray-200 rounded w-1/2 mb-3" />
-          <div className="flex gap-2">
-            <div className="h-8 bg-gray-200 rounded w-16" />
-            <div className="h-8 bg-gray-200 rounded w-24" />
+          <div className="h-4 bg-gray-200 rounded w-3/4 mb-1.5" />
+          <div className="flex justify-between items-center">
+            <div className="flex gap-3">
+              <div className="h-4 bg-gray-200 rounded w-16" />
+              <div className="h-4 bg-gray-200 rounded w-20" />
+            </div>
+            <div className="h-5 bg-gray-200 rounded w-12" />
           </div>
         </div>
       ))}
@@ -247,7 +250,7 @@ export default function ProductsPage() {
   }, [])
 
   // ✅ P0 優化：只載入表格需要的欄位
-  const TABLE_FIELDS = 'id,aurotek_pn,name,spec,material_type_name,product_types,list_price,total_qty'
+  const TABLE_FIELDS = 'id,aurotek_pn,name,spec,material_type_name,product_types,list_price,dealer_price,total_qty'
 
   const fetchProducts = useCallback(async () => {
     setLoading(true)
@@ -349,18 +352,9 @@ export default function ProductsPage() {
       {/* Header */}
       <div className="bg-white shadow-sm border-b sticky top-0 z-20">
         <div className="max-w-full mx-auto px-3 sm:px-4 py-3">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-3">
-              <Link href="/" className="text-gray-500 hover:text-gray-700 text-xl">←</Link>
-              <h1 className="text-lg sm:text-xl font-bold text-gray-900">普渡料號資料庫</h1>
-            </div>
-            <Link 
-              href="/quotations/new"
-              className="text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-              style={{ backgroundColor: '#E60012' }}
-            >
-              + 報價單
-            </Link>
+          <div className="flex items-center gap-3">
+            <Link href="/" className="text-gray-500 hover:text-gray-700 text-xl">←</Link>
+            <h1 className="text-lg sm:text-xl font-bold text-gray-900">普渡料號資料庫</h1>
           </div>
         </div>
       </div>
@@ -560,59 +554,71 @@ export default function ProductsPage() {
               ) : products.length === 0 ? (
                 <div className="bg-white rounded-xl p-8 text-center text-gray-500">找不到產品</div>
               ) : (
-                products.map((product) => (
-                  <div 
-                    key={product.id} 
-                    className="bg-white border rounded-xl p-4 shadow-sm active:bg-gray-50 transition-colors"
-                  >
-                    {/* 第一行：料號 + 物料類型 + 庫存 */}
-                    <div className="flex justify-between items-start mb-1">
-                      <span className="font-mono text-sm text-gray-600">{product.aurotek_pn}</span>
-                      <div className="flex items-center gap-2">
+                products.map((product) => {
+                  // 品名處理：取 / 前的中文名，英文部分淡化
+                  const nameParts = product.name.split('/')
+                  const mainName = nameParts[0].trim()
+                  const engName = nameParts.length > 1 ? nameParts.slice(1).join('/').trim() : null
+                  
+                  return (
+                    <div 
+                      key={product.id} 
+                      className="bg-white border rounded-lg px-3 py-2.5 shadow-sm active:bg-gray-50 transition-colors"
+                    >
+                      {/* 第一行：料號 + 類型 + 庫存 + ⋮詳細 */}
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-mono text-xs text-gray-500">{product.aurotek_pn}</span>
                         {product.material_type_name && (
-                          <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded">
+                          <span className="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded">
                             {product.material_type_name}
                           </span>
                         )}
                         {product.total_qty > 0 && (
-                          <span className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded font-medium">
-                            庫存 {product.total_qty}
+                          <span className="text-[10px] px-1.5 py-0.5 bg-green-50 text-green-600 rounded">
+                            庫存{product.total_qty}
                           </span>
                         )}
+                        <button
+                          onClick={() => openDrawer(product.id)}
+                          className="ml-auto text-gray-400 hover:text-gray-600 px-1.5 py-0.5 text-lg leading-none"
+                          title="詳細"
+                        >
+                          ⋯
+                        </button>
+                      </div>
+                      
+                      {/* 第二行：品名（中文為主，英文淡化） */}
+                      <div className="mb-1.5">
+                        <span className="font-medium text-gray-900 text-sm">{mainName}</span>
+                        {engName && (
+                          <span className="text-xs text-gray-400 ml-1">/{engName}</span>
+                        )}
+                      </div>
+                      
+                      {/* 第三行：牌價 + 經銷價 + 加入報價按鈕 */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-baseline gap-3">
+                          <span className="text-sm font-semibold text-[#E60012]">
+                            {product.list_price ? `$${formatPrice(product.list_price)}` : '-'}
+                          </span>
+                          {product.dealer_price && (
+                            <span className="text-xs text-gray-500">
+                              經銷<span className="text-gray-700 font-medium">${formatPrice(product.dealer_price)}</span>
+                            </span>
+                          )}
+                        </div>
+                        <Link
+                          href={`/quotations/new?product=${product.id}`}
+                          className="text-xs px-2 py-1 rounded text-white font-medium"
+                          style={{ backgroundColor: '#E60012' }}
+                          title="加入報價單"
+                        >
+                          +報價
+                        </Link>
                       </div>
                     </div>
-                    
-                    {/* 第二行：品名 */}
-                    <h3 className="font-medium text-gray-900 mb-1 line-clamp-2">{product.name}</h3>
-                    
-                    {/* 第三行：產品類型 + 牌價 */}
-                    <div className="flex justify-between items-center mb-3">
-                      <span className="text-xs text-gray-500">
-                        {product.product_types?.join(', ') || '-'}
-                      </span>
-                      <span className="font-bold text-[#E60012]">
-                        {product.list_price ? `NT$ ${formatPrice(product.list_price)}` : '-'}
-                      </span>
-                    </div>
-                    
-                    {/* 操作按鈕 */}
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => openDrawer(product.id)}
-                        className="flex-1 px-3 py-2 border rounded-lg text-sm text-gray-700 hover:bg-gray-50"
-                      >
-                        詳細
-                      </button>
-                      <Link
-                        href={`/quotations/new?product=${product.id}`}
-                        className="flex-1 px-3 py-2 rounded-lg text-sm text-white text-center font-medium"
-                        style={{ backgroundColor: '#E60012' }}
-                      >
-                        + 報價單
-                      </Link>
-                    </div>
-                  </div>
-                ))
+                  )
+                }))
               )}
             </div>
           ) : (
@@ -623,12 +629,12 @@ export default function ProductsPage() {
                   <tr className="bg-gray-50">
                     <th className="border-b p-2.5 text-left font-bold text-gray-700 text-xs whitespace-nowrap">和椿料號</th>
                     <th className="border-b p-2.5 text-left font-bold text-gray-700 text-xs whitespace-nowrap">品名</th>
-                    <th className="border-b p-2.5 text-left font-bold text-gray-700 text-xs whitespace-nowrap">規格</th>
-                    <th className="border-b p-2.5 text-left font-bold text-gray-700 text-xs whitespace-nowrap">物料類型</th>
-                    <th className="border-b p-2.5 text-left font-bold text-gray-700 text-xs whitespace-nowrap">產品類型</th>
+                    <th className="border-b p-2.5 text-left font-bold text-gray-700 text-xs whitespace-nowrap hidden lg:table-cell">規格</th>
+                    <th className="border-b p-2.5 text-left font-bold text-gray-700 text-xs whitespace-nowrap hidden md:table-cell">類型</th>
                     <th className="border-b p-2.5 text-right font-bold text-gray-700 text-xs whitespace-nowrap">牌價</th>
-                    <th className="border-b p-2.5 text-right font-bold text-gray-700 text-xs whitespace-nowrap">庫存</th>
-                    <th className="border-b p-2.5 text-center font-bold text-gray-700 text-xs whitespace-nowrap">操作</th>
+                    <th className="border-b p-2.5 text-right font-bold text-gray-700 text-xs whitespace-nowrap">經銷價</th>
+                    <th className="border-b p-2.5 text-right font-bold text-gray-700 text-xs whitespace-nowrap hidden sm:table-cell">庫存</th>
+                    <th className="border-b p-2.5 text-center font-bold text-gray-700 text-xs whitespace-nowrap w-16">⋯</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -639,35 +645,39 @@ export default function ProductsPage() {
                       <td colSpan={8} className="p-8 text-center text-gray-500">找不到產品</td>
                     </tr>
                   ) : (
-                    products.map((product) => (
-                      <tr key={product.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="border-b p-2.5 text-sm font-mono text-gray-700 whitespace-nowrap">{product.aurotek_pn}</td>
-                        <td className="border-b p-2.5 text-sm text-gray-700 max-w-[200px] truncate">{product.name}</td>
-                        <td className="border-b p-2.5 text-sm text-gray-500 max-w-[180px] truncate">{product.spec || '-'}</td>
-                        <td className="border-b p-2.5 text-sm text-gray-700 whitespace-nowrap">{product.material_type_name || '-'}</td>
-                        <td className="border-b p-2.5 text-sm text-gray-500 whitespace-nowrap max-w-[120px] truncate">
-                          {product.product_types?.join(', ') || '-'}
-                        </td>
-                        <td className="border-b p-2.5 text-sm text-gray-700 text-right whitespace-nowrap font-medium">
-                          {formatPrice(product.list_price)}
-                        </td>
-                        <td className="border-b p-2.5 text-sm text-right whitespace-nowrap">
-                          {product.total_qty > 0 ? (
-                            <span className="text-green-600 font-medium">{product.total_qty}</span>
-                          ) : (
-                            <span className="text-gray-400">0</span>
-                          )}
-                        </td>
-                        <td className="border-b p-2.5 text-center whitespace-nowrap">
-                          <button
-                            onClick={() => openDrawer(product.id)}
-                            className="text-xs px-2 py-1 text-[#E60012] hover:underline"
-                          >
-                            詳細
-                          </button>
-                        </td>
-                      </tr>
-                    ))
+                    products.map((product) => {
+                      const mainName = product.name.split('/')[0].trim()
+                      return (
+                        <tr key={product.id} className="hover:bg-gray-50 transition-colors">
+                          <td className="border-b p-2 text-xs font-mono text-gray-600 whitespace-nowrap">{product.aurotek_pn}</td>
+                          <td className="border-b p-2 text-sm text-gray-800 max-w-[180px] truncate" title={product.name}>{mainName}</td>
+                          <td className="border-b p-2 text-xs text-gray-500 max-w-[150px] truncate hidden lg:table-cell">{product.spec || '-'}</td>
+                          <td className="border-b p-2 text-xs text-gray-500 whitespace-nowrap hidden md:table-cell">{product.material_type_name || '-'}</td>
+                          <td className="border-b p-2 text-sm text-right whitespace-nowrap font-medium text-[#E60012]">
+                            {formatPrice(product.list_price)}
+                          </td>
+                          <td className="border-b p-2 text-sm text-right whitespace-nowrap text-gray-700">
+                            {formatPrice(product.dealer_price)}
+                          </td>
+                          <td className="border-b p-2 text-sm text-right whitespace-nowrap hidden sm:table-cell">
+                            {product.total_qty > 0 ? (
+                              <span className="text-green-600 font-medium">{product.total_qty}</span>
+                            ) : (
+                              <span className="text-gray-300">-</span>
+                            )}
+                          </td>
+                          <td className="border-b p-2 text-center whitespace-nowrap">
+                            <button
+                              onClick={() => openDrawer(product.id)}
+                              className="text-gray-400 hover:text-gray-600 px-1"
+                              title="詳細"
+                            >
+                              ⋯
+                            </button>
+                          </td>
+                        </tr>
+                      )
+                    }))
                   )}
                 </tbody>
               </table>
