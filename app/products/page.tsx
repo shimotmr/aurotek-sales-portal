@@ -28,7 +28,16 @@ export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const [typeFilter, setTypeFilter] = useState<string | null>(null)
+  
+  // 篩選狀態
+  const [materialTypeFilter, setMaterialTypeFilter] = useState<string | null>(null)
+  const [productTypeFilters, setProductTypeFilters] = useState<string[]>([])
+  const [tagFilters, setTagFilters] = useState<string[]>([])
+  
+  // 篩選選項（從資料庫載入）
+  const [productTypeOptions, setProductTypeOptions] = useState<string[]>([])
+  const [tagOptions, setTagOptions] = useState<string[]>([])
+  
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(25)
   const [total, setTotal] = useState(0)
@@ -38,28 +47,56 @@ export default function ProductsPage() {
 
   // 物料類型對應
   const materialTypes = [
+    { code: 'spare', name: '備件' },
     { code: 'machine', name: '整機' },
     { code: 'service', name: '服務' },
-    { code: 'accessory', name: '配件' },
-    { code: 'spare', name: '備件' },
     { code: 'consumable', name: '耗材' },
+    { code: 'accessory', name: '配件' },
   ]
+
+  // 載入篩選選項
+  useEffect(() => {
+    // 載入產品類型
+    supabase.from('product_types').select('name').order('name')
+      .then(({ data }) => {
+        if (data) setProductTypeOptions(data.map(d => d.name))
+      })
+    
+    // 載入產品標籤
+    supabase.from('product_tags').select('name').order('name')
+      .then(({ data }) => {
+        if (data) setTagOptions(data.map(d => d.name))
+      })
+  }, [])
 
   const fetchProducts = useCallback(async () => {
     setLoading(true)
     try {
-      // 使用 products_full 視圖（含庫存和標籤）
+      // 使用 products_full 視圖
       let query = supabase
         .from('products_full')
         .select('*', { count: 'exact' })
         .eq('is_active', true)
         .order('aurotek_pn')
 
+      // 關鍵字搜尋
       if (search) {
         query = query.or(`aurotek_pn.ilike.%${search}%,name.ilike.%${search}%,spec.ilike.%${search}%,pudu_pn.ilike.%${search}%`)
       }
-      if (typeFilter) {
-        query = query.eq('material_type', typeFilter)
+      
+      // 物料類型篩選
+      if (materialTypeFilter) {
+        query = query.eq('material_type', materialTypeFilter)
+      }
+      
+      // 產品類型篩選（多選，使用 overlaps）
+      if (productTypeFilters.length > 0) {
+        query = query.overlaps('product_types', productTypeFilters)
+      }
+      
+      // 產品標籤篩選（多選，使用 overlaps）
+      if (tagFilters.length > 0) {
+        query = query.overlaps('product_tags', tagFilters)
       }
 
       query = query.range((page - 1) * pageSize, page * pageSize - 1)
@@ -74,7 +111,7 @@ export default function ProductsPage() {
     } finally {
       setLoading(false)
     }
-  }, [search, typeFilter, page, pageSize])
+  }, [search, materialTypeFilter, productTypeFilters, tagFilters, page, pageSize])
 
   useEffect(() => {
     const timer = setTimeout(fetchProducts, 300)
@@ -100,7 +137,27 @@ export default function ProductsPage() {
 
   const clearFilters = () => {
     setSearch('')
-    setTypeFilter(null)
+    setMaterialTypeFilter(null)
+    setProductTypeFilters([])
+    setTagFilters([])
+    setPage(1)
+  }
+
+  const toggleProductType = (type: string) => {
+    setProductTypeFilters(prev => 
+      prev.includes(type) 
+        ? prev.filter(t => t !== type)
+        : [...prev, type]
+    )
+    setPage(1)
+  }
+
+  const toggleTag = (tag: string) => {
+    setTagFilters(prev => 
+      prev.includes(tag) 
+        ? prev.filter(t => t !== tag)
+        : [...prev, tag]
+    )
     setPage(1)
   }
 
@@ -148,6 +205,11 @@ export default function ProductsPage() {
           <span>☰</span> 
           <span className="hidden sm:inline">展開/收起篩選</span>
           <span className="sm:hidden">篩選</span>
+          {(materialTypeFilter || productTypeFilters.length > 0 || tagFilters.length > 0) && (
+            <span className="bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 ml-1">
+              {(materialTypeFilter ? 1 : 0) + productTypeFilters.length + tagFilters.length}
+            </span>
+          )}
         </button>
       </div>
 
@@ -156,7 +218,7 @@ export default function ProductsPage() {
         
         {/* Left Sidebar - Filters */}
         {showFilters && (
-          <aside className="space-y-3">
+          <aside className="space-y-3 md:max-h-[calc(100vh-140px)] md:overflow-y-auto">
             {/* Keyword */}
             <div className="bg-white border rounded-xl p-3 shadow-sm">
               <div className="font-bold mb-2 text-sm text-gray-800">關鍵字</div>
@@ -181,17 +243,17 @@ export default function ProductsPage() {
                   <button
                     key={type.code}
                     onClick={() => { 
-                      setTypeFilter(typeFilter === type.code ? null : type.code)
+                      setMaterialTypeFilter(materialTypeFilter === type.code ? null : type.code)
                       setPage(1)
                     }}
                     className={`px-3 py-2 rounded-full border text-xs font-medium transition-all ${
-                      typeFilter === type.code 
+                      materialTypeFilter === type.code 
                         ? 'text-white' 
                         : 'bg-gray-50 text-gray-700 hover:border-[#E60012]'
                     }`}
                     style={{
-                      backgroundColor: typeFilter === type.code ? '#E60012' : undefined,
-                      borderColor: typeFilter === type.code ? '#E60012' : '#e5e7eb',
+                      backgroundColor: materialTypeFilter === type.code ? '#E60012' : undefined,
+                      borderColor: materialTypeFilter === type.code ? '#E60012' : '#e5e7eb',
                     }}
                   >
                     {type.name}
@@ -200,7 +262,55 @@ export default function ProductsPage() {
               </div>
             </div>
 
-            {/* Page Size */}
+            {/* Product Type (Multi Select) */}
+            <div className="bg-white border rounded-xl p-3 shadow-sm">
+              <div className="font-bold mb-2 text-sm text-gray-800">快速篩選｜產品類型（和椿，多選）</div>
+              <div className="flex flex-wrap gap-2">
+                {productTypeOptions.map(type => (
+                  <button
+                    key={type}
+                    onClick={() => toggleProductType(type)}
+                    className={`px-3 py-2 rounded-full border text-xs font-medium transition-all ${
+                      productTypeFilters.includes(type)
+                        ? 'text-white' 
+                        : 'bg-gray-50 text-gray-700 hover:border-[#E60012]'
+                    }`}
+                    style={{
+                      backgroundColor: productTypeFilters.includes(type) ? '#E60012' : undefined,
+                      borderColor: productTypeFilters.includes(type) ? '#E60012' : '#e5e7eb',
+                    }}
+                  >
+                    {type}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Product Tags (Multi Select) */}
+            <div className="bg-white border rounded-xl p-3 shadow-sm">
+              <div className="font-bold mb-2 text-sm text-gray-800">快速篩選｜產品標籤（多選）</div>
+              <div className="flex flex-wrap gap-2">
+                {tagOptions.map(tag => (
+                  <button
+                    key={tag}
+                    onClick={() => toggleTag(tag)}
+                    className={`px-3 py-2 rounded-full border text-xs font-medium transition-all ${
+                      tagFilters.includes(tag)
+                        ? 'text-white' 
+                        : 'bg-gray-50 text-gray-700 hover:border-[#E60012]'
+                    }`}
+                    style={{
+                      backgroundColor: tagFilters.includes(tag) ? '#E60012' : undefined,
+                      borderColor: tagFilters.includes(tag) ? '#E60012' : '#e5e7eb',
+                    }}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Page Size & Actions */}
             <div className="bg-white border rounded-xl p-3 shadow-sm">
               <div className="font-bold mb-2 text-sm text-gray-800">顯示設定</div>
               <label className="block text-xs text-gray-500 mb-1">每頁筆數</label>
@@ -215,6 +325,7 @@ export default function ProductsPage() {
                 <option value={25}>25</option>
                 <option value={50}>50</option>
                 <option value={100}>100</option>
+                <option value={200}>200</option>
               </select>
               <button
                 onClick={fetchProducts}
@@ -268,6 +379,7 @@ export default function ProductsPage() {
                   <th className="border-b p-2.5 text-left font-bold text-gray-800 text-xs whitespace-nowrap">品名</th>
                   <th className="border-b p-2.5 text-left font-bold text-gray-800 text-xs whitespace-nowrap hidden md:table-cell">規格</th>
                   <th className="border-b p-2.5 text-left font-bold text-gray-800 text-xs whitespace-nowrap">物料類型</th>
+                  <th className="border-b p-2.5 text-left font-bold text-gray-800 text-xs whitespace-nowrap hidden lg:table-cell">產品類型</th>
                   <th className="border-b p-2.5 text-right font-bold text-gray-800 text-xs whitespace-nowrap">牌價</th>
                   <th className="border-b p-2.5 text-right font-bold text-gray-800 text-xs whitespace-nowrap hidden lg:table-cell">庫存</th>
                   <th className="border-b p-2.5 text-center font-bold text-gray-800 text-xs whitespace-nowrap">操作</th>
@@ -276,11 +388,11 @@ export default function ProductsPage() {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={7} className="p-8 text-center text-gray-500">載入中...</td>
+                    <td colSpan={8} className="p-8 text-center text-gray-500">載入中...</td>
                   </tr>
                 ) : products.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="p-8 text-center text-gray-500">找不到產品</td>
+                    <td colSpan={8} className="p-8 text-center text-gray-500">找不到產品</td>
                   </tr>
                 ) : (
                   products.map((product) => (
@@ -289,6 +401,9 @@ export default function ProductsPage() {
                       <td className="border-b p-2.5 text-sm text-gray-700">{product.name}</td>
                       <td className="border-b p-2.5 text-sm text-gray-500 hidden md:table-cell max-w-xs truncate">{product.spec}</td>
                       <td className="border-b p-2.5 text-sm text-gray-700 whitespace-nowrap">{product.material_type_name || '-'}</td>
+                      <td className="border-b p-2.5 text-sm text-gray-500 hidden lg:table-cell whitespace-nowrap">
+                        {product.product_types?.join(', ') || '-'}
+                      </td>
                       <td className="border-b p-2.5 text-sm text-gray-700 text-right whitespace-nowrap">
                         {formatPrice(product.list_price)}
                       </td>
