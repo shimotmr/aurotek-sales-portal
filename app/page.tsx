@@ -44,11 +44,18 @@ export default function Home() {
             <p className="text-gray-600">追蹤樣品借出、歸還狀態</p>
           </a>
           
+          {/* 產品查詢 */}
+          <a href="/products" className="block p-6 bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow hover:shadow-lg transition text-white">
+            <div className="text-4xl mb-4">🔍</div>
+            <h2 className="text-xl font-semibold mb-2">產品查詢</h2>
+            <p className="text-green-100">搜尋產品 / 價格資訊</p>
+          </a>
+
           {/* 報價單 */}
-          <a href="/quotes" className="block p-6 bg-white rounded-lg shadow hover:shadow-lg transition">
+          <a href="/quotations/new" className="block p-6 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg shadow hover:shadow-lg transition text-white">
             <div className="text-4xl mb-4">📝</div>
             <h2 className="text-xl font-semibold mb-2">報價單製作</h2>
-            <p className="text-gray-600">快速產生報價單</p>
+            <p className="text-orange-100">快速產生報價單</p>
           </a>
           
           {/* 庫存查詢 */}
