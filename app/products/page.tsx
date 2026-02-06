@@ -5,24 +5,23 @@ import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 
 interface Product {
-  id: string
-  sku: string
-  vendor_sku: string | null
-  product_type: string
-  category_code: string | null
-  brand: string | null
+  id: number
+  aurotek_pn: string
+  pudu_pn: string | null
   name: string
-  specification: string | null
-  notes: string | null
-  is_active: boolean
-  product_pricing: {
-    list_price: number | null
-    floor_price: number | null
-    cost_ntd: number | null
-    cost_usd: number | null
-    list_margin_pct: number | null
-    floor_margin_pct: number | null
-  }[]
+  name_en: string | null
+  spec: string | null
+  pudu_spec: string | null
+  material_type: string | null
+  material_type_name: string | null
+  list_price: number | null
+  is_sellable: boolean
+  image_url: string | null
+  component_qty: number
+  robot_qty: number
+  total_qty: number
+  product_types: string[] | null
+  product_tags: string[] | null
 }
 
 export default function ProductsPage() {
@@ -37,25 +36,30 @@ export default function ProductsPage() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
 
-  const productTypes = ['整機', '服務', '配件', '備件', '耗材']
+  // 物料類型對應
+  const materialTypes = [
+    { code: 'machine', name: '整機' },
+    { code: 'service', name: '服務' },
+    { code: 'accessory', name: '配件' },
+    { code: 'spare', name: '備件' },
+    { code: 'consumable', name: '耗材' },
+  ]
 
   const fetchProducts = useCallback(async () => {
     setLoading(true)
     try {
+      // 使用 products_full 視圖（含庫存和標籤）
       let query = supabase
-        .from('products')
-        .select(`
-          *,
-          product_pricing(list_price, floor_price, cost_ntd, cost_usd, list_margin_pct, floor_margin_pct)
-        `, { count: 'exact' })
+        .from('products_full')
+        .select('*', { count: 'exact' })
         .eq('is_active', true)
-        .order('sku')
+        .order('aurotek_pn')
 
       if (search) {
-        query = query.or(`sku.ilike.%${search}%,name.ilike.%${search}%,specification.ilike.%${search}%,vendor_sku.ilike.%${search}%`)
+        query = query.or(`aurotek_pn.ilike.%${search}%,name.ilike.%${search}%,spec.ilike.%${search}%,pudu_pn.ilike.%${search}%`)
       }
       if (typeFilter) {
-        query = query.eq('product_type', typeFilter)
+        query = query.eq('material_type', typeFilter)
       }
 
       query = query.range((page - 1) * pageSize, page * pageSize - 1)
@@ -173,24 +177,24 @@ export default function ProductsPage() {
             <div className="bg-white border rounded-xl p-3 shadow-sm">
               <div className="font-bold mb-2 text-sm text-gray-800">快速篩選｜物料類型（單選）</div>
               <div className="flex flex-wrap gap-2">
-                {productTypes.map(type => (
+                {materialTypes.map(type => (
                   <button
-                    key={type}
+                    key={type.code}
                     onClick={() => { 
-                      setTypeFilter(typeFilter === type ? null : type)
+                      setTypeFilter(typeFilter === type.code ? null : type.code)
                       setPage(1)
                     }}
                     className={`px-3 py-2 rounded-full border text-xs font-medium transition-all ${
-                      typeFilter === type 
+                      typeFilter === type.code 
                         ? 'text-white' 
                         : 'bg-gray-50 text-gray-700 hover:border-[#E60012]'
                     }`}
                     style={{
-                      backgroundColor: typeFilter === type ? '#E60012' : undefined,
-                      borderColor: typeFilter === type ? '#E60012' : '#e5e7eb',
+                      backgroundColor: typeFilter === type.code ? '#E60012' : undefined,
+                      borderColor: typeFilter === type.code ? '#E60012' : '#e5e7eb',
                     }}
                   >
-                    {type}
+                    {type.name}
                   </button>
                 ))}
               </div>
@@ -265,44 +269,49 @@ export default function ProductsPage() {
                   <th className="border-b p-2.5 text-left font-bold text-gray-800 text-xs whitespace-nowrap hidden md:table-cell">規格</th>
                   <th className="border-b p-2.5 text-left font-bold text-gray-800 text-xs whitespace-nowrap">物料類型</th>
                   <th className="border-b p-2.5 text-right font-bold text-gray-800 text-xs whitespace-nowrap">牌價</th>
+                  <th className="border-b p-2.5 text-right font-bold text-gray-800 text-xs whitespace-nowrap hidden lg:table-cell">庫存</th>
                   <th className="border-b p-2.5 text-center font-bold text-gray-800 text-xs whitespace-nowrap">操作</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={6} className="p-8 text-center text-gray-500">載入中...</td>
+                    <td colSpan={7} className="p-8 text-center text-gray-500">載入中...</td>
                   </tr>
                 ) : products.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="p-8 text-center text-gray-500">找不到產品</td>
+                    <td colSpan={7} className="p-8 text-center text-gray-500">找不到產品</td>
                   </tr>
                 ) : (
-                  products.map((product) => {
-                    const pricing = product.product_pricing?.[0]
-                    return (
-                      <tr key={product.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="border-b p-2.5 text-sm font-mono text-gray-700 whitespace-nowrap">{product.sku}</td>
-                        <td className="border-b p-2.5 text-sm text-gray-700">{product.name}</td>
-                        <td className="border-b p-2.5 text-sm text-gray-500 hidden md:table-cell max-w-xs truncate">{product.specification}</td>
-                        <td className="border-b p-2.5 text-sm text-gray-700 whitespace-nowrap">{product.product_type}</td>
-                        <td className="border-b p-2.5 text-sm text-gray-700 text-right whitespace-nowrap">
-                          {formatPrice(pricing?.list_price)}
-                        </td>
-                        <td className="border-b p-2.5 text-center">
-                          <button
-                            onClick={() => openDrawer(product)}
-                            className="underline text-xs transition-colors px-2"
-                            style={{ color: '#E60012' }}
-                            onMouseOver={(e) => e.currentTarget.style.color = '#CC0010'}
-                            onMouseOut={(e) => e.currentTarget.style.color = '#E60012'}
-                          >
-                            詳細
-                          </button>
-                        </td>
-                      </tr>
-                    )
-                  })
+                  products.map((product) => (
+                    <tr key={product.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="border-b p-2.5 text-sm font-mono text-gray-700 whitespace-nowrap">{product.aurotek_pn}</td>
+                      <td className="border-b p-2.5 text-sm text-gray-700">{product.name}</td>
+                      <td className="border-b p-2.5 text-sm text-gray-500 hidden md:table-cell max-w-xs truncate">{product.spec}</td>
+                      <td className="border-b p-2.5 text-sm text-gray-700 whitespace-nowrap">{product.material_type_name || '-'}</td>
+                      <td className="border-b p-2.5 text-sm text-gray-700 text-right whitespace-nowrap">
+                        {formatPrice(product.list_price)}
+                      </td>
+                      <td className="border-b p-2.5 text-sm text-right whitespace-nowrap hidden lg:table-cell">
+                        {product.total_qty > 0 ? (
+                          <span className="text-green-600 font-medium">{product.total_qty}</span>
+                        ) : (
+                          <span className="text-gray-400">0</span>
+                        )}
+                      </td>
+                      <td className="border-b p-2.5 text-center">
+                        <button
+                          onClick={() => openDrawer(product)}
+                          className="underline text-xs transition-colors px-2"
+                          style={{ color: '#E60012' }}
+                          onMouseOver={(e) => e.currentTarget.style.color = '#CC0010'}
+                          onMouseOut={(e) => e.currentTarget.style.color = '#E60012'}
+                        >
+                          詳細
+                        </button>
+                      </td>
+                    </tr>
+                  ))
                 )}
               </tbody>
             </table>
@@ -331,30 +340,45 @@ export default function ProductsPage() {
             </div>
             <div className="p-4 overflow-auto flex-1">
               {selectedProduct && (
-                <table className="w-full border-collapse">
-                  <tbody>
-                    {[
-                      ['和椿料號', selectedProduct.sku],
-                      ['普渡料號', selectedProduct.vendor_sku],
-                      ['品名', selectedProduct.name],
-                      ['規格', selectedProduct.specification],
-                      ['物料類型', selectedProduct.product_type],
-                      ['分群碼', selectedProduct.category_code],
-                      ['牌價', formatPrice(selectedProduct.product_pricing?.[0]?.list_price)],
-                      ['市場底價', formatPrice(selectedProduct.product_pricing?.[0]?.floor_price)],
-                      ['牌價毛利%', selectedProduct.product_pricing?.[0]?.list_margin_pct ? `${selectedProduct.product_pricing[0].list_margin_pct}%` : '-'],
-                      ['底價毛利%', selectedProduct.product_pricing?.[0]?.floor_margin_pct ? `${selectedProduct.product_pricing[0].floor_margin_pct}%` : '-'],
-                      ['進價(USD)', selectedProduct.product_pricing?.[0]?.cost_usd ? `$${selectedProduct.product_pricing[0].cost_usd}` : '-'],
-                      ['進價(NTD)', formatPrice(selectedProduct.product_pricing?.[0]?.cost_ntd)],
-                      ['備註', selectedProduct.notes],
-                    ].map(([label, value]) => (
-                      <tr key={label}>
-                        <th className="w-[35%] bg-gray-50 border-b p-2 text-left font-semibold text-gray-800 text-sm">{label}</th>
-                        <td className="border-b p-2 text-sm text-gray-700">{value || '-'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <>
+                  {/* 產品圖片 */}
+                  {selectedProduct.image_url && (
+                    <div className="mb-4">
+                      <img 
+                        src={selectedProduct.image_url} 
+                        alt={selectedProduct.name}
+                        className="max-w-full h-auto rounded-lg border"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                      />
+                    </div>
+                  )}
+                  
+                  <table className="w-full border-collapse">
+                    <tbody>
+                      {[
+                        ['和椿料號', selectedProduct.aurotek_pn],
+                        ['普渡料號', selectedProduct.pudu_pn],
+                        ['品名', selectedProduct.name],
+                        ['英文名稱', selectedProduct.name_en],
+                        ['規格', selectedProduct.spec],
+                        ['普渡規格', selectedProduct.pudu_spec],
+                        ['物料類型', selectedProduct.material_type_name],
+                        ['產品類型', selectedProduct.product_types?.join(', ')],
+                        ['產品標籤', selectedProduct.product_tags?.join(', ')],
+                        ['牌價', formatPrice(selectedProduct.list_price)],
+                        ['是否可售', selectedProduct.is_sellable ? '✓ 是' : '✗ 否'],
+                        ['組件庫存', selectedProduct.component_qty],
+                        ['機器人庫存', selectedProduct.robot_qty],
+                        ['庫存總數', selectedProduct.total_qty],
+                      ].map(([label, value]) => (
+                        <tr key={label as string}>
+                          <th className="w-[35%] bg-gray-50 border-b p-2 text-left font-semibold text-gray-800 text-sm">{label}</th>
+                          <td className="border-b p-2 text-sm text-gray-700">{value || '-'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </>
               )}
             </div>
           </div>
