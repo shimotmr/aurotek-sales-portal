@@ -581,10 +581,10 @@ export default function ProductsPage() {
                       </button>
                     </div>
                     
-                    {/* 第二行：品名（省略英文） */}
+                    {/* 第二行：規格 */}
                     <div className="mb-1.5">
-                      <span className="font-medium text-gray-900 text-sm">
-                        {product.name.split('/')[0].trim()}
+                      <span className="font-medium text-gray-900 text-sm line-clamp-1">
+                        {product.spec || '-'}
                       </span>
                     </div>
                     
@@ -620,8 +620,8 @@ export default function ProductsPage() {
                 <thead className="sticky top-0 z-10">
                   <tr className="bg-gray-50">
                     <th className="border-b p-2 text-left font-bold text-gray-700 text-xs whitespace-nowrap">料號</th>
-                    <th className="border-b p-2 text-left font-bold text-gray-700 text-xs whitespace-nowrap">品名</th>
-                    <th className="border-b p-2 text-left font-bold text-gray-700 text-xs whitespace-nowrap hidden lg:table-cell">規格</th>
+                    <th className="border-b p-2 text-left font-bold text-gray-700 text-xs whitespace-nowrap">規格</th>
+                    <th className="border-b p-2 text-left font-bold text-gray-700 text-xs whitespace-nowrap hidden lg:table-cell">品名</th>
                     <th className="border-b p-2 text-left font-bold text-gray-700 text-xs whitespace-nowrap hidden md:table-cell">類型</th>
                     <th className="border-b p-2 text-right font-bold text-gray-700 text-xs whitespace-nowrap">牌價</th>
                     <th className="border-b p-2 text-right font-bold text-gray-700 text-xs whitespace-nowrap">經銷價</th>
@@ -640,8 +640,8 @@ export default function ProductsPage() {
                     products.map((product) => (
                       <tr key={product.id} className="hover:bg-gray-50 transition-colors">
                         <td className="border-b p-2 text-xs font-mono text-gray-600 whitespace-nowrap">{product.aurotek_pn}</td>
-                        <td className="border-b p-2 text-sm text-gray-800 max-w-[180px] truncate" title={product.name}>{product.name.split('/')[0].trim()}</td>
-                        <td className="border-b p-2 text-xs text-gray-500 max-w-[150px] truncate hidden lg:table-cell">{product.spec || '-'}</td>
+                        <td className="border-b p-2 text-sm text-gray-800 max-w-[200px] truncate" title={product.spec || ''}>{product.spec || '-'}</td>
+                        <td className="border-b p-2 text-xs text-gray-500 max-w-[150px] truncate hidden lg:table-cell">{product.name.split('/')[0].trim()}</td>
                         <td className="border-b p-2 text-xs text-gray-500 whitespace-nowrap hidden md:table-cell">{product.material_type_name || '-'}</td>
                         <td className="border-b p-2 text-sm text-right whitespace-nowrap font-medium text-[#E60012]">
                           {formatPrice(product.list_price)}
