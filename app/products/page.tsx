@@ -22,6 +22,29 @@ interface Product {
   total_qty: number
   product_types: string[] | null
   product_tags: string[] | null
+  // 新增欄位
+  category_code: string | null
+  material_name: string | null
+  length: number | null
+  width: number | null
+  height: number | null
+  volume: number | null
+  dimension_unit: string | null
+  gross_weight: number | null
+  net_weight: number | null
+  pudu_product_type: string | null
+  warranty_period: string | null
+  warranty_type: string | null
+  warranty_status: string | null
+  certifications: string | null
+  cost_usd: number | null
+  cost_ntd: number | null
+  total_cost_ntd: number | null
+  sales_price: number | null
+  dept_price: number | null
+  div_price: number | null
+  dealer_price: number | null
+  market_floor_price: number | null
 }
 
 export default function ProductsPage() {
@@ -472,23 +495,46 @@ export default function ProductsPage() {
                     <tbody>
                       {[
                         ['和椿料號', selectedProduct.aurotek_pn],
-                        ['普渡料號', selectedProduct.pudu_pn],
+                        ['主分群碼', selectedProduct.category_code],
                         ['品名', selectedProduct.name],
-                        ['英文名稱', selectedProduct.name_en],
                         ['規格', selectedProduct.spec],
-                        ['普渡規格', selectedProduct.pudu_spec],
+                        ['普渡料號', selectedProduct.pudu_pn],
                         ['物料類型', selectedProduct.material_type_name],
-                        ['產品類型', selectedProduct.product_types?.join(', ')],
-                        ['產品標籤', selectedProduct.product_tags?.join(', ')],
-                        ['牌價', formatPrice(selectedProduct.list_price)],
+                        ['物料名稱', selectedProduct.material_name],
+                        ['產品圖片', selectedProduct.image_url ? '(見上方)' : '無'],
+                        ['英文名稱', selectedProduct.name_en],
+                        ['普渡規格', selectedProduct.pudu_spec],
+                        ['長', selectedProduct.length],
+                        ['寬', selectedProduct.width],
+                        ['高', selectedProduct.height],
+                        ['體積', selectedProduct.volume],
+                        ['尺寸單位', selectedProduct.dimension_unit],
+                        ['毛重', selectedProduct.gross_weight],
+                        ['淨重', selectedProduct.net_weight],
+                        ['產品類型(普渡)', selectedProduct.pudu_product_type],
+                        ['產品類型(和椿)', selectedProduct.product_types?.join(', ')],
+                        ['保固期', selectedProduct.warranty_period],
+                        ['保固類型', selectedProduct.warranty_type],
+                        ['保固狀態', selectedProduct.warranty_status],
                         ['是否可售', selectedProduct.is_sellable ? '✓ 是' : '✗ 否'],
+                        ['產品標籤', selectedProduct.product_tags?.join(', ')],
+                        ['認證資料', selectedProduct.certifications],
+                        ['進貨價格(USD)', selectedProduct.cost_usd ? `$${selectedProduct.cost_usd}` : null],
+                        ['進貨價格(NTD)', formatPrice(selectedProduct.cost_ntd)],
+                        ['成本(NTD)', formatPrice(selectedProduct.total_cost_ntd)],
+                        ['牌價', formatPrice(selectedProduct.list_price)],
+                        ['業務價格', formatPrice(selectedProduct.sales_price)],
+                        ['部級價格', formatPrice(selectedProduct.dept_price)],
+                        ['處級價格', formatPrice(selectedProduct.div_price)],
+                        ['經銷商價格', formatPrice(selectedProduct.dealer_price)],
+                        ['市場参考底線價', formatPrice(selectedProduct.market_floor_price)],
                         ['組件庫存', selectedProduct.component_qty],
                         ['機器人庫存', selectedProduct.robot_qty],
                         ['庫存總數', selectedProduct.total_qty],
                       ].map(([label, value]) => (
                         <tr key={label as string}>
                           <th className="w-[35%] bg-gray-50 border-b p-2 text-left font-semibold text-gray-800 text-sm">{label}</th>
-                          <td className="border-b p-2 text-sm text-gray-700">{value || '-'}</td>
+                          <td className="border-b p-2 text-sm text-gray-700">{value !== null && value !== undefined && value !== '' ? value : '-'}</td>
                         </tr>
                       ))}
                     </tbody>
