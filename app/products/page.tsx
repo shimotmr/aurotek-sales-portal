@@ -457,7 +457,7 @@ export default function ProductsPage() {
                     { prefix: 'CC1', match: t => t.startsWith('CC1') },
                     { prefix: 'MT1', match: t => t.startsWith('MT1') },
                     { prefix: 'PD-T', match: t => t.startsWith('PD-T') || t.startsWith('PD-D') },
-                    { prefix: 'PD30', match: t => /^PD[0-9]/.test(t) },
+                    { prefix: 'PD', match: t => /^PD[0-9]/.test(t) },
                     { prefix: 'SH1', match: t => t.startsWith('SH1') },
                   ]
                   
@@ -475,7 +475,7 @@ export default function ProductsPage() {
                     }
                   })
                   
-                  const orderedPrefixes = ['CC1', 'MT1', 'PD-T', 'PD30', 'SH1']
+                  const orderedPrefixes = ['CC1', 'MT1', 'PD-T', 'PD', 'SH1']
                   
                   return (
                     <>
