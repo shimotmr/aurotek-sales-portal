@@ -582,11 +582,21 @@ export default function ProductsPage() {
                       </button>
                     </div>
                     
-                    {/* 第二行：規格 */}
-                    <div className="mb-1.5">
-                      <span className="font-medium text-gray-900 text-sm line-clamp-1">
-                        {product.spec || '-'}
-                      </span>
+                    {/* 第二行：規格（遇到 - 或 ( 後淡化） */}
+                    <div className="mb-1.5 line-clamp-1">
+                      {(() => {
+                        const spec = product.spec || '-'
+                        const match = spec.match(/^([^-（(]+)([-（(].*)$/)
+                        if (match) {
+                          return (
+                            <>
+                              <span className="font-medium text-gray-900 text-sm">{match[1]}</span>
+                              <span className="text-xs text-gray-400">{match[2]}</span>
+                            </>
+                          )
+                        }
+                        return <span className="font-medium text-gray-900 text-sm">{spec}</span>
+                      })()}
                     </div>
                     
                     {/* 第三行：牌價 + 經銷價 + 加入報價 */}
@@ -641,7 +651,21 @@ export default function ProductsPage() {
                     products.map((product) => (
                       <tr key={product.id} className="hover:bg-gray-50 transition-colors">
                         <td className="border-b p-2 text-xs font-mono text-gray-600 whitespace-nowrap">{product.aurotek_pn}</td>
-                        <td className="border-b p-2 text-sm text-gray-800 max-w-[200px] truncate" title={product.spec || ''}>{product.spec || '-'}</td>
+                        <td className="border-b p-2 max-w-[200px] truncate" title={product.spec || ''}>
+                          {(() => {
+                            const spec = product.spec || '-'
+                            const match = spec.match(/^([^-（(]+)([-（(].*)$/)
+                            if (match) {
+                              return (
+                                <>
+                                  <span className="text-sm text-gray-800">{match[1]}</span>
+                                  <span className="text-xs text-gray-400">{match[2]}</span>
+                                </>
+                              )
+                            }
+                            return <span className="text-sm text-gray-800">{spec}</span>
+                          })()}
+                        </td>
                         <td className="border-b p-2 text-xs text-gray-500 max-w-[150px] truncate hidden lg:table-cell">{product.name.split('/')[0].trim()}</td>
                         <td className="border-b p-2 text-xs text-gray-500 whitespace-nowrap hidden md:table-cell">{product.material_type_name || '-'}</td>
                         <td className="border-b p-2 text-sm text-right whitespace-nowrap font-medium text-[#E60012]">
