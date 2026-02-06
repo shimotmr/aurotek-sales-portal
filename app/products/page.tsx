@@ -4,25 +4,29 @@ import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 
-interface Product {
+// 表格只需要的欄位（輕量）
+interface ProductListItem {
   id: number
   aurotek_pn: string
-  pudu_pn: string | null
   name: string
-  name_en: string | null
   spec: string | null
+  material_type_name: string | null
+  product_types: string[] | null
+  list_price: number | null
+  total_qty: number
+}
+
+// 詳細頁完整欄位
+interface ProductDetail extends ProductListItem {
+  pudu_pn: string | null
+  name_en: string | null
   pudu_spec: string | null
   material_type: string | null
-  material_type_name: string | null
-  list_price: number | null
   is_sellable: boolean
   image_url: string | null
   component_qty: number
   robot_qty: number
-  total_qty: number
-  product_types: string[] | null
   product_tags: string[] | null
-  // 新增欄位
   category_code: string | null
   material_name: string | null
   length: number | null
@@ -47,8 +51,148 @@ interface Product {
   market_floor_price: number | null
 }
 
+// 骨架屏組件
+function TableSkeleton({ rows = 5 }: { rows?: number }) {
+  return (
+    <>
+      {Array.from({ length: rows }).map((_, i) => (
+        <tr key={i} className="animate-pulse">
+          <td className="border-b p-2.5"><div className="h-4 bg-gray-200 rounded w-20" /></td>
+          <td className="border-b p-2.5"><div className="h-4 bg-gray-200 rounded w-32" /></td>
+          <td className="border-b p-2.5 hidden md:table-cell"><div className="h-4 bg-gray-200 rounded w-28" /></td>
+          <td className="border-b p-2.5 hidden md:table-cell"><div className="h-4 bg-gray-200 rounded w-16" /></td>
+          <td className="border-b p-2.5 hidden lg:table-cell"><div className="h-4 bg-gray-200 rounded w-16" /></td>
+          <td className="border-b p-2.5"><div className="h-4 bg-gray-200 rounded w-20 ml-auto" /></td>
+          <td className="border-b p-2.5 hidden sm:table-cell"><div className="h-4 bg-gray-200 rounded w-10 ml-auto" /></td>
+          <td className="border-b p-2.5"><div className="h-4 bg-gray-200 rounded w-10 mx-auto" /></td>
+        </tr>
+      ))}
+    </>
+  )
+}
+
+// 手機版卡片骨架
+function CardSkeleton({ count = 5 }: { count?: number }) {
+  return (
+    <>
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="bg-white border rounded-xl p-4 animate-pulse">
+          <div className="flex justify-between items-start mb-2">
+            <div className="h-4 bg-gray-200 rounded w-24" />
+            <div className="h-5 bg-gray-200 rounded w-16" />
+          </div>
+          <div className="h-5 bg-gray-200 rounded w-3/4 mb-2" />
+          <div className="h-4 bg-gray-200 rounded w-1/2 mb-3" />
+          <div className="flex gap-2">
+            <div className="h-8 bg-gray-200 rounded w-16" />
+            <div className="h-8 bg-gray-200 rounded w-24" />
+          </div>
+        </div>
+      ))}
+    </>
+  )
+}
+
+// 詳細頁 Tab 組件
+function DetailTabs({ product, formatPrice }: { product: ProductDetail; formatPrice: (p: number | null) => string }) {
+  const [activeTab, setActiveTab] = useState<'basic' | 'spec' | 'price' | 'stock'>('basic')
+
+  const tabs = [
+    { key: 'basic', label: '基本' },
+    { key: 'spec', label: '規格' },
+    { key: 'price', label: '價格' },
+    { key: 'stock', label: '庫存' },
+  ] as const
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'basic':
+        return [
+          ['和椿料號', product.aurotek_pn],
+          ['主分群碼', product.category_code],
+          ['品名', product.name],
+          ['英文名稱', product.name_en],
+          ['規格', product.spec],
+          ['普渡料號', product.pudu_pn],
+          ['普渡規格', product.pudu_spec],
+          ['物料類型', product.material_type_name],
+          ['物料名稱', product.material_name],
+          ['產品類型(普渡)', product.pudu_product_type],
+          ['產品類型(和椿)', product.product_types?.join(', ')],
+          ['產品標籤', product.product_tags?.join(', ')],
+          ['是否可售', product.is_sellable ? '✓ 是' : '✗ 否'],
+        ]
+      case 'spec':
+        return [
+          ['長', product.length ? `${product.length} ${product.dimension_unit || ''}` : null],
+          ['寬', product.width ? `${product.width} ${product.dimension_unit || ''}` : null],
+          ['高', product.height ? `${product.height} ${product.dimension_unit || ''}` : null],
+          ['體積', product.volume],
+          ['尺寸單位', product.dimension_unit],
+          ['毛重', product.gross_weight ? `${product.gross_weight} kg` : null],
+          ['淨重', product.net_weight ? `${product.net_weight} kg` : null],
+          ['保固期', product.warranty_period],
+          ['保固類型', product.warranty_type],
+          ['保固狀態', product.warranty_status],
+          ['認證資料', product.certifications],
+        ]
+      case 'price':
+        return [
+          ['牌價', formatPrice(product.list_price)],
+          ['進貨價格(USD)', product.cost_usd ? `$${product.cost_usd}` : null],
+          ['進貨價格(NTD)', formatPrice(product.cost_ntd)],
+          ['成本(NTD)', formatPrice(product.total_cost_ntd)],
+          ['業務價格', formatPrice(product.sales_price)],
+          ['部級價格', formatPrice(product.dept_price)],
+          ['處級價格', formatPrice(product.div_price)],
+          ['經銷商價格', formatPrice(product.dealer_price)],
+          ['市場参考底線價', formatPrice(product.market_floor_price)],
+        ]
+      case 'stock':
+        return [
+          ['組件庫存', product.component_qty],
+          ['機器人庫存', product.robot_qty],
+          ['庫存總數', product.total_qty],
+        ]
+    }
+  }
+
+  return (
+    <>
+      {/* Tabs */}
+      <div className="flex border-b mb-4 -mx-4 px-4">
+        {tabs.map(tab => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === tab.key
+                ? 'border-[#E60012] text-[#E60012]'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Content */}
+      <table className="w-full border-collapse">
+        <tbody>
+          {renderContent().map(([label, value]) => (
+            <tr key={label as string}>
+              <th className="w-[40%] bg-gray-50 border-b p-2.5 text-left font-medium text-gray-700 text-sm">{label}</th>
+              <td className="border-b p-2.5 text-sm text-gray-900">{value !== null && value !== undefined && value !== '' ? value : '-'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </>
+  )
+}
+
 export default function ProductsPage() {
-  const [products, setProducts] = useState<Product[]>([])
+  const [products, setProducts] = useState<ProductListItem[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   
@@ -57,7 +201,7 @@ export default function ProductsPage() {
   const [productTypeFilters, setProductTypeFilters] = useState<string[]>([])
   const [tagFilters, setTagFilters] = useState<string[]>([])
   
-  // 篩選選項（從資料庫載入）
+  // 篩選選項
   const [productTypeOptions, setProductTypeOptions] = useState<string[]>([])
   const [tagOptions, setTagOptions] = useState<string[]>([])
   
@@ -65,10 +209,15 @@ export default function ProductsPage() {
   const [pageSize, setPageSize] = useState(25)
   const [total, setTotal] = useState(0)
   const [showFilters, setShowFilters] = useState(true)
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+  
+  // 詳細頁狀態
+  const [selectedProduct, setSelectedProduct] = useState<ProductDetail | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [loadingDetail, setLoadingDetail] = useState(false)
+  
+  // 響應式狀態
+  const [isMobile, setIsMobile] = useState(false)
 
-  // 物料類型對應
   const materialTypes = [
     { code: 'spare', name: '備件' },
     { code: 'machine', name: '整機' },
@@ -79,45 +228,45 @@ export default function ProductsPage() {
 
   // 載入篩選選項
   useEffect(() => {
-    // 載入產品類型
     supabase.from('product_types').select('name').order('name')
-      .then(({ data }) => {
-        if (data) setProductTypeOptions(data.map(d => d.name))
-      })
-    
-    // 載入產品標籤
+      .then(({ data }) => { if (data) setProductTypeOptions(data.map(d => d.name)) })
     supabase.from('product_tags').select('name').order('name')
-      .then(({ data }) => {
-        if (data) setTagOptions(data.map(d => d.name))
-      })
+      .then(({ data }) => { if (data) setTagOptions(data.map(d => d.name)) })
   }, [])
+
+  // 響應式偵測
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 768
+      setIsMobile(mobile)
+      if (mobile) setShowFilters(false)
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  // ✅ P0 優化：只載入表格需要的欄位
+  const TABLE_FIELDS = 'id,aurotek_pn,name,spec,material_type_name,product_types,list_price,total_qty'
 
   const fetchProducts = useCallback(async () => {
     setLoading(true)
     try {
-      // 使用 products_full 視圖
       let query = supabase
         .from('products_full')
-        .select('*', { count: 'exact' })
+        .select(TABLE_FIELDS, { count: 'exact' })
         .eq('is_active', true)
         .order('aurotek_pn')
 
-      // 關鍵字搜尋
       if (search) {
         query = query.or(`aurotek_pn.ilike.%${search}%,name.ilike.%${search}%,spec.ilike.%${search}%,pudu_pn.ilike.%${search}%`)
       }
-      
-      // 物料類型篩選
       if (materialTypeFilter) {
         query = query.eq('material_type', materialTypeFilter)
       }
-      
-      // 產品類型篩選（多選，使用 overlaps）
       if (productTypeFilters.length > 0) {
         query = query.overlaps('product_types', productTypeFilters)
       }
-      
-      // 產品標籤篩選（多選，使用 overlaps）
       if (tagFilters.length > 0) {
         query = query.overlaps('product_tags', tagFilters)
       }
@@ -125,7 +274,6 @@ export default function ProductsPage() {
       query = query.range((page - 1) * pageSize, page * pageSize - 1)
 
       const { data, count, error } = await query
-
       if (error) throw error
       setProducts(data || [])
       setTotal(count || 0)
@@ -148,9 +296,23 @@ export default function ProductsPage() {
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
 
-  const openDrawer = (product: Product) => {
-    setSelectedProduct(product)
+  // ✅ P0 優化：點擊詳細時才載入完整資料
+  const openDrawer = async (productId: number) => {
     setDrawerOpen(true)
+    setLoadingDetail(true)
+    try {
+      const { data, error } = await supabase
+        .from('products_full')
+        .select('*')
+        .eq('id', productId)
+        .single()
+      if (error) throw error
+      setSelectedProduct(data)
+    } catch (err) {
+      console.error('Error fetching product detail:', err)
+    } finally {
+      setLoadingDetail(false)
+    }
   }
 
   const closeDrawer = () => {
@@ -168,50 +330,34 @@ export default function ProductsPage() {
 
   const toggleProductType = (type: string) => {
     setProductTypeFilters(prev => 
-      prev.includes(type) 
-        ? prev.filter(t => t !== type)
-        : [...prev, type]
+      prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
     )
     setPage(1)
   }
 
   const toggleTag = (tag: string) => {
     setTagFilters(prev => 
-      prev.includes(tag) 
-        ? prev.filter(t => t !== tag)
-        : [...prev, tag]
+      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
     )
     setPage(1)
   }
 
-  // 響應式：手機版默認隱藏篩選
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth < 768) {
-        setShowFilters(false)
-      }
-    }
-    handleResize()
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
+  const activeFilterCount = (materialTypeFilter ? 1 : 0) + productTypeFilters.length + tagFilters.length
 
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="bg-white shadow-sm border-b sticky top-0 z-20">
         <div className="max-w-full mx-auto px-3 sm:px-4 py-3">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-3">
               <Link href="/" className="text-gray-500 hover:text-gray-700 text-xl">←</Link>
-              <h1 className="text-lg sm:text-xl font-bold text-gray-900">普渡料號資料庫 - 查詢</h1>
+              <h1 className="text-lg sm:text-xl font-bold text-gray-900">普渡料號資料庫</h1>
             </div>
             <Link 
               href="/quotations/new"
               className="text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
               style={{ backgroundColor: '#E60012' }}
-              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#CC0010'}
-              onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#E60012'}
             >
               + 報價單
             </Link>
@@ -219,48 +365,73 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      {/* Toggle Filter Button */}
-      <div className="px-3 sm:px-4 mt-3 mb-2">
-        <button 
-          onClick={() => setShowFilters(!showFilters)}
-          className="inline-flex items-center gap-2 px-3 py-2 border rounded-lg font-medium text-xs transition-colors bg-white hover:bg-gray-50"
-        >
-          <span>☰</span> 
-          <span className="hidden sm:inline">展開/收起篩選</span>
-          <span className="sm:hidden">篩選</span>
-          {(materialTypeFilter || productTypeFilters.length > 0 || tagFilters.length > 0) && (
-            <span className="bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 ml-1">
-              {(materialTypeFilter ? 1 : 0) + productTypeFilters.length + tagFilters.length}
-            </span>
-          )}
-        </button>
-      </div>
+      {/* Search Bar (Mobile) */}
+      {isMobile && (
+        <div className="px-3 pt-3">
+          <div className="flex gap-2">
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setPage(1) }}
+              placeholder="搜尋料號、品名..."
+              className="flex-1 p-3 text-sm bg-white rounded-xl border focus:ring-2 focus:ring-opacity-20 outline-none"
+              style={{ borderColor: '#e5e7eb' }}
+            />
+            <button 
+              onClick={() => setShowFilters(!showFilters)}
+              className={`px-4 py-3 rounded-xl border font-medium text-sm transition-colors ${
+                activeFilterCount > 0 ? 'bg-red-50 border-red-200 text-red-600' : 'bg-white'
+              }`}
+            >
+              篩選{activeFilterCount > 0 && ` (${activeFilterCount})`}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Toggle Filter Button (Desktop) */}
+      {!isMobile && (
+        <div className="px-3 sm:px-4 mt-3 mb-2">
+          <button 
+            onClick={() => setShowFilters(!showFilters)}
+            className="inline-flex items-center gap-2 px-3 py-2 border rounded-lg font-medium text-xs transition-colors bg-white hover:bg-gray-50"
+          >
+            <span>☰</span> 
+            <span>展開/收起篩選</span>
+            {activeFilterCount > 0 && (
+              <span className="bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 ml-1">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
+        </div>
+      )}
 
       {/* Main Layout */}
-      <main className={`grid gap-3 sm:gap-4 px-3 sm:px-4 pb-4 transition-all duration-200 ${showFilters ? 'md:grid-cols-[320px_1fr]' : 'grid-cols-1'}`}>
+      <main className={`grid gap-3 sm:gap-4 px-3 sm:px-4 pb-4 pt-2 transition-all duration-200 ${
+        showFilters && !isMobile ? 'md:grid-cols-[320px_1fr]' : 'grid-cols-1'
+      }`}>
         
-        {/* Left Sidebar - Filters */}
+        {/* Filters Sidebar / Mobile Sheet */}
         {showFilters && (
-          <aside className="space-y-3 md:max-h-[calc(100vh-140px)] md:overflow-y-auto">
-            {/* Keyword */}
-            <div className="bg-white border rounded-xl p-3 shadow-sm">
-              <div className="font-bold mb-2 text-sm text-gray-800">關鍵字</div>
-              <input
-                type="search"
-                value={search}
-                onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-                onKeyDown={(e) => e.key === 'Enter' && fetchProducts()}
-                placeholder="和椿料號 / 普渡料號 / 品名 / 規格..."
-                className="w-full p-3 text-sm bg-gray-50 rounded-lg border focus:bg-white focus:ring-2 focus:ring-opacity-20 outline-none transition-all"
-                style={{ borderColor: '#e5e7eb' }}
-                onFocus={(e) => { e.target.style.borderColor = '#E60012'; e.target.style.boxShadow = '0 0 0 3px rgba(230,0,18,0.1)' }}
-                onBlur={(e) => { e.target.style.borderColor = '#e5e7eb'; e.target.style.boxShadow = 'none' }}
-              />
-            </div>
+          <aside className={`space-y-3 ${isMobile ? 'bg-white rounded-xl p-4 border shadow-sm' : 'md:max-h-[calc(100vh-140px)] md:overflow-y-auto'}`}>
+            {/* Keyword (Desktop only) */}
+            {!isMobile && (
+              <div className="bg-white border rounded-xl p-3 shadow-sm">
+                <div className="font-bold mb-2 text-sm text-gray-800">關鍵字</div>
+                <input
+                  type="search"
+                  value={search}
+                  onChange={(e) => { setSearch(e.target.value); setPage(1) }}
+                  placeholder="和椿料號 / 普渡料號 / 品名 / 規格..."
+                  className="w-full p-3 text-sm bg-gray-50 rounded-lg border focus:bg-white outline-none transition-all"
+                />
+              </div>
+            )}
 
-            {/* Material Type (Single Select) */}
-            <div className="bg-white border rounded-xl p-3 shadow-sm">
-              <div className="font-bold mb-2 text-sm text-gray-800">快速篩選｜物料類型（單選）</div>
+            {/* Material Type */}
+            <div className={isMobile ? '' : 'bg-white border rounded-xl p-3 shadow-sm'}>
+              <div className="font-bold mb-2 text-sm text-gray-800">物料類型（單選）</div>
               <div className="flex flex-wrap gap-2">
                 {materialTypes.map(type => (
                   <button
@@ -271,13 +442,9 @@ export default function ProductsPage() {
                     }}
                     className={`px-3 py-2 rounded-full border text-xs font-medium transition-all ${
                       materialTypeFilter === type.code 
-                        ? 'text-white' 
+                        ? 'text-white bg-[#E60012] border-[#E60012]' 
                         : 'bg-gray-50 text-gray-700 hover:border-[#E60012]'
                     }`}
-                    style={{
-                      backgroundColor: materialTypeFilter === type.code ? '#E60012' : undefined,
-                      borderColor: materialTypeFilter === type.code ? '#E60012' : '#e5e7eb',
-                    }}
                   >
                     {type.name}
                   </button>
@@ -285,9 +452,9 @@ export default function ProductsPage() {
               </div>
             </div>
 
-            {/* Product Type (Multi Select) */}
-            <div className="bg-white border rounded-xl p-3 shadow-sm">
-              <div className="font-bold mb-2 text-sm text-gray-800">快速篩選｜產品類型（和椿，多選）</div>
+            {/* Product Type */}
+            <div className={isMobile ? '' : 'bg-white border rounded-xl p-3 shadow-sm'}>
+              <div className="font-bold mb-2 text-sm text-gray-800">產品類型（多選）</div>
               <div className="flex flex-wrap gap-2">
                 {productTypeOptions.map(type => (
                   <button
@@ -295,13 +462,9 @@ export default function ProductsPage() {
                     onClick={() => toggleProductType(type)}
                     className={`px-3 py-2 rounded-full border text-xs font-medium transition-all ${
                       productTypeFilters.includes(type)
-                        ? 'text-white' 
+                        ? 'text-white bg-[#E60012] border-[#E60012]' 
                         : 'bg-gray-50 text-gray-700 hover:border-[#E60012]'
                     }`}
-                    style={{
-                      backgroundColor: productTypeFilters.includes(type) ? '#E60012' : undefined,
-                      borderColor: productTypeFilters.includes(type) ? '#E60012' : '#e5e7eb',
-                    }}
                   >
                     {type}
                   </button>
@@ -309,9 +472,9 @@ export default function ProductsPage() {
               </div>
             </div>
 
-            {/* Product Tags (Multi Select) */}
-            <div className="bg-white border rounded-xl p-3 shadow-sm">
-              <div className="font-bold mb-2 text-sm text-gray-800">快速篩選｜產品標籤（多選）</div>
+            {/* Product Tags */}
+            <div className={isMobile ? '' : 'bg-white border rounded-xl p-3 shadow-sm'}>
+              <div className="font-bold mb-2 text-sm text-gray-800">產品標籤（多選）</div>
               <div className="flex flex-wrap gap-2">
                 {tagOptions.map(tag => (
                   <button
@@ -319,13 +482,9 @@ export default function ProductsPage() {
                     onClick={() => toggleTag(tag)}
                     className={`px-3 py-2 rounded-full border text-xs font-medium transition-all ${
                       tagFilters.includes(tag)
-                        ? 'text-white' 
+                        ? 'text-white bg-[#E60012] border-[#E60012]' 
                         : 'bg-gray-50 text-gray-700 hover:border-[#E60012]'
                     }`}
-                    style={{
-                      backgroundColor: tagFilters.includes(tag) ? '#E60012' : undefined,
-                      borderColor: tagFilters.includes(tag) ? '#E60012' : '#e5e7eb',
-                    }}
                   >
                     {tag}
                   </button>
@@ -333,43 +492,43 @@ export default function ProductsPage() {
               </div>
             </div>
 
-            {/* Page Size & Actions */}
-            <div className="bg-white border rounded-xl p-3 shadow-sm">
-              <div className="font-bold mb-2 text-sm text-gray-800">顯示設定</div>
-              <label className="block text-xs text-gray-500 mb-1">每頁筆數</label>
-              <select
-                value={pageSize}
-                onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1) }}
-                className="w-full p-2 text-sm border rounded-lg bg-white outline-none transition-all focus:ring-2 focus:ring-opacity-20"
-                style={{ borderColor: '#e5e7eb' }}
-                onFocus={(e) => { e.target.style.borderColor = '#E60012' }}
-                onBlur={(e) => { e.target.style.borderColor = '#e5e7eb' }}
-              >
-                <option value={25}>25</option>
-                <option value={50}>50</option>
-                <option value={100}>100</option>
-                <option value={200}>200</option>
-              </select>
-              <button
-                onClick={fetchProducts}
-                className="w-full mt-3 px-3 py-2 text-white rounded-lg font-medium text-sm transition-colors"
-                style={{ backgroundColor: '#E60012' }}
-                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#CC0010'}
-                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#E60012'}
-              >
-                查詢
-              </button>
+            {/* Actions */}
+            <div className={isMobile ? 'flex gap-2 pt-2' : 'bg-white border rounded-xl p-3 shadow-sm'}>
+              {!isMobile && (
+                <>
+                  <div className="font-bold mb-2 text-sm text-gray-800">顯示設定</div>
+                  <label className="block text-xs text-gray-500 mb-1">每頁筆數</label>
+                  <select
+                    value={pageSize}
+                    onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1) }}
+                    className="w-full p-2 text-sm border rounded-lg bg-white outline-none mb-3"
+                  >
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                </>
+              )}
               <button
                 onClick={clearFilters}
-                className="w-full mt-2 px-3 py-2 border rounded-lg hover:bg-gray-50 transition-colors text-sm"
+                className={`${isMobile ? 'flex-1' : 'w-full'} px-3 py-2 border rounded-lg hover:bg-gray-50 transition-colors text-sm`}
               >
                 清除條件
               </button>
+              {isMobile && (
+                <button
+                  onClick={() => setShowFilters(false)}
+                  className="flex-1 px-3 py-2 text-white rounded-lg text-sm font-medium"
+                  style={{ backgroundColor: '#E60012' }}
+                >
+                  套用
+                </button>
+              )}
             </div>
           </aside>
         )}
 
-        {/* Right Content - Table */}
+        {/* Content Area */}
         <section className="min-w-0 flex flex-col">
           {/* Result Count & Pagination */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-2 gap-2">
@@ -378,170 +537,238 @@ export default function ProductsPage() {
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-3 py-1.5 border rounded-lg hover:bg-gray-50 transition-colors text-xs disabled:opacity-50"
+                className="px-3 py-1.5 border rounded-lg hover:bg-gray-50 transition-colors text-xs disabled:opacity-50 bg-white"
               >
-                « 上一頁
+                ‹ 上一頁
               </button>
-              <span className="text-gray-500 text-xs px-2">第 {page} / {totalPages} 頁</span>
+              <span className="text-gray-500 text-xs px-2">{page} / {totalPages}</span>
               <button
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages}
-                className="px-3 py-1.5 border rounded-lg hover:bg-gray-50 transition-colors text-xs disabled:opacity-50"
+                className="px-3 py-1.5 border rounded-lg hover:bg-gray-50 transition-colors text-xs disabled:opacity-50 bg-white"
               >
-                下一頁 »
+                下一頁 ›
               </button>
             </div>
           </div>
 
-          {/* Table */}
-          <div className="flex-1 overflow-auto border rounded-xl bg-white shadow-sm">
-            <table className="w-full border-collapse min-w-[800px]">
-              <thead className="sticky top-0 z-10">
-                <tr className="bg-gray-100">
-                  <th className="border-b p-2.5 text-left font-bold text-gray-800 text-xs whitespace-nowrap">和椿料號</th>
-                  <th className="border-b p-2.5 text-left font-bold text-gray-800 text-xs whitespace-nowrap">品名</th>
-                  <th className="border-b p-2.5 text-left font-bold text-gray-800 text-xs whitespace-nowrap">規格</th>
-                  <th className="border-b p-2.5 text-left font-bold text-gray-800 text-xs whitespace-nowrap">物料類型</th>
-                  <th className="border-b p-2.5 text-left font-bold text-gray-800 text-xs whitespace-nowrap">產品類型(和椿)</th>
-                  <th className="border-b p-2.5 text-right font-bold text-gray-800 text-xs whitespace-nowrap">牌價</th>
-                  <th className="border-b p-2.5 text-right font-bold text-gray-800 text-xs whitespace-nowrap">庫存總數</th>
-                  <th className="border-b p-2.5 text-center font-bold text-gray-800 text-xs whitespace-nowrap">操作</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  <tr>
-                    <td colSpan={8} className="p-8 text-center text-gray-500">載入中...</td>
-                  </tr>
-                ) : products.length === 0 ? (
-                  <tr>
-                    <td colSpan={8} className="p-8 text-center text-gray-500">找不到產品</td>
-                  </tr>
-                ) : (
-                  products.map((product) => (
-                    <tr key={product.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="border-b p-2.5 text-sm font-mono text-gray-700 whitespace-nowrap">{product.aurotek_pn}</td>
-                      <td className="border-b p-2.5 text-sm text-gray-700 max-w-[200px] truncate">{product.name}</td>
-                      <td className="border-b p-2.5 text-sm text-gray-500 max-w-[200px] truncate">{product.spec || '-'}</td>
-                      <td className="border-b p-2.5 text-sm text-gray-700 whitespace-nowrap">{product.material_type_name || '-'}</td>
-                      <td className="border-b p-2.5 text-sm text-gray-500 whitespace-nowrap">
-                        {product.product_types?.join(', ') || '-'}
-                      </td>
-                      <td className="border-b p-2.5 text-sm text-gray-700 text-right whitespace-nowrap">
-                        {formatPrice(product.list_price)}
-                      </td>
-                      <td className="border-b p-2.5 text-sm text-right whitespace-nowrap">
-                        {product.total_qty > 0 ? (
-                          <span className="text-green-600 font-medium">{product.total_qty}</span>
-                        ) : (
-                          <span className="text-gray-400">0</span>
+          {/* ✅ P0: 手機版卡片佈局 */}
+          {isMobile ? (
+            <div className="space-y-3">
+              {loading ? (
+                <CardSkeleton count={pageSize > 10 ? 10 : pageSize} />
+              ) : products.length === 0 ? (
+                <div className="bg-white rounded-xl p-8 text-center text-gray-500">找不到產品</div>
+              ) : (
+                products.map((product) => (
+                  <div 
+                    key={product.id} 
+                    className="bg-white border rounded-xl p-4 shadow-sm active:bg-gray-50 transition-colors"
+                  >
+                    {/* 第一行：料號 + 物料類型 + 庫存 */}
+                    <div className="flex justify-between items-start mb-1">
+                      <span className="font-mono text-sm text-gray-600">{product.aurotek_pn}</span>
+                      <div className="flex items-center gap-2">
+                        {product.material_type_name && (
+                          <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded">
+                            {product.material_type_name}
+                          </span>
                         )}
-                      </td>
-                      <td className="border-b p-2.5 text-center">
-                        <button
-                          onClick={() => openDrawer(product)}
-                          className="underline text-xs transition-colors px-2"
-                          style={{ color: '#E60012' }}
-                          onMouseOver={(e) => e.currentTarget.style.color = '#CC0010'}
-                          onMouseOut={(e) => e.currentTarget.style.color = '#E60012'}
-                        >
-                          詳細
-                        </button>
-                      </td>
+                        {product.total_qty > 0 && (
+                          <span className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded font-medium">
+                            庫存 {product.total_qty}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* 第二行：品名 */}
+                    <h3 className="font-medium text-gray-900 mb-1 line-clamp-2">{product.name}</h3>
+                    
+                    {/* 第三行：產品類型 + 牌價 */}
+                    <div className="flex justify-between items-center mb-3">
+                      <span className="text-xs text-gray-500">
+                        {product.product_types?.join(', ') || '-'}
+                      </span>
+                      <span className="font-bold text-[#E60012]">
+                        {product.list_price ? `NT$ ${formatPrice(product.list_price)}` : '-'}
+                      </span>
+                    </div>
+                    
+                    {/* 操作按鈕 */}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => openDrawer(product.id)}
+                        className="flex-1 px-3 py-2 border rounded-lg text-sm text-gray-700 hover:bg-gray-50"
+                      >
+                        詳細
+                      </button>
+                      <Link
+                        href={`/quotations/new?product=${product.id}`}
+                        className="flex-1 px-3 py-2 rounded-lg text-sm text-white text-center font-medium"
+                        style={{ backgroundColor: '#E60012' }}
+                      >
+                        + 報價單
+                      </Link>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          ) : (
+            /* 桌面版表格 */
+            <div className="flex-1 overflow-auto border rounded-xl bg-white shadow-sm">
+              <table className="w-full border-collapse">
+                <thead className="sticky top-0 z-10">
+                  <tr className="bg-gray-50">
+                    <th className="border-b p-2.5 text-left font-bold text-gray-700 text-xs whitespace-nowrap">和椿料號</th>
+                    <th className="border-b p-2.5 text-left font-bold text-gray-700 text-xs whitespace-nowrap">品名</th>
+                    <th className="border-b p-2.5 text-left font-bold text-gray-700 text-xs whitespace-nowrap">規格</th>
+                    <th className="border-b p-2.5 text-left font-bold text-gray-700 text-xs whitespace-nowrap">物料類型</th>
+                    <th className="border-b p-2.5 text-left font-bold text-gray-700 text-xs whitespace-nowrap">產品類型</th>
+                    <th className="border-b p-2.5 text-right font-bold text-gray-700 text-xs whitespace-nowrap">牌價</th>
+                    <th className="border-b p-2.5 text-right font-bold text-gray-700 text-xs whitespace-nowrap">庫存</th>
+                    <th className="border-b p-2.5 text-center font-bold text-gray-700 text-xs whitespace-nowrap">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loading ? (
+                    <TableSkeleton rows={pageSize > 15 ? 15 : pageSize} />
+                  ) : products.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="p-8 text-center text-gray-500">找不到產品</td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  ) : (
+                    products.map((product) => (
+                      <tr key={product.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="border-b p-2.5 text-sm font-mono text-gray-700 whitespace-nowrap">{product.aurotek_pn}</td>
+                        <td className="border-b p-2.5 text-sm text-gray-700 max-w-[200px] truncate">{product.name}</td>
+                        <td className="border-b p-2.5 text-sm text-gray-500 max-w-[180px] truncate">{product.spec || '-'}</td>
+                        <td className="border-b p-2.5 text-sm text-gray-700 whitespace-nowrap">{product.material_type_name || '-'}</td>
+                        <td className="border-b p-2.5 text-sm text-gray-500 whitespace-nowrap max-w-[120px] truncate">
+                          {product.product_types?.join(', ') || '-'}
+                        </td>
+                        <td className="border-b p-2.5 text-sm text-gray-700 text-right whitespace-nowrap font-medium">
+                          {formatPrice(product.list_price)}
+                        </td>
+                        <td className="border-b p-2.5 text-sm text-right whitespace-nowrap">
+                          {product.total_qty > 0 ? (
+                            <span className="text-green-600 font-medium">{product.total_qty}</span>
+                          ) : (
+                            <span className="text-gray-400">0</span>
+                          )}
+                        </td>
+                        <td className="border-b p-2.5 text-center whitespace-nowrap">
+                          <button
+                            onClick={() => openDrawer(product.id)}
+                            className="text-xs px-2 py-1 text-[#E60012] hover:underline"
+                          >
+                            詳細
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Mobile Pagination */}
+          {isMobile && products.length > 0 && (
+            <div className="flex justify-center items-center gap-4 mt-4 py-2">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="px-4 py-2 border rounded-lg text-sm disabled:opacity-50 bg-white"
+              >
+                ‹ 上一頁
+              </button>
+              <span className="text-gray-600 text-sm">{page} / {totalPages}</span>
+              <button
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page >= totalPages}
+                className="px-4 py-2 border rounded-lg text-sm disabled:opacity-50 bg-white"
+              >
+                下一頁 ›
+              </button>
+            </div>
+          )}
         </section>
       </main>
 
-      {/* Drawer */}
+      {/* Detail Drawer */}
       {drawerOpen && (
         <div className="fixed inset-0 z-30">
-          {/* Mask */}
-          <div 
-            className="absolute inset-0 bg-black/20 transition-opacity"
-            onClick={closeDrawer}
-          />
-          {/* Panel */}
-          <div className={`absolute top-0 right-0 h-full w-full sm:w-[520px] max-w-full bg-white border-l flex flex-col shadow-xl transform transition-transform duration-300 ${drawerOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-            <div className="flex items-center justify-between px-4 py-3 border-b">
-              <div className="font-bold text-lg text-gray-800">明細</div>
+          <div className="absolute inset-0 bg-black/30 transition-opacity" onClick={closeDrawer} />
+          <div className={`absolute top-0 right-0 h-full w-full sm:w-[480px] max-w-full bg-white flex flex-col shadow-2xl transform transition-transform duration-300 ${drawerOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b bg-gray-50">
+              <div className="font-bold text-lg text-gray-800">產品明細</div>
               <button 
                 onClick={closeDrawer}
-                className="text-2xl hover:opacity-80 transition-opacity w-11 h-11 flex items-center justify-center"
+                className="text-2xl text-gray-400 hover:text-gray-600 w-10 h-10 flex items-center justify-center"
               >
-                ✕
+                ×
               </button>
             </div>
+            
+            {/* Content */}
             <div className="p-4 overflow-auto flex-1">
-              {selectedProduct && (
+              {loadingDetail ? (
+                <div className="space-y-3 animate-pulse">
+                  <div className="h-6 bg-gray-200 rounded w-1/2" />
+                  <div className="h-4 bg-gray-200 rounded w-3/4" />
+                  <div className="h-32 bg-gray-200 rounded" />
+                  <div className="space-y-2">
+                    {Array.from({ length: 8 }).map((_, i) => (
+                      <div key={i} className="h-8 bg-gray-200 rounded" />
+                    ))}
+                  </div>
+                </div>
+              ) : selectedProduct ? (
                 <>
                   {/* 產品圖片 */}
                   {selectedProduct.image_url && (
-                    <div className="mb-4">
+                    <div className="mb-4 rounded-lg overflow-hidden border">
                       <img 
                         src={selectedProduct.image_url} 
                         alt={selectedProduct.name}
-                        className="max-w-full h-auto rounded-lg border"
+                        className="w-full h-auto"
                         onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
                       />
                     </div>
                   )}
                   
-                  <table className="w-full border-collapse">
-                    <tbody>
-                      {[
-                        ['和椿料號', selectedProduct.aurotek_pn],
-                        ['主分群碼', selectedProduct.category_code],
-                        ['品名', selectedProduct.name],
-                        ['規格', selectedProduct.spec],
-                        ['普渡料號', selectedProduct.pudu_pn],
-                        ['物料類型', selectedProduct.material_type_name],
-                        ['物料名稱', selectedProduct.material_name],
-                        ['產品圖片', selectedProduct.image_url ? '(見上方)' : '無'],
-                        ['英文名稱', selectedProduct.name_en],
-                        ['普渡規格', selectedProduct.pudu_spec],
-                        ['長', selectedProduct.length],
-                        ['寬', selectedProduct.width],
-                        ['高', selectedProduct.height],
-                        ['體積', selectedProduct.volume],
-                        ['尺寸單位', selectedProduct.dimension_unit],
-                        ['毛重', selectedProduct.gross_weight],
-                        ['淨重', selectedProduct.net_weight],
-                        ['產品類型(普渡)', selectedProduct.pudu_product_type],
-                        ['產品類型(和椿)', selectedProduct.product_types?.join(', ')],
-                        ['保固期', selectedProduct.warranty_period],
-                        ['保固類型', selectedProduct.warranty_type],
-                        ['保固狀態', selectedProduct.warranty_status],
-                        ['是否可售', selectedProduct.is_sellable ? '✓ 是' : '✗ 否'],
-                        ['產品標籤', selectedProduct.product_tags?.join(', ')],
-                        ['認證資料', selectedProduct.certifications],
-                        ['進貨價格(USD)', selectedProduct.cost_usd ? `$${selectedProduct.cost_usd}` : null],
-                        ['進貨價格(NTD)', formatPrice(selectedProduct.cost_ntd)],
-                        ['成本(NTD)', formatPrice(selectedProduct.total_cost_ntd)],
-                        ['牌價', formatPrice(selectedProduct.list_price)],
-                        ['業務價格', formatPrice(selectedProduct.sales_price)],
-                        ['部級價格', formatPrice(selectedProduct.dept_price)],
-                        ['處級價格', formatPrice(selectedProduct.div_price)],
-                        ['經銷商價格', formatPrice(selectedProduct.dealer_price)],
-                        ['市場参考底線價', formatPrice(selectedProduct.market_floor_price)],
-                        ['組件庫存', selectedProduct.component_qty],
-                        ['機器人庫存', selectedProduct.robot_qty],
-                        ['庫存總數', selectedProduct.total_qty],
-                      ].map(([label, value]) => (
-                        <tr key={label as string}>
-                          <th className="w-[35%] bg-gray-50 border-b p-2 text-left font-semibold text-gray-800 text-sm">{label}</th>
-                          <td className="border-b p-2 text-sm text-gray-700">{value !== null && value !== undefined && value !== '' ? value : '-'}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  {/* 標題區 */}
+                  <div className="mb-4">
+                    <div className="font-mono text-sm text-gray-500 mb-1">{selectedProduct.aurotek_pn}</div>
+                    <h2 className="text-lg font-bold text-gray-900">{selectedProduct.name}</h2>
+                    {selectedProduct.list_price && (
+                      <div className="text-xl font-bold text-[#E60012] mt-1">
+                        NT$ {formatPrice(selectedProduct.list_price)}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Tabs 內容 */}
+                  <DetailTabs product={selectedProduct} formatPrice={formatPrice} />
                 </>
-              )}
+              ) : null}
             </div>
+
+            {/* Footer Actions */}
+            {selectedProduct && (
+              <div className="p-4 border-t bg-gray-50">
+                <Link
+                  href={`/quotations/new?product=${selectedProduct.id}`}
+                  className="block w-full px-4 py-3 text-white rounded-lg text-center font-medium"
+                  style={{ backgroundColor: '#E60012' }}
+                >
+                  加入報價單
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       )}
