@@ -447,23 +447,92 @@ export default function ProductsPage() {
               </div>
             </div>
 
-            {/* Product Type */}
+            {/* Product Type - 分組顯示 */}
             <div className={isMobile ? '' : 'bg-white border rounded-xl p-3 shadow-sm'}>
               <div className="font-bold mb-2 text-sm text-gray-800">產品類型（多選）</div>
-              <div className="flex flex-wrap gap-2">
-                {productTypeOptions.map(type => (
-                  <button
-                    key={type}
-                    onClick={() => toggleProductType(type)}
-                    className={`px-3 py-2 rounded-full border text-xs font-medium transition-all ${
-                      productTypeFilters.includes(type)
-                        ? 'text-white bg-[#E60012] border-[#E60012]' 
-                        : 'bg-gray-50 text-gray-700 hover:border-[#E60012]'
-                    }`}
-                  >
-                    {type}
-                  </button>
-                ))}
+              <div className="space-y-2">
+                {(() => {
+                  // 定義分組規則
+                  const groupRules: { prefix: string; match: (t: string) => boolean }[] = [
+                    { prefix: 'CC1', match: t => t.startsWith('CC1') },
+                    { prefix: 'MT1', match: t => t.startsWith('MT1') },
+                    { prefix: 'PD-T', match: t => t.startsWith('PD-T') || t.startsWith('PD-D') },
+                    { prefix: 'PD30', match: t => /^PD[0-9]/.test(t) },
+                    { prefix: 'SH1', match: t => t.startsWith('SH1') },
+                  ]
+                  
+                  // 分組
+                  const groups: { [key: string]: string[] } = {}
+                  const ungrouped: string[] = []
+                  
+                  productTypeOptions.forEach(type => {
+                    const rule = groupRules.find(r => r.match(type))
+                    if (rule) {
+                      if (!groups[rule.prefix]) groups[rule.prefix] = []
+                      groups[rule.prefix].push(type)
+                    } else {
+                      ungrouped.push(type)
+                    }
+                  })
+                  
+                  const orderedPrefixes = ['CC1', 'MT1', 'PD-T', 'PD30', 'SH1']
+                  
+                  return (
+                    <>
+                      {orderedPrefixes.map(prefix => {
+                        const types = groups[prefix]
+                        if (!types || types.length === 0) return null
+                        return (
+                          <div key={prefix} className="flex items-start gap-2">
+                            <span className="text-xs text-gray-500 w-12 pt-2 shrink-0">{prefix}</span>
+                            <div className="flex flex-wrap gap-1.5">
+                              {types.map(type => {
+                                // 顯示簡化名稱（去掉前綴）
+                                let displayName = type
+                                if (type !== prefix) {
+                                  displayName = type.replace(prefix, '').replace(/^[\s-]+/, '') || type
+                                }
+                                return (
+                                  <button
+                                    key={type}
+                                    onClick={() => toggleProductType(type)}
+                                    className={`px-2 py-1 rounded border text-xs font-medium transition-all ${
+                                      productTypeFilters.includes(type)
+                                        ? 'text-white bg-[#E60012] border-[#E60012]' 
+                                        : 'bg-gray-50 text-gray-600 hover:border-[#E60012]'
+                                    }`}
+                                  >
+                                    {displayName}
+                                  </button>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        )
+                      })}
+                      {ungrouped.length > 0 && (
+                        <div className="flex items-start gap-2">
+                          <span className="text-xs text-gray-500 w-12 pt-2 shrink-0">其他</span>
+                          <div className="flex flex-wrap gap-1.5">
+                            {ungrouped.map(type => (
+                              <button
+                                key={type}
+                                onClick={() => toggleProductType(type)}
+                                className={`px-2 py-1 rounded border text-xs font-medium transition-all ${
+                                  productTypeFilters.includes(type)
+                                    ? 'text-white bg-[#E60012] border-[#E60012]' 
+                                    : 'bg-gray-50 text-gray-600 hover:border-[#E60012]'
+                                }`}
+                              >
+                                {type}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )
+                })()}
               </div>
             </div>
 
