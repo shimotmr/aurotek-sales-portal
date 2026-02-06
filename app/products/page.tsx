@@ -124,6 +124,7 @@ function DetailTabs({ product, formatPrice }: { product: ProductDetail; formatPr
           ['產品類型(和椿)', product.product_types?.join(', ')],
           ['產品標籤', product.product_tags?.join(', ')],
           ['是否可售', product.is_sellable ? '✓ 是' : '✗ 否'],
+          ['圖片', product.image_url],
         ]
       case 'spec':
         return [
