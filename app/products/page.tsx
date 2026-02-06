@@ -395,16 +395,16 @@ export default function ProductsPage() {
 
           {/* Table */}
           <div className="flex-1 overflow-auto border rounded-xl bg-white shadow-sm">
-            <table className="w-full border-collapse">
+            <table className="w-full border-collapse min-w-[800px]">
               <thead className="sticky top-0 z-10">
                 <tr className="bg-gray-100">
                   <th className="border-b p-2.5 text-left font-bold text-gray-800 text-xs whitespace-nowrap">和椿料號</th>
                   <th className="border-b p-2.5 text-left font-bold text-gray-800 text-xs whitespace-nowrap">品名</th>
-                  <th className="border-b p-2.5 text-left font-bold text-gray-800 text-xs whitespace-nowrap hidden md:table-cell">規格</th>
+                  <th className="border-b p-2.5 text-left font-bold text-gray-800 text-xs whitespace-nowrap">規格</th>
                   <th className="border-b p-2.5 text-left font-bold text-gray-800 text-xs whitespace-nowrap">物料類型</th>
-                  <th className="border-b p-2.5 text-left font-bold text-gray-800 text-xs whitespace-nowrap hidden lg:table-cell">產品類型</th>
+                  <th className="border-b p-2.5 text-left font-bold text-gray-800 text-xs whitespace-nowrap">產品類型(和椿)</th>
                   <th className="border-b p-2.5 text-right font-bold text-gray-800 text-xs whitespace-nowrap">牌價</th>
-                  <th className="border-b p-2.5 text-right font-bold text-gray-800 text-xs whitespace-nowrap hidden lg:table-cell">庫存</th>
+                  <th className="border-b p-2.5 text-right font-bold text-gray-800 text-xs whitespace-nowrap">庫存總數</th>
                   <th className="border-b p-2.5 text-center font-bold text-gray-800 text-xs whitespace-nowrap">操作</th>
                 </tr>
               </thead>
@@ -421,16 +421,16 @@ export default function ProductsPage() {
                   products.map((product) => (
                     <tr key={product.id} className="hover:bg-gray-50 transition-colors">
                       <td className="border-b p-2.5 text-sm font-mono text-gray-700 whitespace-nowrap">{product.aurotek_pn}</td>
-                      <td className="border-b p-2.5 text-sm text-gray-700">{product.name}</td>
-                      <td className="border-b p-2.5 text-sm text-gray-500 hidden md:table-cell max-w-xs truncate">{product.spec}</td>
+                      <td className="border-b p-2.5 text-sm text-gray-700 max-w-[200px] truncate">{product.name}</td>
+                      <td className="border-b p-2.5 text-sm text-gray-500 max-w-[200px] truncate">{product.spec || '-'}</td>
                       <td className="border-b p-2.5 text-sm text-gray-700 whitespace-nowrap">{product.material_type_name || '-'}</td>
-                      <td className="border-b p-2.5 text-sm text-gray-500 hidden lg:table-cell whitespace-nowrap">
+                      <td className="border-b p-2.5 text-sm text-gray-500 whitespace-nowrap">
                         {product.product_types?.join(', ') || '-'}
                       </td>
                       <td className="border-b p-2.5 text-sm text-gray-700 text-right whitespace-nowrap">
                         {formatPrice(product.list_price)}
                       </td>
-                      <td className="border-b p-2.5 text-sm text-right whitespace-nowrap hidden lg:table-cell">
+                      <td className="border-b p-2.5 text-sm text-right whitespace-nowrap">
                         {product.total_qty > 0 ? (
                           <span className="text-green-600 font-medium">{product.total_qty}</span>
                         ) : (
