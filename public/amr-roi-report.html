@@ -275,6 +275,69 @@
             font-size: 0.9rem;
         }
         
+        /* 手機優化 */
+        @media (max-width: 768px) {
+            body { font-size: 15px; }
+            
+            .container { padding: 20px 16px; }
+            
+            header { padding: 24px 0; }
+            header h1 { font-size: 1.6rem; }
+            header .subtitle { font-size: 0.95rem; }
+            header .meta { 
+                flex-direction: column; 
+                gap: 8px; 
+                font-size: 0.85rem;
+            }
+            
+            h2 { font-size: 1.3rem; margin: 32px 0 16px; }
+            h2 .num { width: 30px; height: 30px; font-size: 0.9rem; }
+            
+            h3 { font-size: 1.1rem; }
+            
+            .formula-box { padding: 16px; }
+            .formula-box code { font-size: 0.9rem; padding: 10px 12px; }
+            
+            .stat-row { 
+                flex-direction: column; 
+                gap: 12px; 
+            }
+            .stat-box { padding: 20px; }
+            .stat-box .value { font-size: 2rem; }
+            
+            .factor-grid { 
+                grid-template-columns: 1fr; 
+                gap: 12px; 
+            }
+            .factor-card { padding: 20px; }
+            .factor-card .icon { font-size: 1.5rem; }
+            
+            .grid-2 { 
+                grid-template-columns: 1fr; 
+                gap: 16px; 
+            }
+            .card { padding: 20px; }
+            
+            table { font-size: 0.85rem; }
+            th, td { padding: 10px 8px; }
+            
+            /* 表格水平滾動 */
+            .table-wrapper {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            .highlight-box { padding: 16px; }
+        }
+        
+        /* 小手機 */
+        @media (max-width: 400px) {
+            header h1 { font-size: 1.4rem; }
+            .stat-box .value { font-size: 1.8rem; }
+            table { font-size: 0.8rem; }
+            th, td { padding: 8px 6px; }
+        }
+        
         @media print {
             body { background: white; }
             .container { box-shadow: none; padding: 20px; }
