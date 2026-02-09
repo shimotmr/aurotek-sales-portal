@@ -137,7 +137,7 @@
       "caseCount": 442
     },
     {
-      "rep": "待補 (TBH-1)",
+      "rep": "張哲銘 (u2668)",
       "totalShipped": 0,
       "totalForecast": 0,
       "totalTarget": 48700,
@@ -145,7 +145,7 @@
       "caseCount": 0
     },
     {
-      "rep": "待補 (TBH-2)",
+      "rep": "林奕丞 (u2671)",
       "totalShipped": 0,
       "totalForecast": 0,
       "totalTarget": 48300,
@@ -227,6 +227,6 @@
       "amount": 0
     }
   ],
-  "updatedAt": "2026-02-09T14:09:09.700002",
+  "updatedAt": "2026-02-09T15:02:54.490593",
   "currentMonth": 2
 }
