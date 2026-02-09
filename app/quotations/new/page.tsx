@@ -137,7 +137,7 @@ export default function NewQuotationPage() {
         .from('products_full')
         .select('aurotek_pn, name, spec, material_type_name, list_price, dealer_price, market_floor_price, total_qty')
         .eq('is_active', true)
-        .or(`aurotek_pn.ilike.%${searchQuery}%,name.ilike.%${searchQuery}%`)
+        .or(`aurotek_pn.ilike.%${searchQuery}%,name.ilike.%${searchQuery}%,pudu_pn.ilike.%${searchQuery}%,spec.ilike.%${searchQuery}%`)
         .order('aurotek_pn')
         .limit(15)
       setSearchResults(data || [])
@@ -481,7 +481,7 @@ export default function NewQuotationPage() {
             </div>
             <div className="p-4">
               <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-                placeholder="輸入料號或品名..."
+                placeholder="輸入料號、規格或品名搜尋..."
                 className="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-red-300"
                 autoFocus />
             </div>
