@@ -498,7 +498,8 @@ export default function NewQuotationPage() {
                     className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b flex justify-between items-center">
                     <div>
                       <div className="font-mono text-xs text-gray-400">{p.aurotek_pn}</div>
-                      <div className="text-sm font-medium text-gray-800">{p.name}</div>
+                      <div className="text-sm font-medium text-gray-800">{p.spec || p.name}</div>
+                      {p.spec && <div className="text-xs text-gray-500">{p.name}</div>}
                       <div className="text-xs text-gray-500">
                         牌價 {fmt(p.list_price||0)} · 經銷價 {fmt(p.dealer_price||0)}
                       </div>
