@@ -86,13 +86,13 @@ export default function QuotationDetailPage({ params }: { params: Promise<{ id: 
         body: JSON.stringify({ quotation, items })
       })
       if (!res.ok) throw new Error('PDF 生成失敗')
-      const blob = await res.blob()
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `${quotation.quotation_no}.pdf`
-      a.click()
-      URL.revokeObjectURL(url)
+      const html = await res.text()
+      const w = window.open('', '_blank')
+      if (w) {
+        w.document.write(html)
+        w.document.close()
+        setTimeout(() => w.print(), 500)
+      }
     } catch (err) {
       alert((err as Error).message)
     } finally {
