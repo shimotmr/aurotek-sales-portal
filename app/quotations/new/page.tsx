@@ -1,500 +1,515 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 interface Product {
-  id: number
   aurotek_pn: string
-  pudu_pn: string | null
   name: string
   spec: string | null
   material_type_name: string | null
   list_price: number | null
+  dealer_price: number | null
+  market_floor_price: number | null
   total_qty: number
 }
 
 interface QuoteItem {
-  product: Product
+  aurotek_pn: string
+  item_name: string
+  unit: string
   quantity: number
-  unitPrice: number
-  discount: number
+  unit_price: number
+  amount: number
 }
 
 interface Dealer {
   id: string
   name: string
   contact: string | null
+  phone: string | null
+  address: string | null
+}
+
+interface TeamMember {
+  id: string
+  name: string
+  email: string | null
+}
+
+const DEFAULT_NOTES = `1.此報價單有效日期為7天。
+2.單筆訂單未滿新台幣3,000元將酌收運費或運費到付。
+3.如需訂購，請傳訂購單或回傳此報價書並加蓋公司章作為訂購証明。
+4.下單前確認規格是否無誤；訂購確認後，非經賣方同意，買方不得取消訂單。
+5.此文件經客戶簽署後，將被視為正式訂單。
+6.貨款未付清及票據未兌現前，貨品所有權概屬賣方所有。
+7.本公司保留接受訂單與否權利。`
+
+const REP_EXT: Record<string, string> = {
+  'u2625': '7509',
+  'u2668': '',
+  'u2671': '',
 }
 
 export default function NewQuotationPage() {
+  const router = useRouter()
+  
+  // Data sources
   const [dealers, setDealers] = useState<Dealer[]>([])
-  const [selectedDealer, setSelectedDealer] = useState('')
+  const [team, setTeam] = useState<TeamMember[]>([])
+  
+  // Form - customer
+  const [dealerId, setDealerId] = useState('')
   const [customerName, setCustomerName] = useState('')
+  const [customerAddress, setCustomerAddress] = useState('')
   const [customerContact, setCustomerContact] = useState('')
   const [customerPhone, setCustomerPhone] = useState('')
-  const [customerEmail, setCustomerEmail] = useState('')
-  const [validDays, setValidDays] = useState(30)
-  const [notes, setNotes] = useState('')
+  const [deliveryAddress, setDeliveryAddress] = useState('')
   
+  // Form - sales rep
+  const [salesRepId, setSalesRepId] = useState('')
+  const [salesRepName, setSalesRepName] = useState('')
+  const [salesRepExt, setSalesRepExt] = useState('')
+  const [salesRepEmail, setSalesRepEmail] = useState('')
+  
+  // Form - terms
+  const [paymentTerms, setPaymentTerms] = useState('現金')
+  const [validDays, setValidDays] = useState(7)
+  const [taxRate, setTaxRate] = useState(5)
+  const [notes, setNotes] = useState(DEFAULT_NOTES)
+  
+  // Items
   const [items, setItems] = useState<QuoteItem[]>([])
+  const [showSearch, setShowSearch] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<Product[]>([])
   const [searching, setSearching] = useState(false)
-  const [showSearch, setShowSearch] = useState(false)
   
+  // Save state
   const [saving, setSaving] = useState(false)
-  const [savedQuoteNo, setSavedQuoteNo] = useState<string | null>(null)
 
-  // Load dealers
+  // Load dealers & team
   useEffect(() => {
-    supabase.from('dealers').select('id, name, contact').eq('status', 'active').order('name')
+    supabase.from('dealers').select('id, name, contact, phone, address')
+      .eq('status', 'active').order('name')
       .then(({ data }) => setDealers(data || []))
+    supabase.from('team').select('id, name, email')
+      .eq('status', 'active').order('name')
+      .then(({ data }) => setTeam(data || []))
   }, [])
 
-  // Search products - 使用新的 products_full 視圖
-  useEffect(() => {
-    if (!searchQuery || searchQuery.length < 2) {
-      setSearchResults([])
-      return
+  // Auto-fill dealer info
+  const handleDealerChange = (id: string) => {
+    setDealerId(id)
+    if (id) {
+      const d = dealers.find(d => d.id === id)
+      if (d) {
+        setCustomerName(d.name)
+        setCustomerContact(d.contact || '')
+        setCustomerPhone(d.phone || '')
+        setCustomerAddress(d.address || '')
+        setDeliveryAddress(d.address || '')
+      }
     }
-    
+  }
+
+  // Auto-fill sales rep info
+  const handleRepChange = (id: string) => {
+    setSalesRepId(id)
+    if (id) {
+      const r = team.find(t => t.id === id)
+      if (r) {
+        setSalesRepName(r.name)
+        setSalesRepEmail(r.email || '')
+        setSalesRepExt(REP_EXT[r.id] || '')
+      }
+    }
+  }
+
+  // Search products
+  useEffect(() => {
+    if (!searchQuery || searchQuery.length < 2) { setSearchResults([]); return }
     const timer = setTimeout(async () => {
       setSearching(true)
       const { data } = await supabase
         .from('products_full')
-        .select('id, aurotek_pn, pudu_pn, name, spec, material_type_name, list_price, total_qty')
+        .select('aurotek_pn, name, spec, material_type_name, list_price, dealer_price, market_floor_price, total_qty')
         .eq('is_active', true)
-        .or(`aurotek_pn.ilike.%${searchQuery}%,name.ilike.%${searchQuery}%,pudu_pn.ilike.%${searchQuery}%`)
+        .or(`aurotek_pn.ilike.%${searchQuery}%,name.ilike.%${searchQuery}%`)
         .order('aurotek_pn')
         .limit(15)
       setSearchResults(data || [])
       setSearching(false)
     }, 300)
-    
     return () => clearTimeout(timer)
   }, [searchQuery])
 
-  const addItem = (product: Product) => {
-    // 檢查是否已加入
-    if (items.some(item => item.product.id === product.id)) {
-      alert('此產品已在報價單中')
-      return
-    }
-    const price = product.list_price || 0
-    setItems([...items, { product, quantity: 1, unitPrice: price, discount: 0 }])
+  const addItem = (p: Product) => {
+    if (items.some(i => i.aurotek_pn === p.aurotek_pn)) { return }
+    const price = p.dealer_price || p.list_price || 0
+    setItems([...items, {
+      aurotek_pn: p.aurotek_pn,
+      item_name: p.name + (p.spec ? `(${p.spec})` : ''),
+      unit: 'SET',
+      quantity: 1,
+      unit_price: price,
+      amount: price
+    }])
     setSearchQuery('')
     setSearchResults([])
     setShowSearch(false)
   }
 
-  const updateItem = (index: number, field: keyof QuoteItem, value: number) => {
+  const updateItem = (idx: number, field: string, value: number | string) => {
     const newItems = [...items]
-    newItems[index] = { ...newItems[index], [field]: value }
+    const item = { ...newItems[idx], [field]: value }
+    if (field === 'quantity' || field === 'unit_price') {
+      item.amount = item.quantity * item.unit_price
+    }
+    newItems[idx] = item
     setItems(newItems)
   }
 
-  const removeItem = (index: number) => {
-    setItems(items.filter((_, i) => i !== index))
-  }
+  const removeItem = (idx: number) => setItems(items.filter((_, i) => i !== idx))
 
-  const calculateSubtotal = (item: QuoteItem) => {
-    return item.quantity * item.unitPrice * (1 - item.discount / 100)
-  }
+  const subtotal = items.reduce((s, i) => s + i.amount, 0)
+  const taxAmount = Math.round(subtotal * taxRate / 100)
+  const totalAmount = subtotal + taxAmount
 
-  const total = items.reduce((sum, item) => sum + calculateSubtotal(item), 0)
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('zh-TW', { maximumFractionDigits: 0 }).format(price)
-  }
-
-  const generateQuoteNo = () => {
-    const now = new Date()
-    const year = now.getFullYear()
-    const month = String(now.getMonth() + 1).padStart(2, '0')
-    const day = String(now.getDate()).padStart(2, '0')
-    const rand = String(Math.floor(Math.random() * 1000)).padStart(3, '0')
-    return `Q${year}${month}${day}${rand}`
-  }
+  const fmt = (n: number) => new Intl.NumberFormat('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n)
 
   const saveQuotation = async () => {
-    if (items.length === 0) {
-      alert('請至少加入一項產品')
-      return
-    }
+    if (!customerName) { alert('請填寫客戶名稱'); return }
+    if (!salesRepName) { alert('請選擇業務代表'); return }
+    if (items.length === 0) { alert('請至少加入一項產品'); return }
 
     setSaving(true)
     try {
-      const quotationNo = generateQuoteNo()
-      const validUntil = new Date()
-      validUntil.setDate(validUntil.getDate() + validDays)
-
-      // Insert quotation - 使用新的 schema
-      const { data: quotation, error: qError } = await supabase
-        .from('quotations')
-        .insert({
-          quotation_no: quotationNo,
-          customer_name: customerName || null,
-          customer_contact: customerContact || null,
-          customer_phone: customerPhone || null,
-          customer_email: customerEmail || null,
-          quote_date: new Date().toISOString().split('T')[0],
-          valid_until: validUntil.toISOString().split('T')[0],
-          currency: 'TWD',
-          subtotal: total,
-          discount_percent: 0,
-          discount_amount: 0,
-          tax_percent: 0,
-          tax_amount: 0,
-          total_amount: total,
-          status: 'draft',
-          notes: notes || null,
-          created_by: 'portal'
-        })
+      // Get next quotation number
+      const now = new Date()
+      const ym = String(now.getFullYear()).slice(-2) + String(now.getMonth()+1).padStart(2,'0')
+      
+      // Upsert sequence
+      const { data: seqData } = await supabase
+        .from('quotation_sequences')
+        .upsert({ year_month: ym, last_serial: 10001 }, { onConflict: 'year_month' })
         .select()
         .single()
+      
+      let serial = 10001
+      if (seqData) {
+        // Increment
+        const { data: updated } = await supabase
+          .from('quotation_sequences')
+          .update({ last_serial: seqData.last_serial + 1 })
+          .eq('year_month', ym)
+          .select()
+          .single()
+        serial = updated?.last_serial || seqData.last_serial + 1
+      }
 
-      if (qError) throw qError
+      const quotationNo = `ASAA-${ym}${String(serial).padStart(6, '0')}`
 
-      // Insert items - 使用新的 schema
-      const itemsToInsert = items.map((item, index) => ({
-        quotation_id: quotation.id,
-        product_id: item.product.id,
-        aurotek_pn: item.product.aurotek_pn,
-        product_name: item.product.name,
-        product_spec: item.product.spec,
-        quantity: item.quantity,
-        unit_price: item.unitPrice,
-        discount_percent: item.discount,
-        line_total: calculateSubtotal(item),
-        sort_order: index
-      }))
+      // Insert quotation
+      const { data: q, error: qErr } = await supabase.from('quotations').insert({
+        quotation_no: quotationNo,
+        quotation_date: now.toISOString().split('T')[0],
+        valid_days: validDays,
+        dealer_id: dealerId || null,
+        customer_name: customerName,
+        customer_address: customerAddress || null,
+        customer_contact: customerContact || null,
+        customer_phone: customerPhone || null,
+        delivery_address: deliveryAddress || null,
+        sales_rep_id: salesRepId || null,
+        sales_rep_name: salesRepName,
+        sales_rep_ext: salesRepExt || null,
+        sales_rep_email: salesRepEmail || null,
+        payment_terms: paymentTerms,
+        currency: 'TWD',
+        subtotal: subtotal,
+        tax_rate: taxRate,
+        tax_amount: taxAmount,
+        total_amount: totalAmount,
+        notes: notes || null,
+        status: 'draft'
+      }).select().single()
 
-      const { error: iError } = await supabase
-        .from('quotation_items')
-        .insert(itemsToInsert)
+      if (qErr) throw qErr
 
-      if (iError) throw iError
+      // Insert items
+      const { error: iErr } = await supabase.from('quotation_items').insert(
+        items.map((item, idx) => ({
+          quotation_id: q.id,
+          aurotek_pn: item.aurotek_pn,
+          item_name: item.item_name,
+          unit: item.unit,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          amount: item.amount,
+          sort_order: idx
+        }))
+      )
+      if (iErr) throw iErr
 
-      setSavedQuoteNo(quotationNo)
+      router.push(`/quotations/${q.id}`)
     } catch (err) {
-      console.error('Error saving quotation:', err)
       alert('儲存失敗：' + (err as Error).message)
     } finally {
       setSaving(false)
     }
   }
 
-  const resetForm = () => {
-    setItems([])
-    setCustomerName('')
-    setCustomerContact('')
-    setCustomerPhone('')
-    setCustomerEmail('')
-    setNotes('')
-    setSelectedDealer('')
-    setSavedQuoteNo(null)
-  }
-
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-4xl mx-auto px-4 py-3">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-3">
-              <Link href="/products" className="text-gray-500 hover:text-gray-700 text-xl">←</Link>
-              <h1 className="text-lg sm:text-xl font-bold text-gray-900">新增報價單</h1>
-            </div>
-            <Link 
-              href="/products" 
-              className="text-sm px-3 py-1.5 border rounded-lg hover:bg-gray-50"
-            >
-              產品查詢
+      <div className="bg-white shadow-sm border-b sticky top-0 z-10">
+        <div className="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <Link href="/quotations" className="text-gray-400 hover:text-gray-600">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
             </Link>
+            <h1 className="text-lg font-bold text-gray-900">新增報價單</h1>
           </div>
+          <button
+            onClick={saveQuotation}
+            disabled={saving}
+            className="text-white px-5 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
+            style={{ backgroundColor: '#E60012' }}
+          >
+            {saving ? '儲存中...' : '💾 儲存'}
+          </button>
         </div>
       </div>
 
-      {/* Success Message */}
-      {savedQuoteNo && (
-        <div className="max-w-4xl mx-auto px-4 mt-4">
-          <div className="bg-green-50 border border-green-200 rounded-xl p-6 text-center">
-            <div className="text-green-600 text-4xl mb-2">✓</div>
-            <h2 className="text-xl font-bold text-green-800 mb-2">報價單已儲存</h2>
-            <p className="text-green-700 mb-4">報價單編號：<span className="font-mono font-bold">{savedQuoteNo}</span></p>
-            <div className="flex justify-center gap-4">
-              <button
-                onClick={resetForm}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-              >
-                建立新報價單
-              </button>
-              <Link
-                href="/products"
-                className="px-4 py-2 border border-green-600 text-green-600 rounded-lg hover:bg-green-50"
-              >
-                返回產品查詢
-              </Link>
+      <div className="max-w-4xl mx-auto px-4 py-4 space-y-4">
+        {/* Customer Section */}
+        <div className="bg-white rounded-xl border border-gray-100 p-4">
+          <h2 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-1">👤 客戶資訊</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">經銷商（選填）</label>
+              <select value={dealerId} onChange={e => handleDealerChange(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-red-300">
+                <option value="">-- 手動輸入 --</option>
+                {dealers.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">客戶名稱 *</label>
+              <input value={customerName} onChange={e => setCustomerName(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-red-300"
+                placeholder="客戶名稱" />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="block text-xs text-gray-500 mb-1">客戶地址</label>
+              <input value={customerAddress} onChange={e => setCustomerAddress(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-red-300"
+                placeholder="地址" />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">聯絡人</label>
+              <input value={customerContact} onChange={e => setCustomerContact(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-red-300" />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">電話</label>
+              <input value={customerPhone} onChange={e => setCustomerPhone(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-red-300" />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="block text-xs text-gray-500 mb-1">交貨地點</label>
+              <input value={deliveryAddress} onChange={e => setDeliveryAddress(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-red-300"
+                placeholder="預設同客戶地址" />
             </div>
           </div>
         </div>
-      )}
 
-      {!savedQuoteNo && (
-        <div className="max-w-4xl mx-auto px-4 py-6">
-          {/* Customer Info */}
-          <div className="bg-white rounded-xl shadow-sm p-6 mb-4">
-            <h2 className="text-base font-bold text-gray-800 mb-4">客戶資訊</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">經銷商</label>
-                <select
-                  value={selectedDealer}
-                  onChange={(e) => setSelectedDealer(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-opacity-20 outline-none"
-                  style={{ borderColor: '#e5e7eb' }}
-                  onFocus={(e) => { e.target.style.borderColor = '#E60012' }}
-                  onBlur={(e) => { e.target.style.borderColor = '#e5e7eb' }}
-                >
-                  <option value="">-- 選擇經銷商 --</option>
-                  {dealers.map(d => (
-                    <option key={d.id} value={d.id}>{d.name}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">報價有效天數</label>
-                <input
-                  type="number"
-                  value={validDays}
-                  onChange={(e) => setValidDays(parseInt(e.target.value) || 30)}
-                  className="w-full px-3 py-2 border rounded-lg text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">終端客戶名稱</label>
-                <input
-                  type="text"
-                  value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  placeholder="客戶名稱"
-                  className="w-full px-3 py-2 border rounded-lg text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">聯絡人</label>
-                <input
-                  type="text"
-                  value={customerContact}
-                  onChange={(e) => setCustomerContact(e.target.value)}
-                  placeholder="聯絡人姓名"
-                  className="w-full px-3 py-2 border rounded-lg text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">電話</label>
-                <input
-                  type="tel"
-                  value={customerPhone}
-                  onChange={(e) => setCustomerPhone(e.target.value)}
-                  placeholder="電話號碼"
-                  className="w-full px-3 py-2 border rounded-lg text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                <input
-                  type="email"
-                  value={customerEmail}
-                  onChange={(e) => setCustomerEmail(e.target.value)}
-                  placeholder="電子郵件"
-                  className="w-full px-3 py-2 border rounded-lg text-sm"
-                />
-              </div>
+        {/* Sales Rep Section */}
+        <div className="bg-white rounded-xl border border-gray-100 p-4">
+          <h2 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-1">👔 業務代表</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">業務 *</label>
+              <select value={salesRepId} onChange={e => handleRepChange(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-red-300">
+                <option value="">-- 選擇 --</option>
+                {team.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">分機</label>
+              <input value={salesRepExt} onChange={e => setSalesRepExt(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-red-300" />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Email</label>
+              <input value={salesRepEmail} onChange={e => setSalesRepEmail(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-red-300" />
             </div>
           </div>
+        </div>
 
-          {/* Product Items */}
-          <div className="bg-white rounded-xl shadow-sm p-6 mb-4">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-base font-bold text-gray-800">產品項目</h2>
-              <button
-                onClick={() => setShowSearch(true)}
-                className="text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                style={{ backgroundColor: '#E60012' }}
-                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#CC0010'}
-                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#E60012'}
-              >
-                + 加入產品
-              </button>
+        {/* Terms */}
+        <div className="bg-white rounded-xl border border-gray-100 p-4">
+          <h2 className="text-sm font-bold text-gray-700 mb-3">⚙️ 交易條件</h2>
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">交易條件</label>
+              <select value={paymentTerms} onChange={e => setPaymentTerms(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-red-300">
+                <option>現金</option>
+                <option>月結30天</option>
+                <option>月結60天</option>
+                <option>月結90天</option>
+              </select>
             </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">有效天數</label>
+              <input type="number" value={validDays} onChange={e => setValidDays(parseInt(e.target.value)||7)}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-red-300" />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">稅率 %</label>
+              <input type="number" value={taxRate} onChange={e => setTaxRate(parseFloat(e.target.value)||0)}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-red-300" />
+            </div>
+          </div>
+        </div>
 
-            {/* Search Modal */}
-            {showSearch && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div className="bg-white rounded-xl p-6 w-full max-w-lg mx-4 shadow-xl">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-bold text-gray-800">搜尋產品</h3>
-                    <button onClick={() => setShowSearch(false)} className="text-gray-500 hover:text-gray-700 text-xl">✕</button>
-                  </div>
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="輸入和椿料號 / 普渡料號 / 品名..."
-                    className="w-full px-4 py-3 border rounded-lg mb-4 text-sm"
-                    style={{ borderColor: '#e5e7eb' }}
-                    onFocus={(e) => { e.target.style.borderColor = '#E60012'; e.target.style.boxShadow = '0 0 0 3px rgba(230,0,18,0.1)' }}
-                    onBlur={(e) => { e.target.style.borderColor = '#e5e7eb'; e.target.style.boxShadow = 'none' }}
-                    autoFocus
-                  />
-                  <div className="max-h-80 overflow-y-auto">
-                    {searching ? (
-                      <p className="text-gray-500 text-center py-4">搜尋中...</p>
-                    ) : searchResults.length === 0 ? (
-                      <p className="text-gray-500 text-center py-4">
-                        {searchQuery.length < 2 ? '請輸入至少 2 個字元' : '找不到產品'}
-                      </p>
-                    ) : (
-                      searchResults.map(product => (
-                        <div
-                          key={product.id}
-                          onClick={() => addItem(product)}
-                          className="p-3 hover:bg-gray-50 cursor-pointer border-b transition-colors"
-                        >
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <div className="font-mono text-sm text-gray-600">{product.aurotek_pn}</div>
-                              <div className="font-medium text-gray-800">{product.name}</div>
-                              <div className="text-sm text-gray-500">
-                                {product.material_type_name} · NT$ {formatPrice(product.list_price || 0)}
-                              </div>
-                            </div>
-                            {product.total_qty > 0 && (
-                              <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
-                                庫存 {product.total_qty}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
+        {/* Items */}
+        <div className="bg-white rounded-xl border border-gray-100 p-4">
+          <div className="flex justify-between items-center mb-3">
+            <h2 className="text-sm font-bold text-gray-700">📦 產品明細</h2>
+            <button onClick={() => setShowSearch(true)}
+              className="text-white px-3 py-1.5 rounded-lg text-xs font-medium"
+              style={{ backgroundColor: '#E60012' }}>
+              + 加入產品
+            </button>
+          </div>
 
-            {/* Items Table */}
-            {items.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">尚未加入產品，點擊「+ 加入產品」開始</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-2 py-2 text-left text-xs font-bold text-gray-600">產品</th>
-                      <th className="px-2 py-2 text-center text-xs font-bold text-gray-600 w-20">數量</th>
-                      <th className="px-2 py-2 text-right text-xs font-bold text-gray-600 w-28">單價</th>
-                      <th className="px-2 py-2 text-center text-xs font-bold text-gray-600 w-20">折扣%</th>
-                      <th className="px-2 py-2 text-right text-xs font-bold text-gray-600 w-28">小計</th>
-                      <th className="px-2 py-2 w-10"></th>
+          {items.length === 0 ? (
+            <div className="text-center py-8 text-gray-400 text-sm">點擊「+ 加入產品」搜尋料號或品名</div>
+          ) : (
+            <>
+              <div className="overflow-x-auto -mx-4 px-4">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b bg-gray-50">
+                      <th className="text-left py-2 px-2 text-xs text-gray-500 font-medium">料號 / 品名</th>
+                      <th className="text-center py-2 px-1 text-xs text-gray-500 font-medium w-16">數量</th>
+                      <th className="text-right py-2 px-1 text-xs text-gray-500 font-medium w-24">單價</th>
+                      <th className="text-right py-2 px-2 text-xs text-gray-500 font-medium w-24">總價</th>
+                      <th className="w-8"></th>
                     </tr>
                   </thead>
                   <tbody>
-                    {items.map((item, index) => (
-                      <tr key={index} className="border-b hover:bg-gray-50">
-                        <td className="px-2 py-3">
-                          <div className="font-mono text-xs text-gray-500">{item.product.aurotek_pn}</div>
-                          <div className="text-sm font-medium text-gray-800">{item.product.name}</div>
+                    {items.map((item, idx) => (
+                      <tr key={idx} className="border-b">
+                        <td className="py-2 px-2">
+                          <div className="font-mono text-xs text-gray-400">{item.aurotek_pn}</div>
+                          <div className="text-sm text-gray-800 truncate max-w-[200px]">{item.item_name}</div>
                         </td>
-                        <td className="px-2 py-2">
-                          <input
-                            type="number"
-                            min="1"
-                            value={item.quantity}
-                            onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value) || 1)}
-                            className="w-16 px-2 py-1 border rounded text-center text-sm"
-                          />
+                        <td className="py-2 px-1">
+                          <input type="number" min={1} value={item.quantity}
+                            onChange={e => updateItem(idx, 'quantity', parseInt(e.target.value)||1)}
+                            className="w-14 px-1 py-1 border rounded text-center text-sm" />
                         </td>
-                        <td className="px-2 py-2">
-                          <input
-                            type="number"
-                            value={item.unitPrice}
-                            onChange={(e) => updateItem(index, 'unitPrice', parseFloat(e.target.value) || 0)}
-                            className="w-24 px-2 py-1 border rounded text-right text-sm"
-                          />
+                        <td className="py-2 px-1">
+                          <input type="number" value={item.unit_price}
+                            onChange={e => updateItem(idx, 'unit_price', parseFloat(e.target.value)||0)}
+                            className="w-22 px-1 py-1 border rounded text-right text-sm" />
                         </td>
-                        <td className="px-2 py-2">
-                          <input
-                            type="number"
-                            min="0"
-                            max="100"
-                            value={item.discount}
-                            onChange={(e) => updateItem(index, 'discount', parseFloat(e.target.value) || 0)}
-                            className="w-16 px-2 py-1 border rounded text-center text-sm"
-                          />
-                        </td>
-                        <td className="px-2 py-2 text-right font-medium text-gray-800">
-                          {formatPrice(calculateSubtotal(item))}
-                        </td>
-                        <td className="px-2 py-2">
-                          <button
-                            onClick={() => removeItem(index)}
-                            className="text-red-500 hover:text-red-700 text-lg"
-                          >
-                            ✕
-                          </button>
+                        <td className="py-2 px-2 text-right font-medium">{fmt(item.amount)}</td>
+                        <td className="py-2">
+                          <button onClick={() => removeItem(idx)} className="text-red-400 hover:text-red-600 text-sm">✕</button>
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-            )}
 
-            {/* Total */}
-            {items.length > 0 && (
-              <div className="mt-4 pt-4 border-t flex justify-between items-center">
-                <span className="text-gray-600">共 {items.length} 項產品</span>
-                <span className="text-xl font-bold" style={{ color: '#E60012' }}>
-                  總計：NT$ {formatPrice(total)}
-                </span>
+              {/* Totals */}
+              <div className="mt-3 pt-3 border-t space-y-1 text-sm">
+                <div className="flex justify-between text-gray-600">
+                  <span>銷售金額(未稅)</span>
+                  <span>{fmt(subtotal)}</span>
+                </div>
+                <div className="flex justify-between text-gray-600">
+                  <span>營業稅 ({taxRate}%)</span>
+                  <span>{fmt(taxAmount)}</span>
+                </div>
+                <div className="flex justify-between font-bold text-base pt-1 border-t">
+                  <span>銷售金額 合計</span>
+                  <span style={{ color: '#E60012' }}>TWD {fmt(totalAmount)}</span>
+                </div>
               </div>
-            )}
-          </div>
+            </>
+          )}
+        </div>
 
-          {/* Notes */}
-          <div className="bg-white rounded-xl shadow-sm p-6 mb-4">
-            <h2 className="text-base font-bold text-gray-800 mb-4">備註</h2>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="付款條件、交貨方式、特殊需求等..."
-              rows={3}
-              className="w-full px-3 py-2 border rounded-lg text-sm"
-            />
-          </div>
+        {/* Notes */}
+        <div className="bg-white rounded-xl border border-gray-100 p-4">
+          <h2 className="text-sm font-bold text-gray-700 mb-3">📝 備註</h2>
+          <textarea value={notes} onChange={e => setNotes(e.target.value)}
+            rows={7}
+            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs leading-relaxed focus:outline-none focus:border-red-300" />
+        </div>
 
-          {/* Actions */}
-          <div className="flex justify-end gap-3">
-            <Link
-              href="/products"
-              className="px-6 py-2.5 border rounded-lg hover:bg-gray-50 text-sm font-medium"
-            >
-              取消
-            </Link>
-            <button
-              onClick={saveQuotation}
-              disabled={saving || items.length === 0}
-              className="px-6 py-2.5 text-white rounded-lg font-medium text-sm transition-colors disabled:opacity-50"
-              style={{ backgroundColor: '#E60012' }}
-              onMouseOver={(e) => !saving && (e.currentTarget.style.backgroundColor = '#CC0010')}
-              onMouseOut={(e) => (e.currentTarget.style.backgroundColor = '#E60012')}
-            >
-              {saving ? '儲存中...' : '儲存報價單'}
-            </button>
+        {/* Bottom Save */}
+        <div className="pb-8">
+          <button onClick={saveQuotation} disabled={saving}
+            className="w-full text-white py-3 rounded-xl text-sm font-bold disabled:opacity-50"
+            style={{ backgroundColor: '#E60012' }}>
+            {saving ? '儲存中...' : '💾 儲存報價單'}
+          </button>
+        </div>
+      </div>
+
+      {/* Search Modal */}
+      {showSearch && (
+        <div className="fixed inset-0 bg-black/50 flex items-start justify-center pt-20 z-50">
+          <div className="bg-white rounded-xl w-full max-w-lg mx-4 shadow-2xl overflow-hidden">
+            <div className="p-4 border-b flex justify-between items-center">
+              <h3 className="font-bold text-gray-800">搜尋產品</h3>
+              <button onClick={() => { setShowSearch(false); setSearchQuery(''); setSearchResults([]) }}
+                className="text-gray-400 hover:text-gray-600 text-xl">✕</button>
+            </div>
+            <div className="p-4">
+              <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+                placeholder="輸入料號或品名..."
+                className="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-red-300"
+                autoFocus />
+            </div>
+            <div className="max-h-80 overflow-y-auto">
+              {searching ? (
+                <p className="text-center py-6 text-gray-400 text-sm">搜尋中...</p>
+              ) : searchResults.length === 0 ? (
+                <p className="text-center py-6 text-gray-400 text-sm">
+                  {searchQuery.length < 2 ? '輸入至少 2 字元' : '找不到產品'}
+                </p>
+              ) : (
+                searchResults.map(p => (
+                  <div key={p.aurotek_pn} onClick={() => addItem(p)}
+                    className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b flex justify-between items-center">
+                    <div>
+                      <div className="font-mono text-xs text-gray-400">{p.aurotek_pn}</div>
+                      <div className="text-sm font-medium text-gray-800">{p.name}</div>
+                      <div className="text-xs text-gray-500">
+                        牌價 {fmt(p.list_price||0)} · 經銷價 {fmt(p.dealer_price||0)}
+                      </div>
+                    </div>
+                    <div className="text-xs text-gray-400 shrink-0 ml-2">
+                      {p.total_qty > 0 ? `庫存 ${p.total_qty}` : '無庫存'}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
       )}
