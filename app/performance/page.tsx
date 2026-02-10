@@ -414,17 +414,17 @@ export default function PerformancePage() {
                           {m.month === currentMonth && (
                             <span className="text-xs bg-blue-500 text-white px-2 py-1 rounded-full">當月</span>
                           )}
-                          <span className={`text-xs px-2 py-0.5 rounded ${isActual ? 'bg-gray-200 text-gray-600' : 'bg-purple-100 text-purple-600'}`}>
-                            {isActual ? '實際' : '預測'}
+                          <span className={`text-xs px-2 py-0.5 rounded ${m.month === currentMonth ? 'bg-blue-100 text-blue-600' : isActual ? 'bg-gray-200 text-gray-600' : 'bg-purple-100 text-purple-600'}`}>
+                            {m.month === currentMonth ? '實際+預測' : isActual ? '實際' : '預測'}
                           </span>
                         </div>
-                        <span className={`text-2xl font-bold ${getStatusColor(m.rate)}`}>
-                          {m.rate}%
+                        <span className={`text-2xl font-bold ${getStatusColor(m.month === currentMonth && m.target > 0 ? Math.round(totalPerformance / m.target * 100) : m.rate)}`}>
+                          {m.month === currentMonth && m.target > 0 ? Math.round(totalPerformance / m.target * 100) : m.rate}%
                         </span>
                       </div>
                       
-                      {/* 過去月份：只顯示目標 vs 已出貨 */}
-                      {isActual ? (
+                      {/* 過去月份：只顯示目標 vs 已出貨；當月：顯示目標+已出貨+預測 */}
+                      {isActual && m.month !== currentMonth ? (
                         <>
                           <div className="grid grid-cols-2 gap-3 mb-3">
                             <div className="text-center p-3 bg-gray-100 rounded-lg">
