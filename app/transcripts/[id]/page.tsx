@@ -375,8 +375,16 @@ export default function TranscriptDetailPage() {
                         min="0"
                         max={(transcript.duration_seconds || 0) * 1000}
                         value={currentTime}
+                        onInput={e => {
+                          const time = parseInt((e.target as HTMLInputElement).value)
+                          setCurrentTime(time)
+                          if (audioRef.current) {
+                            audioRef.current.currentTime = time / 1000
+                          }
+                        }}
                         onChange={e => {
                           const time = parseInt(e.target.value)
+                          setCurrentTime(time)
                           if (audioRef.current) {
                             audioRef.current.currentTime = time / 1000
                           }
