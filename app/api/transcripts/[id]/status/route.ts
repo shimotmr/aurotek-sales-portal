@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
-const ASSEMBLYAI_API_KEY = '2382a2ea630b44d1b16cd41e58cc7459'
+const ASSEMBLYAI_API_KEY = process.env.ASSEMBLYAI_API_KEY || ''
 
 export async function GET(
   request: NextRequest,
@@ -70,7 +70,7 @@ export async function GET(
         .from('transcripts')
         .update({
           status: 'ready',
-          duration_seconds: Math.floor((statusData.audio_duration || 0) / 1000),
+          duration_seconds: Math.floor(statusData.audio_duration || 0),
           speakers: speakers
         })
         .eq('id', id)

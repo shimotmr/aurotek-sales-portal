@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
-const ASSEMBLYAI_API_KEY = '2382a2ea630b44d1b16cd41e58cc7459'
+const ASSEMBLYAI_API_KEY = process.env.ASSEMBLYAI_API_KEY || ''
 
 export async function POST(request: NextRequest) {
   try {
