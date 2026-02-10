@@ -1,7 +1,7 @@
 {
   "summary": {
     "totalCases": 879,
-    "activeCases": 386,
+    "activeCases": 379,
     "thisMonth": {
       "month": 2,
       "actual": 1295,
@@ -39,10 +39,10 @@
     {
       "month": 3,
       "actual": 0,
-      "forecast": 77548,
+      "forecast": 77463,
       "target": 8800,
-      "gap": 68748,
-      "rate": 881,
+      "gap": 68663,
+      "rate": 880,
       "type": "forecast"
     },
     {
@@ -66,10 +66,10 @@
     {
       "month": 6,
       "actual": 0,
-      "forecast": 2212,
+      "forecast": 1912,
       "target": 10600,
-      "gap": -8388,
-      "rate": 21,
+      "gap": -8688,
+      "rate": 18,
       "type": "forecast"
     },
     {
@@ -102,28 +102,28 @@
     {
       "month": 10,
       "actual": 0,
-      "forecast": 3665,
+      "forecast": 3875,
       "target": 14600,
-      "gap": -10935,
-      "rate": 25,
+      "gap": -10725,
+      "rate": 27,
       "type": "forecast"
     },
     {
       "month": 11,
       "actual": 0,
-      "forecast": 9088,
+      "forecast": 5562,
       "target": 17700,
-      "gap": -8612,
-      "rate": 51,
+      "gap": -12138,
+      "rate": 31,
       "type": "forecast"
     },
     {
       "month": 12,
       "actual": 0,
-      "forecast": 6162,
+      "forecast": 6012,
       "target": 18800,
-      "gap": -12638,
-      "rate": 33,
+      "gap": -12788,
+      "rate": 32,
       "type": "forecast"
     }
   ],
@@ -131,10 +131,10 @@
     {
       "rep": "喬紹恆 (u2625)",
       "totalShipped": 10159,
-      "totalForecast": 105933,
+      "totalForecast": 115974,
       "totalTarget": 52650,
       "rate": 19,
-      "caseCount": 442
+      "caseCount": 481
     },
     {
       "rep": "張哲銘 (u2668)",
@@ -208,8 +208,8 @@
   "stageStats": [
     {
       "stage": "進行中",
-      "count": 380,
-      "amount": 251463
+      "count": 373,
+      "amount": 245813
     },
     {
       "stage": "待出貨",
@@ -223,10 +223,10 @@
     },
     {
       "stage": "失敗",
-      "count": 419,
+      "count": 426,
       "amount": 0
     }
   ],
-  "updatedAt": "2026-02-09T15:02:54.490593",
+  "updatedAt": "2026-02-10T15:42:03.644850",
   "currentMonth": 2
 }
