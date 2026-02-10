@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
 const GEMINI_API_KEY = process.env.GOOGLE_AI_API_KEY || ''
@@ -42,7 +42,7 @@ ${segments.map((seg, idx) => `${idx}|${seg.edited_text || seg.text}`).join('\n')
   const lines = resultText.split('\n').filter((line: string) => line.trim())
   
   for (const line of lines) {
-    const match = line.match(/^(\d+)\|(.+)$/)
+    const match = line.match(/^`?(\d+)\|(.+?)`?$/)
     if (match) {
       const idx = parseInt(match[1])
       const polishedText = match[2].trim()
@@ -59,67 +59,95 @@ export async function POST(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  try {
-    const transcriptId = params.id
+  const transcriptId = params.id
 
-    const { data: segments, error: fetchError } = await supabase
-      .from('transcript_segments')
-      .select('id, text, edited_text')
-      .eq('transcript_id', transcriptId)
-      .order('start_ms', { ascending: true })
+  const { data: segments, error: fetchError } = await supabase
+    .from('transcript_segments')
+    .select('id, text, edited_text')
+    .eq('transcript_id', transcriptId)
+    .order('start_ms', { ascending: true })
 
-    if (fetchError) {
-      return NextResponse.json({ error: fetchError.message }, { status: 500 })
-    }
-
-    if (!segments || segments.length === 0) {
-      return NextResponse.json({ processedCount: 0 })
-    }
-
-    const BATCH_SIZE = 5
-    let processedCount = 0
-    const allResults = new Map<string, string>()
-
-    for (let i = 0; i < segments.length; i += BATCH_SIZE) {
-      const batch = segments.slice(i, i + BATCH_SIZE)
-      try {
-        const batchResults = await polishBatch(batch)
-        for (const [id, text] of batchResults) {
-          allResults.set(id, text)
-        }
-      } catch (e: any) {
-        // Rate limit hit — skip this batch, continue with next
-        if (e.message?.includes('429') || e.message?.includes('RESOURCE_EXHAUSTED')) {
-          await new Promise(r => setTimeout(r, 5000))
-          // Retry once
-          try {
-            const batchResults = await polishBatch(batch)
-            for (const [id, text] of batchResults) {
-              allResults.set(id, text)
-            }
-          } catch { /* skip */ }
-        }
-      }
-      processedCount += batch.length
-      // Delay between batches to avoid rate limit
-      if (i + BATCH_SIZE < segments.length) {
-        await new Promise(r => setTimeout(r, 2000))
-      }
-    }
-
-    for (const [segmentId, polishedText] of allResults) {
-      await supabase
-        .from('transcript_segments')
-        .update({ edited_text: polishedText })
-        .eq('id', segmentId)
-    }
-
-    return NextResponse.json({ 
-      processedCount,
-      polishedCount: allResults.size
+  if (fetchError || !segments || segments.length === 0) {
+    return new Response(JSON.stringify({ error: fetchError?.message || 'No segments' }), { 
+      status: 500, headers: { 'Content-Type': 'application/json' } 
     })
-  } catch (error) {
-    console.error('Polish error:', error)
-    return NextResponse.json({ error: String(error) }, { status: 500 })
   }
+
+  // Stream progress back to client
+  const encoder = new TextEncoder()
+  const stream = new ReadableStream({
+    async start(controller) {
+      const BATCH_SIZE = 5
+      const totalBatches = Math.ceil(segments.length / BATCH_SIZE)
+      let completedBatches = 0
+      let polishedTotal = 0
+
+      for (let i = 0; i < segments.length; i += BATCH_SIZE) {
+        const batch = segments.slice(i, i + BATCH_SIZE)
+        
+        try {
+          const batchResults = await polishBatch(batch)
+          
+          // Write results to DB immediately
+          for (const [segmentId, polishedText] of batchResults) {
+            await supabase
+              .from('transcript_segments')
+              .update({ edited_text: polishedText })
+              .eq('id', segmentId)
+          }
+          polishedTotal += batchResults.size
+        } catch (e: any) {
+          if (e.message?.includes('429') || e.message?.includes('RESOURCE_EXHAUSTED')) {
+            // Send wait message
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'waiting', message: 'API 限流，等待中...' })}\n\n`))
+            await new Promise(r => setTimeout(r, 8000))
+            // Retry
+            try {
+              const batchResults = await polishBatch(batch)
+              for (const [segmentId, polishedText] of batchResults) {
+                await supabase
+                  .from('transcript_segments')
+                  .update({ edited_text: polishedText })
+                  .eq('id', segmentId)
+              }
+              polishedTotal += batchResults.size
+            } catch { /* skip */ }
+          }
+        }
+
+        completedBatches++
+        const progress = Math.round((completedBatches / totalBatches) * 100)
+        
+        // Send progress
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
+          type: 'progress', 
+          progress, 
+          completed: completedBatches, 
+          total: totalBatches,
+          polished: polishedTotal 
+        })}\n\n`))
+
+        // Delay between batches
+        if (i + BATCH_SIZE < segments.length) {
+          await new Promise(r => setTimeout(r, 2000))
+        }
+      }
+
+      // Done
+      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
+        type: 'done', 
+        processedCount: segments.length, 
+        polishedCount: polishedTotal 
+      })}\n\n`))
+      controller.close()
+    }
+  })
+
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+    }
+  })
 }

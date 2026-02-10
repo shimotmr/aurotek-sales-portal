@@ -58,6 +58,8 @@ export default function TranscriptDetailPage() {
   const [addToDict, setAddToDict] = useState(false)
   const [replacing, setReplacing] = useState(false)
   const [polishing, setPolishing] = useState(false)
+  const [polishProgress, setPolishProgress] = useState(0)
+  const [polishMessage, setPolishMessage] = useState('')
   const [toast, setToast] = useState<string | null>(null)
 
   useEffect(() => {
@@ -226,17 +228,46 @@ export default function TranscriptDetailPage() {
     if (!confirm('AI 將修正標點、空格和語句，確認執行？')) return
     
     setPolishing(true)
+    setPolishProgress(0)
+    setPolishMessage('啟動中...')
+    
     try {
       const res = await fetch(`/api/transcripts/${id}/polish`, { method: 'POST' })
       if (!res.ok) throw new Error(await res.text())
       
-      const data = await res.json()
-      showToast(`AI 潤稿完成，處理了 ${data.processedCount} 段`)
-      loadTranscript()
+      const reader = res.body?.getReader()
+      const decoder = new TextDecoder()
+      
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+          
+          const text = decoder.decode(value)
+          const lines = text.split('\n').filter(l => l.startsWith('data: '))
+          
+          for (const line of lines) {
+            try {
+              const data = JSON.parse(line.slice(6))
+              if (data.type === 'progress') {
+                setPolishProgress(data.progress)
+                setPolishMessage(`${data.completed}/${data.total} 批次，已修正 ${data.polished} 段`)
+              } else if (data.type === 'waiting') {
+                setPolishMessage(data.message)
+              } else if (data.type === 'done') {
+                showToast(`AI 潤稿完成，修正了 ${data.polishedCount} 段`)
+                loadTranscript()
+              }
+            } catch {}
+          }
+        }
+      }
     } catch (err) {
       showToast('潤稿失敗：' + (err as Error).message)
     } finally {
       setPolishing(false)
+      setPolishProgress(0)
+      setPolishMessage('')
     }
   }
 
@@ -813,10 +844,24 @@ export default function TranscriptDetailPage() {
                   cursor: polishing ? 'not-allowed' : 'pointer',
                   minHeight: '48px',
                   whiteSpace: 'nowrap',
-                  flexShrink: 0
+                  flexShrink: 0,
+                  position: 'relative',
+                  overflow: 'hidden',
+                  minWidth: polishing ? '180px' : 'auto'
                 }}
               >
-                {polishing ? '⏳ 潤稿中...' : '✨ AI 潤稿'}
+                {polishing && (
+                  <div style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    height: '4px',
+                    backgroundColor: '#A855F7',
+                    width: `${polishProgress}%`,
+                    transition: 'width 0.5s ease'
+                  }} />
+                )}
+                {polishing ? `⏳ ${polishProgress}% ${polishMessage}` : '✨ AI 潤稿'}
               </button>
             </div>
           </div>
