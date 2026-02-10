@@ -375,7 +375,7 @@ export default function TranscriptDetailPage() {
                   <span style={{ fontSize: isMobile ? '14px' : '12px', color: '#111827' }}>→</span>
                   <input
                     type="text"
-                    defaultValue={transcript.speakers[label]}
+                    defaultValue={transcript.speakers?.[label] || label}
                     onBlur={e => updateSpeakerName(label, e.target.value)}
                     style={{ 
                       border: 'none', 
