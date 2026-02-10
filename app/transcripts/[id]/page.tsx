@@ -304,6 +304,22 @@ export default function TranscriptDetailPage() {
 
   const allSpeakerLabels = transcript ? Object.keys(transcript.speakers || {}) : []
 
+  const addSpeaker = async () => {
+    if (!transcript) return
+    const existing = Object.keys(transcript.speakers || {})
+    // Find next available label: Speaker A, B, C...
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    let nextLabel = ''
+    for (const ch of alphabet) {
+      const label = `Speaker ${ch}`
+      if (!existing.includes(label)) { nextLabel = label; break }
+    }
+    if (!nextLabel) return
+    const newSpeakers = { ...(transcript.speakers || {}), [nextLabel]: '' }
+    await supabase.from('transcripts').update({ speakers: newSpeakers }).eq('id', id)
+    setTranscript({ ...transcript, speakers: newSpeakers })
+  }
+
   const highlightText = (text: string) => {
     if (!searchText || !showReplace) return text
     
@@ -486,11 +502,27 @@ export default function TranscriptDetailPage() {
           </div>
 
           {/* Speaker List — inline below info */}
-          {transcript.speakers && Object.keys(transcript.speakers).length > 0 && (
-            <div style={{ marginTop: '16px', borderTop: '1px solid #F3F4F6', paddingTop: '16px' }}>
-              <div style={{ color: '#6B7280', fontSize: isMobile ? '13px' : '12px', marginBottom: '10px' }}>與會人員</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {Object.keys(transcript.speakers).map(label => (
+          <div style={{ marginTop: '16px', borderTop: '1px solid #F3F4F6', paddingTop: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+              <div style={{ color: '#6B7280', fontSize: isMobile ? '13px' : '12px' }}>與會人員</div>
+              <button
+                onClick={addSpeaker}
+                style={{
+                  background: 'none',
+                  border: '1px solid #D1D5DB',
+                  borderRadius: '6px',
+                  padding: isMobile ? '6px 12px' : '4px 10px',
+                  fontSize: isMobile ? '13px' : '12px',
+                  color: '#6B7280',
+                  cursor: 'pointer',
+                  minHeight: '32px'
+                }}
+              >
+                + 新增
+              </button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {Object.keys(transcript?.speakers || {}).map(label => (
                   <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <span style={{ 
                       fontSize: isMobile ? '13px' : '12px', 
@@ -520,7 +552,6 @@ export default function TranscriptDetailPage() {
                 ))}
               </div>
             </div>
-          )}
         </div>
 
         {/* Status Messages */}
