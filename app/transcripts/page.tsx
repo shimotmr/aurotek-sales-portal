@@ -26,8 +26,6 @@ const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> =
 export default function TranscriptsPage() {
   const [transcripts, setTranscripts] = useState<Transcript[]>([])
   const [loading, setLoading] = useState(true)
-  const [progressMap, setProgressMap] = useState<Record<string, number>>({})
-
   const loadTranscripts = useCallback(async () => {
     const { data } = await supabase
       .from('transcripts')
@@ -37,7 +35,16 @@ export default function TranscriptsPage() {
     setLoading(false)
   }, [])
 
-  // Poll processing transcripts for progress
+  // Estimate progress based on elapsed time (typical transcription ~30-60% of audio length)
+  const getProgress = (t: Transcript) => {
+    if (t.status !== 'processing' && t.status !== 'uploading') return 100
+    const elapsed = (Date.now() - new Date(t.created_at).getTime()) / 1000
+    // Assume ~3 min for average transcription; logarithmic curve capping at 95%
+    const progress = Math.min(95, Math.round((1 - Math.exp(-elapsed / 120)) * 100))
+    return Math.max(5, progress)
+  }
+
+  // Poll processing transcripts
   const pollProgress = useCallback(async () => {
     const processing = transcripts.filter(t => t.status === 'processing' || t.status === 'uploading')
     if (processing.length === 0) return
@@ -48,19 +55,9 @@ export default function TranscriptsPage() {
         const res = await fetch(`/api/transcripts/${t.id}/status`)
         if (res.ok) {
           const data = await res.json()
-          if (data.status === 'ready') {
-            // Reload all
+          if (data.status === 'ready' || data.status === 'error') {
             loadTranscripts()
             return
-          }
-          // AssemblyAI doesn't give exact %, estimate based on time
-          if (data.status === 'processing' || data.status === 'queued') {
-            setProgressMap(prev => {
-              const current = prev[t.id] || 0
-              // Gradually increase, cap at 95%
-              const next = Math.min(current + Math.random() * 8 + 2, 95)
-              return { ...prev, [t.id]: Math.round(next) }
-            })
           }
         }
       } catch {}
@@ -71,22 +68,19 @@ export default function TranscriptsPage() {
     loadTranscripts()
   }, [loadTranscripts])
 
+  // Auto-refresh progress display + poll status
+  const [, setTick] = useState(0)
   useEffect(() => {
     const hasProcessing = transcripts.some(t => t.status === 'processing' || t.status === 'uploading')
     if (!hasProcessing) return
 
-    // Initialize progress for processing items
-    setProgressMap(prev => {
-      const next = { ...prev }
-      transcripts.forEach(t => {
-        if ((t.status === 'processing' || t.status === 'uploading') && !next[t.id]) {
-          next[t.id] = t.status === 'uploading' ? 5 : 15
-        }
-      })
-      return next
-    })
-
-    const interval = setInterval(pollProgress, 8000)
+    // Update display every 3s, poll API every 10s
+    let pollCount = 0
+    const interval = setInterval(() => {
+      setTick(t => t + 1) // Force re-render to update time-based progress
+      pollCount++
+      if (pollCount % 3 === 0) pollProgress() // Poll every ~10s
+    }, 3000)
     return () => clearInterval(interval)
   }, [transcripts, pollProgress])
 
@@ -150,7 +144,7 @@ export default function TranscriptsPage() {
             {transcripts.map(t => {
               const st = STATUS_MAP[t.status] || STATUS_MAP.ready
               const isProcessing = t.status === 'processing' || t.status === 'uploading'
-              const progress = progressMap[t.id] || 0
+              const progress = isProcessing ? getProgress(t) : 100
 
               return (
                 <Link
