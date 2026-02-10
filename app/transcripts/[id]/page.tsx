@@ -61,6 +61,7 @@ export default function TranscriptDetailPage() {
   const [polishProgress, setPolishProgress] = useState(0)
   const [polishMessage, setPolishMessage] = useState('')
   const [toast, setToast] = useState<string | null>(null)
+  const [editingSpeakerId, setEditingSpeakerId] = useState<string | null>(null)
 
   useEffect(() => {
     loadTranscript()
@@ -292,6 +293,17 @@ export default function TranscriptDetailPage() {
     return transcript?.speakers?.[label] || label
   }
 
+  const reassignSpeaker = async (segId: string, newSpeaker: string) => {
+    await supabase
+      .from('transcript_segments')
+      .update({ speaker: newSpeaker })
+      .eq('id', segId)
+    setSegments(segments.map(s => s.id === segId ? { ...s, speaker: newSpeaker } : s))
+    setEditingSpeakerId(null)
+  }
+
+  const allSpeakerLabels = transcript ? Object.keys(transcript.speakers || {}) : []
+
   const highlightText = (text: string) => {
     if (!searchText || !showReplace) return text
     
@@ -472,36 +484,44 @@ export default function TranscriptDetailPage() {
               <div style={{ color: '#111827', fontWeight: '500' }}>{formatDate(transcript.created_at)}</div>
             </div>
           </div>
-        </div>
 
-        {/* Speaker Labels */}
-        {transcript.speakers && Object.keys(transcript.speakers).length > 0 && (
-          <div style={{ backgroundColor: 'white', borderRadius: isMobile ? '16px' : '12px', border: '1px solid #f3f4f6', padding: isMobile ? '20px' : '16px', marginBottom: isMobile ? '16px' : '16px' }}>
-            <h2 style={{ fontSize: isMobile ? '15px' : '14px', fontWeight: 'bold', color: '#374151', marginBottom: isMobile ? '16px' : '12px' }}>👥 說話者標籤</h2>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: isMobile ? '12px' : '8px' }}>
-              {Object.keys(transcript.speakers).map(label => (
-                <div key={label} style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '10px' : '8px', padding: isMobile ? '10px 14px' : '6px 12px', backgroundColor: '#F3F4F6', borderRadius: '8px', minHeight: '44px' }}>
-                  <span style={{ fontSize: isMobile ? '14px' : '12px', color: '#6B7280' }}>{label}</span>
-                  <span style={{ fontSize: isMobile ? '14px' : '12px', color: '#111827' }}>→</span>
-                  <input
-                    type="text"
-                    defaultValue={transcript.speakers?.[label] || label}
-                    onBlur={e => updateSpeakerName(label, e.target.value)}
-                    style={{ 
-                      border: 'none', 
-                      backgroundColor: 'transparent', 
-                      fontSize: isMobile ? '14px' : '12px',
-                      color: '#2563EB', 
-                      fontWeight: '500', 
-                      width: isMobile ? '100px' : '80px',
-                      minHeight: '28px'
-                    }}
-                  />
-                </div>
-              ))}
+          {/* Speaker List — inline below info */}
+          {transcript.speakers && Object.keys(transcript.speakers).length > 0 && (
+            <div style={{ marginTop: '16px', borderTop: '1px solid #F3F4F6', paddingTop: '16px' }}>
+              <div style={{ color: '#6B7280', fontSize: isMobile ? '13px' : '12px', marginBottom: '10px' }}>與會人員</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {Object.keys(transcript.speakers).map(label => (
+                  <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ 
+                      fontSize: isMobile ? '13px' : '12px', 
+                      color: '#9CA3AF', 
+                      width: '80px',
+                      flexShrink: 0
+                    }}>
+                      {label}
+                    </span>
+                    <input
+                      type="text"
+                      defaultValue={transcript.speakers?.[label] || label}
+                      onBlur={e => updateSpeakerName(label, e.target.value)}
+                      style={{ 
+                        border: '1px solid #E5E7EB',
+                        borderRadius: '6px',
+                        backgroundColor: 'white',
+                        padding: isMobile ? '8px 12px' : '6px 10px',
+                        fontSize: isMobile ? '15px' : '14px',
+                        color: '#111827', 
+                        fontWeight: '500', 
+                        flex: 1,
+                        minHeight: '40px'
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Status Messages */}
         {transcript.status === 'processing' && (
@@ -577,15 +597,61 @@ export default function TranscriptDetailPage() {
                       >
                         {formatTime(seg.start_ms)}
                       </button>
-                      <span style={{ 
-                        fontSize: isMobile ? '14px' : '12px',
-                        fontWeight: '600', 
-                        color: '#7C3AED', 
-                        flexShrink: 0,
-                        padding: isMobile ? '8px 0' : '4px 0'
-                      }}>
-                        {getSpeakerName(seg.speaker)}
-                      </span>
+                      <div style={{ position: 'relative', flexShrink: 0 }}>
+                        <button
+                          onClick={() => setEditingSpeakerId(editingSpeakerId === seg.id ? null : seg.id)}
+                          style={{ 
+                            fontSize: isMobile ? '14px' : '12px',
+                            fontWeight: '600', 
+                            color: '#7C3AED', 
+                            background: editingSpeakerId === seg.id ? '#EDE9FE' : 'none',
+                            border: '1px solid transparent',
+                            borderRadius: '4px',
+                            padding: isMobile ? '6px 10px' : '4px 8px',
+                            cursor: 'pointer',
+                            minHeight: isMobile ? '36px' : 'auto',
+                            whiteSpace: 'nowrap'
+                          }}
+                        >
+                          {getSpeakerName(seg.speaker)} ▾
+                        </button>
+                        {editingSpeakerId === seg.id && allSpeakerLabels.length > 0 && (
+                          <div style={{
+                            position: 'absolute',
+                            top: '100%',
+                            left: 0,
+                            backgroundColor: 'white',
+                            border: '1px solid #E5E7EB',
+                            borderRadius: '8px',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                            zIndex: 40,
+                            minWidth: '140px',
+                            overflow: 'hidden'
+                          }}>
+                            {allSpeakerLabels.map(label => (
+                              <button
+                                key={label}
+                                onClick={() => reassignSpeaker(seg.id, label)}
+                                style={{
+                                  display: 'block',
+                                  width: '100%',
+                                  textAlign: 'left',
+                                  padding: isMobile ? '12px 16px' : '8px 12px',
+                                  fontSize: isMobile ? '15px' : '13px',
+                                  border: 'none',
+                                  backgroundColor: seg.speaker === label ? '#EDE9FE' : 'white',
+                                  color: seg.speaker === label ? '#7C3AED' : '#374151',
+                                  fontWeight: seg.speaker === label ? '600' : '400',
+                                  cursor: 'pointer',
+                                  minHeight: isMobile ? '44px' : 'auto'
+                                }}
+                              >
+                                {getSpeakerName(label)}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                       <div style={{ flex: 1, minWidth: isMobile ? '100%' : 'auto' }}>
                         {isEditing ? (
                           <textarea
