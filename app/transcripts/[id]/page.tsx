@@ -52,6 +52,13 @@ export default function TranscriptDetailPage() {
   const [polling, setPolling] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [showReplace, setShowReplace] = useState(false)
+  const [searchText, setSearchText] = useState('')
+  const [replaceText, setReplaceText] = useState('')
+  const [addToDict, setAddToDict] = useState(false)
+  const [replacing, setReplacing] = useState(false)
+  const [polishing, setPolishing] = useState(false)
+  const [toast, setToast] = useState<string | null>(null)
 
   useEffect(() => {
     loadTranscript()
@@ -176,13 +183,66 @@ export default function TranscriptDetailPage() {
     try {
       const res = await fetch(`/api/transcripts/${id}/correct`, { method: 'POST' })
       if (!res.ok) throw new Error(await res.text())
-      alert('辭典校正完成')
+      showToast('辭典校正完成')
       loadTranscript()
     } catch (err) {
-      alert('校正失敗：' + (err as Error).message)
+      showToast('校正失敗：' + (err as Error).message)
     } finally {
       setCorrecting(false)
     }
+  }
+
+  const handleReplace = async () => {
+    if (!searchText) {
+      showToast('請輸入搜尋文字')
+      return
+    }
+    
+    setReplacing(true)
+    try {
+      const res = await fetch(`/api/transcripts/${id}/replace`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ search: searchText, replace: replaceText, addToDict })
+      })
+      
+      if (!res.ok) throw new Error(await res.text())
+      
+      const data = await res.json()
+      showToast(`已替換 ${data.replacedCount} 段${data.addedToDict ? '，並加入辭典' : ''}`)
+      loadTranscript()
+      setSearchText('')
+      setReplaceText('')
+      setAddToDict(false)
+      setShowReplace(false)
+    } catch (err) {
+      showToast('取代失敗：' + (err as Error).message)
+    } finally {
+      setReplacing(false)
+    }
+  }
+
+  const handlePolish = async () => {
+    if (!confirm('AI 將修正標點、空格和語句，確認執行？')) return
+    
+    setPolishing(true)
+    try {
+      const res = await fetch(`/api/transcripts/${id}/polish`, { method: 'POST' })
+      if (!res.ok) throw new Error(await res.text())
+      
+      const data = await res.json()
+      showToast(`AI 潤稿完成，處理了 ${data.processedCount} 段`)
+      loadTranscript()
+    } catch (err) {
+      showToast('潤稿失敗：' + (err as Error).message)
+    } finally {
+      setPolishing(false)
+    }
+  }
+
+  const showToast = (message: string) => {
+    setToast(message)
+    setTimeout(() => setToast(null), 3000)
   }
 
   const updateSpeakerName = async (oldLabel: string, newName: string) => {
@@ -199,6 +259,17 @@ export default function TranscriptDetailPage() {
 
   const getSpeakerName = (label: string) => {
     return transcript?.speakers?.[label] || label
+  }
+
+  const highlightText = (text: string) => {
+    if (!searchText || !showReplace) return text
+    
+    const parts = text.split(new RegExp(`(${searchText})`, 'gi'))
+    return parts.map((part, i) => 
+      part.toLowerCase() === searchText.toLowerCase() 
+        ? `<mark style="background:#FEF08A">${part}</mark>`
+        : part
+    ).join('')
   }
 
   if (loading) {
@@ -503,9 +574,8 @@ export default function TranscriptDetailPage() {
                               cursor: 'text',
                               padding: isMobile ? '4px 0' : '2px 0'
                             }}
-                          >
-                            {displayText}
-                          </div>
+                            dangerouslySetInnerHTML={{ __html: highlightText(displayText) }}
+                          />
                         )}
                       </div>
                       {!isEditing && (
@@ -534,6 +604,126 @@ export default function TranscriptDetailPage() {
         )}
       </div>
 
+      {/* Toast Notification */}
+      {toast && (
+        <div style={{
+          position: 'fixed',
+          top: '20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          backgroundColor: '#111827',
+          color: 'white',
+          padding: isMobile ? '14px 24px' : '12px 20px',
+          borderRadius: '8px',
+          fontSize: isMobile ? '15px' : '14px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+          zIndex: 50,
+          maxWidth: '90%',
+          textAlign: 'center'
+        }}>
+          {toast}
+        </div>
+      )}
+
+      {/* Replace Panel - 固定在底部工具列上方 */}
+      {showReplace && segments.length > 0 && (
+        <div style={{
+          position: 'fixed',
+          bottom: isMobile ? '70px' : '80px',
+          left: 0,
+          right: 0,
+          backgroundColor: 'white',
+          borderTop: '2px solid #2563EB',
+          boxShadow: '0 -4px 12px rgba(0,0,0,0.1)',
+          zIndex: 25,
+          padding: isMobile ? '16px' : '16px'
+        }}>
+          <div style={{ maxWidth: '1024px', margin: '0 auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <h3 style={{ fontSize: isMobile ? '15px' : '14px', fontWeight: 'bold', color: '#111827' }}>🔍 批量取代</h3>
+              <button
+                onClick={() => setShowReplace(false)}
+                style={{ 
+                  background: 'none', 
+                  border: 'none', 
+                  fontSize: '20px', 
+                  cursor: 'pointer',
+                  minHeight: '44px',
+                  minWidth: '44px',
+                  color: '#6B7280'
+                }}
+              >
+                ✕
+              </button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <input
+                type="text"
+                placeholder="搜尋文字..."
+                value={searchText}
+                onChange={e => setSearchText(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: isMobile ? '12px' : '10px',
+                  border: '1px solid #D1D5DB',
+                  borderRadius: '6px',
+                  fontSize: isMobile ? '16px' : '14px',
+                  minHeight: '44px'
+                }}
+              />
+              <input
+                type="text"
+                placeholder="替換為..."
+                value={replaceText}
+                onChange={e => setReplaceText(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: isMobile ? '12px' : '10px',
+                  border: '1px solid #D1D5DB',
+                  borderRadius: '6px',
+                  fontSize: isMobile ? '16px' : '14px',
+                  minHeight: '44px'
+                }}
+              />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minHeight: '44px' }}>
+                <input
+                  type="checkbox"
+                  id="addToDict"
+                  checked={addToDict}
+                  onChange={e => setAddToDict(e.target.checked)}
+                  style={{ 
+                    width: '20px', 
+                    height: '20px',
+                    cursor: 'pointer'
+                  }}
+                />
+                <label htmlFor="addToDict" style={{ fontSize: isMobile ? '14px' : '13px', color: '#374151', cursor: 'pointer' }}>
+                  同時加入辭典
+                </label>
+              </div>
+              <button
+                onClick={handleReplace}
+                disabled={replacing || !searchText}
+                style={{
+                  backgroundColor: '#2563EB',
+                  color: 'white',
+                  padding: isMobile ? '12px' : '10px',
+                  borderRadius: '6px',
+                  fontSize: isMobile ? '15px' : '14px',
+                  fontWeight: '500',
+                  border: 'none',
+                  cursor: (replacing || !searchText) ? 'not-allowed' : 'pointer',
+                  opacity: (replacing || !searchText) ? 0.5 : 1,
+                  minHeight: '48px'
+                }}
+              >
+                {replacing ? '⏳ 取代中...' : '執行取代'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Bottom Toolbar - 固定底部 */}
       {segments.length > 0 && (
         <div style={{ 
@@ -549,34 +739,78 @@ export default function TranscriptDetailPage() {
           <div style={{ 
             maxWidth: '1024px', 
             margin: '0 auto', 
-            padding: isMobile ? '12px' : '12px 16px',
-            display: 'flex', 
-            flexDirection: isMobile ? 'column' : 'row',
-            justifyContent: 'space-between', 
-            alignItems: isMobile ? 'stretch' : 'center',
-            gap: isMobile ? '10px' : '16px'
+            padding: isMobile ? '12px' : '12px 16px'
           }}>
-            <div style={{ fontSize: isMobile ? '13px' : '12px', color: '#6B7280', textAlign: isMobile ? 'center' : 'left' }}>
-              {segments.length} 個段落 · 點擊時間戳跳轉 · 雙擊文字編輯
+            {!isMobile && (
+              <div style={{ fontSize: '12px', color: '#6B7280', marginBottom: '10px' }}>
+                {segments.length} 個段落 · 點擊時間戳跳轉 · 雙擊文字編輯
+              </div>
+            )}
+            <div style={{
+              display: 'flex',
+              gap: '8px',
+              overflowX: 'auto',
+              WebkitOverflowScrolling: 'touch',
+              paddingBottom: '4px'
+            }}>
+              <button
+                onClick={handleCorrect}
+                disabled={correcting}
+                style={{ 
+                  backgroundColor: '#7C3AED', 
+                  color: 'white', 
+                  padding: isMobile ? '12px 16px' : '8px 16px',
+                  borderRadius: '8px', 
+                  fontSize: isMobile ? '15px' : '14px',
+                  fontWeight: '500', 
+                  border: 'none', 
+                  cursor: correcting ? 'not-allowed' : 'pointer', 
+                  opacity: correcting ? 0.5 : 1,
+                  minHeight: '48px',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0
+                }}
+              >
+                {correcting ? '⏳ 校正中...' : '📚 辭典校正'}
+              </button>
+              <button
+                onClick={() => setShowReplace(!showReplace)}
+                style={{ 
+                  backgroundColor: showReplace ? '#2563EB' : '#F3F4F6',
+                  color: showReplace ? 'white' : '#374151',
+                  padding: isMobile ? '12px 16px' : '8px 16px',
+                  borderRadius: '8px', 
+                  fontSize: isMobile ? '15px' : '14px',
+                  fontWeight: '500', 
+                  border: 'none', 
+                  cursor: 'pointer',
+                  minHeight: '48px',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0
+                }}
+              >
+                🔍 批量取代
+              </button>
+              <button
+                onClick={handlePolish}
+                disabled={polishing}
+                style={{ 
+                  background: polishing ? '#9CA3AF' : 'linear-gradient(135deg, #7C3AED 0%, #A855F7 100%)',
+                  color: 'white', 
+                  padding: isMobile ? '12px 16px' : '8px 16px',
+                  borderRadius: '8px', 
+                  fontSize: isMobile ? '15px' : '14px',
+                  fontWeight: '500', 
+                  border: 'none', 
+                  cursor: polishing ? 'not-allowed' : 'pointer',
+                  minHeight: '48px',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0
+                }}
+              >
+                {polishing ? '⏳ 潤稿中...' : '✨ AI 潤稿'}
+              </button>
             </div>
-            <button
-              onClick={handleCorrect}
-              disabled={correcting}
-              style={{ 
-                backgroundColor: '#7C3AED', 
-                color: 'white', 
-                padding: isMobile ? '12px 16px' : '8px 16px',
-                borderRadius: '8px', 
-                fontSize: isMobile ? '15px' : '14px',
-                fontWeight: '500', 
-                border: 'none', 
-                cursor: correcting ? 'not-allowed' : 'pointer', 
-                opacity: correcting ? 0.5 : 1,
-                minHeight: '48px'
-              }}
-            >
-              {correcting ? '⏳ 校正中...' : '📚 辭典校正'}
-            </button>
           </div>
         </div>
       )}
