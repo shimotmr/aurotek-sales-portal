@@ -9,18 +9,36 @@ interface Segment {
   edited_text: string | null
 }
 
+// Remove spaces between CJK characters (AssemblyAI artifact)
+function stripCJKSpaces(text: string): string {
+  // Remove spaces between CJK chars, but keep spaces around English/numbers
+  return text
+    .replace(/([\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff])\s+([\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff])/g, '$1$2')
+    .replace(/([\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff])\s+([\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff])/g, '$1$2') // Run twice for overlapping matches
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+}
+
 async function polishBatch(segments: Segment[]): Promise<Map<string, string>> {
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`
 
-  const prompt = `你是逐字稿校對專家。請修正以下中文逐字稿：
-1) 去除多餘空格
-2) 加上正確標點符號
-3) 修正語句使其通順自然
-4) 保留原意不改變內容
+  // Pre-process: strip CJK spaces first
+  const cleaned = segments.map(seg => ({
+    ...seg,
+    cleanText: stripCJKSpaces(seg.edited_text || seg.text)
+  }))
 
-每行格式：\`編號|修正後文字\`。只輸出修正後的內容，不要加其他說明。
+  const prompt = `你是專業的中文逐字稿校對編輯。以下是會議逐字稿，請進行以下修正：
 
-${segments.map((seg, idx) => `${idx}|${seg.edited_text || seg.text}`).join('\n')}`
+1. 加上正確的標點符號（句號、逗號、問號、頓號等）
+2. 修正語句使其通順自然、符合書面中文
+3. 保留原意，不改變內容含義
+4. 不要翻譯，保持原語言
+
+嚴格按照格式輸出，每行：編號|修正後文字
+不要加 markdown 格式、不要加說明文字。
+
+${cleaned.map((seg, idx) => `${idx}|${seg.cleanText}`).join('\n')}`
 
   const response = await fetch(endpoint, {
     method: 'POST',
