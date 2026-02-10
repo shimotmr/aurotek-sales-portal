@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 
@@ -11,6 +11,7 @@ interface Transcript {
   duration_seconds: number | null
   status: string
   speakers: Record<string, string> | null
+  assemblyai_id: string | null
   created_at: string
 }
 
@@ -25,20 +26,69 @@ const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> =
 export default function TranscriptsPage() {
   const [transcripts, setTranscripts] = useState<Transcript[]>([])
   const [loading, setLoading] = useState(true)
+  const [progressMap, setProgressMap] = useState<Record<string, number>>({})
 
-  useEffect(() => {
-    loadTranscripts()
-  }, [])
-
-  const loadTranscripts = async () => {
-    setLoading(true)
+  const loadTranscripts = useCallback(async () => {
     const { data } = await supabase
       .from('transcripts')
-      .select('id, title, meeting_date, duration_seconds, status, speakers, created_at')
+      .select('id, title, meeting_date, duration_seconds, status, speakers, assemblyai_id, created_at')
       .order('created_at', { ascending: false })
     setTranscripts(data || [])
     setLoading(false)
-  }
+  }, [])
+
+  // Poll processing transcripts for progress
+  const pollProgress = useCallback(async () => {
+    const processing = transcripts.filter(t => t.status === 'processing' || t.status === 'uploading')
+    if (processing.length === 0) return
+
+    for (const t of processing) {
+      if (!t.assemblyai_id) continue
+      try {
+        const res = await fetch(`/api/transcripts/${t.id}/status`)
+        if (res.ok) {
+          const data = await res.json()
+          if (data.status === 'ready') {
+            // Reload all
+            loadTranscripts()
+            return
+          }
+          // AssemblyAI doesn't give exact %, estimate based on time
+          if (data.status === 'processing' || data.status === 'queued') {
+            setProgressMap(prev => {
+              const current = prev[t.id] || 0
+              // Gradually increase, cap at 95%
+              const next = Math.min(current + Math.random() * 8 + 2, 95)
+              return { ...prev, [t.id]: Math.round(next) }
+            })
+          }
+        }
+      } catch {}
+    }
+  }, [transcripts, loadTranscripts])
+
+  useEffect(() => {
+    loadTranscripts()
+  }, [loadTranscripts])
+
+  useEffect(() => {
+    const hasProcessing = transcripts.some(t => t.status === 'processing' || t.status === 'uploading')
+    if (!hasProcessing) return
+
+    // Initialize progress for processing items
+    setProgressMap(prev => {
+      const next = { ...prev }
+      transcripts.forEach(t => {
+        if ((t.status === 'processing' || t.status === 'uploading') && !next[t.id]) {
+          next[t.id] = t.status === 'uploading' ? 5 : 15
+        }
+      })
+      return next
+    })
+
+    const interval = setInterval(pollProgress, 8000)
+    return () => clearInterval(interval)
+  }, [transcripts, pollProgress])
 
   const formatDuration = (seconds: number | null) => {
     if (!seconds) return '--:--'
@@ -75,14 +125,13 @@ export default function TranscriptsPage() {
               href="/transcripts/new"
               style={{ backgroundColor: '#2563EB', color: 'white', padding: '8px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: '500', textDecoration: 'none' }}
             >
-              + 新增逐字稿
+              + 新增
             </Link>
           </div>
         </div>
       </div>
 
       <div style={{ maxWidth: '1024px', margin: '0 auto', padding: '16px' }}>
-        {/* List */}
         {loading ? (
           <div style={{ textAlign: 'center', padding: '48px 0', color: '#9CA3AF' }}>載入中...</div>
         ) : transcripts.length === 0 ? (
@@ -100,32 +149,52 @@ export default function TranscriptsPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {transcripts.map(t => {
               const st = STATUS_MAP[t.status] || STATUS_MAP.ready
+              const isProcessing = t.status === 'processing' || t.status === 'uploading'
+              const progress = progressMap[t.id] || 0
+
               return (
                 <Link
                   key={t.id}
                   href={`/transcripts/${t.id}`}
-                  style={{ display: 'block', backgroundColor: 'white', borderRadius: '12px', border: '1px solid #f3f4f6', padding: '16px', textDecoration: 'none', transition: 'box-shadow 0.2s' }}
+                  style={{ display: 'block', backgroundColor: 'white', borderRadius: '12px', border: '1px solid #f3f4f6', padding: '16px', textDecoration: 'none', transition: 'box-shadow 0.2s', overflow: 'hidden', position: 'relative' }}
                   onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)'}
                   onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}
                 >
+                  {/* Progress bar for processing items */}
+                  {isProcessing && (
+                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', backgroundColor: '#E5E7EB' }}>
+                      <div style={{ 
+                        height: '100%', 
+                        backgroundColor: '#2563EB', 
+                        width: `${progress}%`,
+                        transition: 'width 1s ease-in-out',
+                        borderRadius: '0 2px 2px 0'
+                      }} />
+                    </div>
+                  )}
+
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
-                    <div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
                       <span style={{ fontSize: '16px', fontWeight: 'bold', color: '#111827' }}>
-                        {t.title || `逐字稿 ${t.id.slice(0, 8)}`}
+                        {t.title || `逐字稿 ${String(t.id).slice(0, 8)}`}
                       </span>
                       <span
                         style={{ marginLeft: '8px', padding: '2px 8px', borderRadius: '9999px', fontSize: '12px', fontWeight: '500', backgroundColor: st.bg, color: st.color }}
                       >
-                        {st.label}
+                        {isProcessing ? `${st.label} ${progress}%` : st.label}
                       </span>
                     </div>
-                    <span style={{ fontSize: '14px', color: '#2563EB' }}>
+                    <span style={{ fontSize: '14px', color: '#2563EB', flexShrink: 0, marginLeft: '8px' }}>
                       {formatDuration(t.duration_seconds)}
                     </span>
                   </div>
+                  
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#6B7280' }}>
                     <span>
-                      {getSpeakerCount(t.speakers)} 位說話者 · {formatDate(t.meeting_date)}
+                      {t.status === 'ready' || t.status === 'reviewed' 
+                        ? `${getSpeakerCount(t.speakers)} 位說話者 · ${formatDate(t.meeting_date)}`
+                        : formatDate(t.meeting_date)
+                      }
                     </span>
                     <span>{formatDate(t.created_at)}</span>
                   </div>

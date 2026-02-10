@@ -83,8 +83,8 @@ export default function NewTranscriptPage() {
         throw new Error(err)
       }
 
-      // 5. 跳轉到詳情頁
-      router.push(`/transcripts/${transcript.id}`)
+      // 5. 跳轉到列表頁（背景繼續轉錄，不阻塞用戶）
+      router.push('/transcripts')
     } catch (err) {
       alert('上傳失敗：' + (err as Error).message)
       setUploading(false)
