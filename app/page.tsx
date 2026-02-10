@@ -57,6 +57,13 @@ export default function Home() {
             <h2 className="text-xl font-semibold mb-2">報價單製作</h2>
             <p className="text-orange-100">快速產生報價單</p>
           </a>
+
+          {/* 逐字稿 */}
+          <a href="/transcripts" className="block p-6 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg shadow hover:shadow-lg transition text-white">
+            <div className="text-4xl mb-4">🎤</div>
+            <h2 className="text-xl font-semibold mb-2">會議逐字稿</h2>
+            <p className="text-indigo-100">語音轉文字 / 智慧校正</p>
+          </a>
           
           {/* 庫存查詢 */}
           <a href="/inventory" className="block p-6 bg-white rounded-lg shadow hover:shadow-lg transition">
