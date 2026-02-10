@@ -111,6 +111,16 @@ export default function TranscriptDetailPage() {
         .order('start_ms', { ascending: true })
       
       setSegments(segs || [])
+
+      // Auto-populate speakers from segments if empty
+      if ((!t.speakers || Object.keys(t.speakers).length === 0) && segs && segs.length > 0) {
+        const uniqueSpeakers = [...new Set(segs.map((s: Segment) => s.speaker))].sort()
+        const speakersMap: Record<string, string> = {}
+        uniqueSpeakers.forEach(label => { speakersMap[label] = label })
+        await supabase.from('transcripts').update({ speakers: speakersMap }).eq('id', id)
+        t.speakers = speakersMap
+        setTranscript({ ...t })
+      }
     }
     
     setLoading(false)
@@ -166,18 +176,26 @@ export default function TranscriptDetailPage() {
     return `${date.getFullYear()}/${String(date.getMonth()+1).padStart(2,'0')}/${String(date.getDate()).padStart(2,'0')}`
   }
 
+  const [editingSpeaker, setEditingSpeaker] = useState('')
+
   const handleEditStart = (seg: Segment) => {
     setEditingId(seg.id)
     setEditingText(seg.edited_text || seg.text)
+    setEditingSpeaker(seg.speaker)
   }
 
   const handleEditSave = async (segId: string) => {
+    const seg = segments.find(s => s.id === segId)
+    const updates: Record<string, string> = { edited_text: editingText }
+    if (seg && editingSpeaker !== seg.speaker) {
+      updates.speaker = editingSpeaker
+    }
     await supabase
       .from('transcript_segments')
-      .update({ edited_text: editingText })
+      .update(updates)
       .eq('id', segId)
     
-    setSegments(segments.map(s => s.id === segId ? { ...s, edited_text: editingText } : s))
+    setSegments(segments.map(s => s.id === segId ? { ...s, edited_text: editingText, speaker: editingSpeaker } : s))
     setEditingId(null)
   }
 
@@ -685,21 +703,43 @@ export default function TranscriptDetailPage() {
                       </div>
                       <div style={{ flex: 1, minWidth: isMobile ? '100%' : 'auto' }}>
                         {isEditing ? (
-                          <textarea
-                            value={editingText}
-                            onChange={e => setEditingText(e.target.value)}
-                            onBlur={() => handleEditSave(seg.id)}
-                            autoFocus
-                            style={{ 
-                              width: '100%', 
-                              padding: isMobile ? '12px' : '8px',
-                              border: '1px solid #D1D5DB', 
-                              borderRadius: '4px', 
-                              fontSize: isMobile ? '16px' : '14px',
-                              lineHeight: '1.6', 
-                              minHeight: isMobile ? '100px' : '60px'
-                            }}
-                          />
+                          <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                              <span style={{ fontSize: isMobile ? '13px' : '12px', color: '#6B7280' }}>說話者：</span>
+                              <select
+                                value={editingSpeaker}
+                                onChange={e => setEditingSpeaker(e.target.value)}
+                                style={{
+                                  border: '1px solid #D1D5DB',
+                                  borderRadius: '4px',
+                                  padding: isMobile ? '6px 10px' : '4px 8px',
+                                  fontSize: isMobile ? '14px' : '13px',
+                                  color: '#7C3AED',
+                                  fontWeight: '600',
+                                  minHeight: isMobile ? '36px' : 'auto'
+                                }}
+                              >
+                                {allSpeakerLabels.map(label => (
+                                  <option key={label} value={label}>{getSpeakerName(label)}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <textarea
+                              value={editingText}
+                              onChange={e => setEditingText(e.target.value)}
+                              onBlur={() => handleEditSave(seg.id)}
+                              autoFocus
+                              style={{ 
+                                width: '100%', 
+                                padding: isMobile ? '12px' : '8px',
+                                border: '1px solid #D1D5DB', 
+                                borderRadius: '4px', 
+                                fontSize: isMobile ? '16px' : '14px',
+                                lineHeight: '1.6', 
+                                minHeight: isMobile ? '100px' : '60px'
+                              }}
+                            />
+                          </div>
                         ) : (
                           <div
                             onDoubleClick={() => handleEditStart(seg)}
