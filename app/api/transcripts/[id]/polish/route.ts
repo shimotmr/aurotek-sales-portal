@@ -10,7 +10,7 @@ interface Segment {
 }
 
 async function polishBatch(segments: Segment[]): Promise<Map<string, string>> {
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`
 
   const prompt = `你是逐字稿校對專家。請修正以下中文逐字稿：
 1) 去除多餘空格
@@ -76,18 +76,35 @@ export async function POST(
       return NextResponse.json({ processedCount: 0 })
     }
 
-    const BATCH_SIZE = 10
+    const BATCH_SIZE = 5
     let processedCount = 0
     const allResults = new Map<string, string>()
 
     for (let i = 0; i < segments.length; i += BATCH_SIZE) {
       const batch = segments.slice(i, i + BATCH_SIZE)
-      const batchResults = await polishBatch(batch)
-      
-      for (const [id, text] of batchResults) {
-        allResults.set(id, text)
+      try {
+        const batchResults = await polishBatch(batch)
+        for (const [id, text] of batchResults) {
+          allResults.set(id, text)
+        }
+      } catch (e: any) {
+        // Rate limit hit — skip this batch, continue with next
+        if (e.message?.includes('429') || e.message?.includes('RESOURCE_EXHAUSTED')) {
+          await new Promise(r => setTimeout(r, 5000))
+          // Retry once
+          try {
+            const batchResults = await polishBatch(batch)
+            for (const [id, text] of batchResults) {
+              allResults.set(id, text)
+            }
+          } catch { /* skip */ }
+        }
       }
       processedCount += batch.length
+      // Delay between batches to avoid rate limit
+      if (i + BATCH_SIZE < segments.length) {
+        await new Promise(r => setTimeout(r, 2000))
+      }
     }
 
     for (const [segmentId, polishedText] of allResults) {
