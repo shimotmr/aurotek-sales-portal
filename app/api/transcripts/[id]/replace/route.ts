@@ -58,12 +58,10 @@ export async function POST(
     if (addToDict && replace) {
       await supabase
         .from('transcript_dictionary')
-        .insert({
-          wrong_text: search,
-          correct_text: replace
-        })
-        .onConflict('wrong_text')
-        .ignoreDuplicates()
+        .upsert(
+          { wrong_text: search, correct_text: replace },
+          { onConflict: 'wrong_text', ignoreDuplicates: true }
+        )
     }
 
     return NextResponse.json({ 
