@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import Link from 'next/link'
 import { supabase } from "@/lib/supabase"
 
 interface AgentTask {
@@ -19,13 +20,39 @@ interface AgentTask {
 }
 
 const AGENTS = [
-  { id: 'main', name: 'Jarvis', emoji: '🤖', role: '主協調員・對話・調度・決策', status: 'active', model: 'Opus 4.6', color: '#4F46E5' },
-  { id: 'secretary', name: 'Secretary', emoji: '📋', role: '簽核・郵件・行事曆', status: 'active', model: 'Opus 4.6', color: '#059669' },
-  { id: 'analyst', name: 'Analyst', emoji: '📊', role: 'Pipeline・業績・報表', status: 'planned', model: 'Opus 4.6', color: '#9CA3AF' },
-  { id: 'researcher', name: 'Researcher', emoji: '🔬', role: '市場・競品・技術研究', status: 'planned', model: 'Opus 4.6', color: '#9CA3AF' },
-  { id: 'developer', name: 'Developer', emoji: '💻', role: 'Portal・腳本・API', status: 'planned', model: 'Opus 4.6', color: '#9CA3AF' },
-  { id: 'editor', name: 'Editor', emoji: '✏️', role: 'Travis Daily・報告', status: 'planned', model: 'Opus 4.6', color: '#9CA3AF' },
+  { id: 'main', name: 'Jarvis', role: '主協調員・對話・調度・決策', status: 'active', model: 'Opus 4.6', color: '#4F46E5' },
+  { id: 'secretary', name: 'Secretary', role: '簽核・郵件・行事曆', status: 'active', model: 'Opus 4.6', color: '#059669' },
+  { id: 'analyst', name: 'Analyst', role: 'Pipeline・業績・報表', status: 'planned', model: 'Opus 4.6', color: '#9CA3AF' },
+  { id: 'researcher', name: 'Researcher', role: '市場・競品・技術研究', status: 'planned', model: 'Opus 4.6', color: '#9CA3AF' },
+  { id: 'developer', name: 'Developer', role: 'Portal・腳本・API', status: 'planned', model: 'Opus 4.6', color: '#9CA3AF' },
+  { id: 'editor', name: 'Editor', role: 'Travis Daily・報告', status: 'planned', model: 'Opus 4.6', color: '#9CA3AF' },
 ]
+
+/* SVG Icons */
+const IconBot = () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="8.5" cy="16" r="1.5"/><circle cx="15.5" cy="16" r="1.5"/><path d="M12 2v4M8 7h8a2 2 0 012 2v2H6v-2a2 2 0 012-2z"/></svg>
+const IconClipboard = () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+const IconChart = () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M3 3v18h18"/><path d="M7 16l4-4 4 4 5-5"/></svg>
+const IconSearch = () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+const IconCode = () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg>
+const IconPen = () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M12 20h9M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+const IconClock = () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+const IconRefresh = () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+const IconBox = () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><path d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12"/></svg>
+const IconChat = () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+const IconBuild = () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M2 20h20M5 20V10l7-5 7 5v10"/><rect x="9" y="14" width="6" height="6"/></svg>
+const IconArrowLeft = () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+const IconLock = () => <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+const IconDoc = () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+const IconFork = () => <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M6 9v3a6 6 0 006 6h3"/></svg>
+
+const AGENT_ICONS: Record<string, () => JSX.Element> = {
+  main: IconBot,
+  secretary: IconClipboard,
+  analyst: IconChart,
+  researcher: IconSearch,
+  developer: IconCode,
+  editor: IconPen,
+}
 
 const CRON_JOBS = [
   { time: '01:00', name: 'Pipeline 風險日報', agent: 'main', type: 'main' },
@@ -56,10 +83,16 @@ interface TaskRun {
   completed_at: string | null
 }
 
-const RUN_STATUS: Record<string, { icon: string; label: string; color: string; bg: string }> = {
-  running:   { icon: '⏳', label: '執行中', color: '#D97706', bg: '#FEF3C7' },
-  completed: { icon: '✅', label: '完成',   color: '#059669', bg: '#D1FAE5' },
-  failed:    { icon: '❌', label: '失敗',   color: '#DC2626', bg: '#FEE2E2' },
+const RUN_STATUS: Record<string, { label: string; color: string; bg: string; iconColor: string }> = {
+  running:   { label: '執行中', color: '#D97706', bg: '#FEF3C7', iconColor: 'text-amber-500' },
+  completed: { label: '完成',   color: '#059669', bg: '#D1FAE5', iconColor: 'text-emerald-500' },
+  failed:    { label: '失敗',   color: '#DC2626', bg: '#FEE2E2', iconColor: 'text-red-500' },
+}
+
+const RunStatusIcon = ({ status }: { status: string }) => {
+  if (status === 'running') return <svg className="w-4 h-4 text-amber-500 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+  if (status === 'completed') return <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
+  return <svg className="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
 }
 
 function fmtTime(iso: string) {
@@ -124,27 +157,27 @@ export default function AgentsPage() {
 
   if (isAdmin === false) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-4xl mb-3">🔒</p>
-          <p className="text-gray-600 font-medium">需要超級管理員權限</p>
-          <a href="/" className="text-sm text-blue-500 hover:underline mt-2 inline-block">返回首頁</a>
+          <div className="text-slate-300 mb-3 flex justify-center"><IconLock /></div>
+          <p className="text-slate-600 font-medium">需要超級管理員權限</p>
+          <Link href="/" className="text-sm text-cyan-600 hover:underline mt-2 inline-block">返回首頁</Link>
         </div>
       </div>
     )
   }
   if (isAdmin === null) {
-    return <div className="min-h-screen bg-gray-50 flex items-center justify-center text-gray-400">載入中...</div>
+    return <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 flex items-center justify-center text-slate-400">載入中...</div>
   }
 
   const statusBadge = (status: string) => {
     const styles: Record<string, string> = {
-      active: 'bg-green-100 text-green-800 border-green-200',
-      planned: 'bg-gray-100 text-gray-500 border-gray-200',
-      pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      running: 'bg-blue-100 text-blue-800 border-blue-200',
-      completed: 'bg-green-100 text-green-800 border-green-200',
-      failed: 'bg-red-100 text-red-800 border-red-200',
+      active: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+      planned: 'bg-slate-50 text-slate-500 border-slate-200',
+      pending: 'bg-amber-50 text-amber-700 border-amber-200',
+      running: 'bg-sky-50 text-sky-700 border-sky-200',
+      completed: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+      failed: 'bg-red-50 text-red-700 border-red-200',
     }
     const labels: Record<string, string> = {
       active: '運作中', planned: '規劃中', pending: '等待中',
@@ -162,48 +195,44 @@ export default function AgentsPage() {
     return a?.color || '#6B7280'
   }
 
-  const agentEmoji = (agentId: string) => {
-    const a = AGENTS.find(a => a.id === agentId)
-    return a?.emoji || '🔧'
+  const AgentIcon = ({ agentId, className }: { agentId: string; className?: string }) => {
+    const Ic = AGENT_ICONS[agentId] || IconBot
+    return <span className={className}><Ic /></span>
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b">
-        <div className="max-w-6xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">🤖 Multi-Agent 儀表板</h1>
-              <p className="text-sm text-gray-500 mt-0.5">Jarvis 多 Agent 協作系統狀態</p>
-            </div>
-            <div className="text-right">
-              <div className="text-xs text-gray-400">Phase 1 — Secretary</div>
-              <div className="text-xs text-gray-400">{new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })}</div>
-            </div>
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
+      {/* Sticky Header */}
+      <div className="bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 z-10">
+        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center gap-3">
+          <Link href="/" className="text-slate-400 hover:text-slate-600 transition"><IconArrowLeft /></Link>
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center text-white">
+            <IconBot />
           </div>
+          <h1 className="text-base font-bold text-slate-900">Agent 中控台</h1>
+          <div className="ml-auto text-xs text-slate-400">{new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })}</div>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
+      <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
         {/* Agent Cards */}
         <section>
-          <h2 className="text-sm font-semibold text-gray-700 mb-3">Agent 狀態</h2>
+          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Agent 狀態</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
             {AGENTS.map(agent => (
               <div
                 key={agent.id}
-                className={`bg-white rounded-lg border p-3 ${agent.status === 'active' ? 'border-l-4' : 'opacity-50'}`}
+                className={`bg-white rounded-xl shadow-sm border border-slate-100 p-3 ${agent.status === 'active' ? 'border-l-4' : 'opacity-50'}`}
                 style={agent.status === 'active' ? { borderLeftColor: agent.color } : {}}
               >
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-lg">{agent.emoji}</span>
-                  <span className="font-semibold text-sm text-gray-900">{agent.name}</span>
+                  <span className="text-slate-600"><AgentIcon agentId={agent.id} /></span>
+                  <span className="font-semibold text-sm text-slate-900">{agent.name}</span>
                 </div>
-                <p className="text-xs text-gray-500 mb-2 leading-tight">{agent.role}</p>
+                <p className="text-xs text-slate-500 mb-2 leading-tight">{agent.role}</p>
                 <div className="flex items-center justify-between">
                   {statusBadge(agent.status)}
-                  <span className="text-[10px] text-gray-400">{agent.model}</span>
+                  <span className="text-[10px] text-slate-400">{agent.model}</span>
                 </div>
               </div>
             ))}
@@ -212,35 +241,40 @@ export default function AgentsPage() {
 
         {/* Cron Schedule */}
         <section>
-          <h2 className="text-sm font-semibold text-gray-700 mb-3">⏰ 排程任務</h2>
-          <div className="bg-white rounded-lg border overflow-hidden">
+          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+            <IconClock /> 排程任務
+          </h2>
+          <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-gray-50 border-b">
-                    <th className="text-left px-4 py-2 font-medium text-gray-600 w-32">時間</th>
-                    <th className="text-left px-4 py-2 font-medium text-gray-600">任務</th>
-                    <th className="text-left px-4 py-2 font-medium text-gray-600 w-28">負責 Agent</th>
-                    <th className="text-left px-4 py-2 font-medium text-gray-600 w-24">執行方式</th>
+                  <tr className="bg-slate-50 border-b border-slate-100">
+                    <th className="text-left px-4 py-2 font-medium text-slate-500 w-32">時間</th>
+                    <th className="text-left px-4 py-2 font-medium text-slate-500">任務</th>
+                    <th className="text-left px-4 py-2 font-medium text-slate-500 w-28">負責 Agent</th>
+                    <th className="text-left px-4 py-2 font-medium text-slate-500 w-24">執行方式</th>
                   </tr>
                 </thead>
                 <tbody>
                   {CRON_JOBS.map((job, i) => (
-                    <tr key={i} className="border-b last:border-0 hover:bg-gray-50">
-                      <td className="px-4 py-2 font-mono text-xs text-gray-600">{job.time}</td>
-                      <td className="px-4 py-2 text-gray-900">{job.name}</td>
+                    <tr key={i} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50">
+                      <td className="px-4 py-2 font-mono text-xs text-slate-500">{job.time}</td>
+                      <td className="px-4 py-2 text-slate-900">{job.name}</td>
                       <td className="px-4 py-2">
                         <span className="inline-flex items-center gap-1 text-xs" style={{ color: agentColor(job.agent) }}>
-                          {agentEmoji(job.agent)} {job.agent}
+                          <AgentIcon agentId={job.agent} /> {job.agent}
                         </span>
                       </td>
                       <td className="px-4 py-2">
-                        <span className={`text-xs px-1.5 py-0.5 rounded ${
-                          job.type === 'spawn' ? 'bg-green-50 text-green-700' :
-                          job.type === 'isolated' ? 'bg-blue-50 text-blue-700' :
-                          'bg-gray-50 text-gray-600'
+                        <span className={`inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded ${
+                          job.type === 'spawn' ? 'bg-emerald-50 text-emerald-700' :
+                          job.type === 'isolated' ? 'bg-sky-50 text-sky-700' :
+                          'bg-slate-50 text-slate-600'
                         }`}>
-                          {job.type === 'spawn' ? '🔀 spawn' : job.type === 'isolated' ? '📦 isolated' : '💬 main'}
+                          {job.type === 'spawn' && <IconFork />}
+                          {job.type === 'isolated' && <IconBox />}
+                          {job.type === 'main' && <IconChat />}
+                          {job.type}
                         </span>
                       </td>
                     </tr>
@@ -254,24 +288,26 @@ export default function AgentsPage() {
         {/* Task Runs 執行紀錄 */}
         <section>
           <div className="flex justify-between items-center mb-3">
-            <h2 className="text-sm font-semibold text-gray-700">📋 任務執行紀錄</h2>
+            <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+              <IconClipboard /> 任務執行紀錄
+            </h2>
             <div className="flex gap-1.5 items-center">
               {[{ l: '昨天', v: fmtDateStr(new Date(Date.now() - 86400000)) }, { l: '今天', v: fmtDateStr(new Date()) }].map(b => (
                 <button key={b.v} onClick={() => setRunDate(b.v)}
-                  className={`px-2.5 py-1 rounded-md text-xs font-medium border transition ${runDate === b.v ? 'bg-blue-500 text-white border-blue-500' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`}
+                  className={`px-2.5 py-1 rounded-md text-xs font-medium border transition ${runDate === b.v ? 'bg-cyan-500 text-white border-cyan-500' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
                 >{b.l}</button>
               ))}
               <input type="date" value={runDate} onChange={e => setRunDate(e.target.value)}
-                className="px-2 py-1 rounded-md border border-gray-300 text-xs" />
+                className="px-2 py-1 rounded-md border border-slate-200 text-xs" />
             </div>
           </div>
-          <div className="bg-white rounded-lg border overflow-hidden">
+          <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
             {runsLoading ? (
-              <div className="p-6 text-center text-gray-400 text-sm">載入中...</div>
+              <div className="p-6 text-center text-slate-400 text-sm">載入中...</div>
             ) : runs.length === 0 ? (
-              <div className="p-6 text-center text-gray-400 text-sm">{runDate === fmtDateStr(new Date()) ? '今天尚無任務紀錄' : '該日無紀錄'}</div>
+              <div className="p-6 text-center text-slate-400 text-sm">{runDate === fmtDateStr(new Date()) ? '今天尚無任務紀錄' : '該日無紀錄'}</div>
             ) : (
-              <div className="divide-y divide-gray-100">
+              <div className="divide-y divide-slate-50">
                 {runs.map(run => {
                   const s = RUN_STATUS[run.status] || RUN_STATUS.running
                   const expanded = expandedRunId === run.id
@@ -283,24 +319,24 @@ export default function AgentsPage() {
                     <div key={run.id}>
                       <div
                         onClick={() => hasText && !hasUrl && setExpandedRunId(expanded ? null : run.id)}
-                        className={`flex items-center gap-3 px-4 py-2.5 ${hasText && !hasUrl ? 'cursor-pointer hover:bg-gray-50' : ''}`}
+                        className={`flex items-center gap-3 px-4 py-2.5 ${hasText && !hasUrl ? 'cursor-pointer hover:bg-slate-50/50' : ''}`}
                       >
-                        <span className="text-xs font-mono text-gray-400 w-11 shrink-0">{fmtTime(run.started_at)}</span>
-                        <span className="text-base">{s.icon}</span>
+                        <span className="text-xs font-mono text-slate-400 w-11 shrink-0">{fmtTime(run.started_at)}</span>
+                        <RunStatusIcon status={run.status} />
                         <div className="flex-1 min-w-0">
-                          <span className="text-sm font-medium text-gray-900">{run.task_name}</span>
-                          <span className="text-xs text-gray-400 ml-2">{run.agent}{dur !== null ? ` · ${dur}s` : ''}</span>
+                          <span className="text-sm font-medium text-slate-900">{run.task_name}</span>
+                          <span className="text-xs text-slate-400 ml-2">{run.agent}{dur !== null ? ` · ${dur}s` : ''}</span>
                         </div>
                         <span className="text-xs px-2 py-0.5 rounded-full font-medium shrink-0" style={{ background: s.bg, color: s.color }}>{s.label}</span>
                         {hasUrl ? (
-                          <button onClick={e => { e.stopPropagation(); setModalRun(run) }} className="text-lg hover:scale-110 transition-transform" title="查看報告">📄</button>
+                          <button onClick={e => { e.stopPropagation(); setModalRun(run) }} className="text-slate-400 hover:text-slate-600 transition" title="查看報告"><IconDoc /></button>
                         ) : hasText ? (
-                          <span className={`text-xs text-gray-400 transition-transform ${expanded ? 'rotate-180' : ''}`}>▼</span>
+                          <span className={`text-xs text-slate-400 transition-transform ${expanded ? 'rotate-180' : ''}`}>▼</span>
                         ) : null}
                       </div>
                       {expanded && hasText && (
                         <div className="px-4 pb-3">
-                          <pre className="p-3 rounded-lg bg-gray-50 text-xs leading-relaxed whitespace-pre-wrap break-words max-h-60 overflow-y-auto"
+                          <pre className="p-3 rounded-lg bg-slate-50 text-xs leading-relaxed whitespace-pre-wrap break-words max-h-60 overflow-y-auto"
                             style={{ color: run.status === 'failed' ? '#DC2626' : '#374151' }}>
                             {run.status === 'failed' ? run.error_message : run.result_text}
                           </pre>
@@ -312,17 +348,19 @@ export default function AgentsPage() {
               </div>
             )}
           </div>
-          <p className="text-center text-xs text-gray-300 mt-2">每 30 秒自動刷新</p>
+          <p className="text-center text-xs text-slate-300 mt-2">每 30 秒自動刷新</p>
         </section>
 
         {/* Task Queue (agent_tasks) */}
         <section>
-          <h2 className="text-sm font-semibold text-gray-700 mb-3">🔄 任務佇列（agent_tasks）</h2>
-          <div className="bg-white rounded-lg border overflow-hidden">
+          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+            <IconRefresh /> 任務佇列（agent_tasks）
+          </h2>
+          <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
             {loading ? (
-              <div className="p-8 text-center text-gray-400">載入中...</div>
+              <div className="p-8 text-center text-slate-400">載入中...</div>
             ) : tasks.length === 0 ? (
-              <div className="p-8 text-center text-gray-400">
+              <div className="p-8 text-center text-slate-400">
                 <p className="text-lg mb-1">尚無任務紀錄</p>
                 <p className="text-xs">明天工作日 Cron 觸發後會開始記錄</p>
               </div>
@@ -330,12 +368,12 @@ export default function AgentsPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="bg-gray-50 border-b">
-                      <th className="text-left px-4 py-2 font-medium text-gray-600">時間</th>
-                      <th className="text-left px-4 py-2 font-medium text-gray-600">類型</th>
-                      <th className="text-left px-4 py-2 font-medium text-gray-600">Agent</th>
-                      <th className="text-left px-4 py-2 font-medium text-gray-600">狀態</th>
-                      <th className="text-left px-4 py-2 font-medium text-gray-600">耗時</th>
+                    <tr className="bg-slate-50 border-b border-slate-100">
+                      <th className="text-left px-4 py-2 font-medium text-slate-500">時間</th>
+                      <th className="text-left px-4 py-2 font-medium text-slate-500">類型</th>
+                      <th className="text-left px-4 py-2 font-medium text-slate-500">Agent</th>
+                      <th className="text-left px-4 py-2 font-medium text-slate-500">狀態</th>
+                      <th className="text-left px-4 py-2 font-medium text-slate-500">耗時</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -344,18 +382,18 @@ export default function AgentsPage() {
                         ? Math.round((new Date(task.completed_at).getTime() - new Date(task.started_at).getTime()) / 1000)
                         : null
                       return (
-                        <tr key={task.id} className="border-b last:border-0 hover:bg-gray-50">
-                          <td className="px-4 py-2 text-xs text-gray-500 whitespace-nowrap">
+                        <tr key={task.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50">
+                          <td className="px-4 py-2 text-xs text-slate-500 whitespace-nowrap">
                             {new Date(task.created_at).toLocaleString('zh-TW', { timeZone: 'Asia/Taipei', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
                           </td>
-                          <td className="px-4 py-2 text-gray-900">{task.task_type}</td>
+                          <td className="px-4 py-2 text-slate-900">{task.task_type}</td>
                           <td className="px-4 py-2">
-                            <span className="text-xs" style={{ color: agentColor(task.assigned_to) }}>
-                              {agentEmoji(task.assigned_to)} {task.assigned_to}
+                            <span className="inline-flex items-center gap-1 text-xs" style={{ color: agentColor(task.assigned_to) }}>
+                              <AgentIcon agentId={task.assigned_to} /> {task.assigned_to}
                             </span>
                           </td>
                           <td className="px-4 py-2">{statusBadge(task.status)}</td>
-                          <td className="px-4 py-2 text-xs text-gray-500">
+                          <td className="px-4 py-2 text-xs text-slate-500">
                             {duration !== null ? `${duration}s` : '—'}
                           </td>
                         </tr>
@@ -369,32 +407,39 @@ export default function AgentsPage() {
         </section>
 
         {/* Architecture Note */}
-        <section className="bg-white rounded-lg border p-4">
-          <h2 className="text-sm font-semibold text-gray-700 mb-2">🏗️ 架構說明</h2>
-          <div className="text-xs text-gray-500 space-y-1">
-            <p><strong>Phase 1（當前）</strong>：Jarvis (Coordinator) + Secretary Agent — 簽核/郵件/行事曆自動化</p>
-            <p><strong>Phase 2</strong>：+ Analyst (Pipeline/業績) + Researcher (市場/技術)</p>
-            <p><strong>Phase 3</strong>：+ Developer (Portal) + Editor (Travis Daily)</p>
-            <p className="text-gray-400 mt-2">通訊方式：Cron → Jarvis (調度) → sessions_spawn → Secretary → Telegram 直接通知</p>
-            <p className="text-gray-400">跨 Agent 協作透過 Supabase agent_tasks 任務佇列</p>
+        <section className="bg-white rounded-xl shadow-sm border border-slate-100 p-4">
+          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+            <IconBuild /> 架構說明
+          </h2>
+          <div className="text-xs text-slate-500 space-y-1">
+            <p><strong className="text-slate-700">Phase 1（當前）</strong>：Jarvis (Coordinator) + Secretary Agent — 簽核/郵件/行事曆自動化</p>
+            <p><strong className="text-slate-700">Phase 2</strong>：+ Analyst (Pipeline/業績) + Researcher (市場/技術)</p>
+            <p><strong className="text-slate-700">Phase 3</strong>：+ Developer (Portal) + Editor (Travis Daily)</p>
+            <p className="text-slate-400 mt-2">通訊方式：Cron → Jarvis (調度) → sessions_spawn → Secretary → Telegram 直接通知</p>
+            <p className="text-slate-400">跨 Agent 協作透過 Supabase agent_tasks 任務佇列</p>
           </div>
         </section>
+
+        {/* Footer */}
+        <footer className="text-center text-xs text-slate-400 mt-8 pb-6">
+          Aurotek Sales Portal · Powered by Jarvis
+        </footer>
       </div>
 
       {/* 報告浮窗 */}
       {modalRun && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setModalRun(null)}>
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 shrink-0">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 shrink-0">
               <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-gray-900 truncate">{modalRun.task_name}</h3>
-                <p className="text-xs text-gray-400">{modalRun.agent} · {fmtTime(modalRun.started_at)}</p>
+                <h3 className="font-bold text-slate-900 truncate">{modalRun.task_name}</h3>
+                <p className="text-xs text-slate-400">{modalRun.agent} · {fmtTime(modalRun.started_at)}</p>
               </div>
               <div className="flex items-center gap-2 ml-3 shrink-0">
                 <a href={modalRun.result_url!} target="_blank" rel="noopener noreferrer"
-                  className="px-3 py-1.5 text-xs font-medium bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">另開視窗 ↗</a>
+                  className="px-3 py-1.5 text-xs font-medium bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition">另開視窗 ↗</a>
                 <button onClick={() => setModalRun(null)}
-                  className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 text-lg">✕</button>
+                  className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 text-lg">✕</button>
               </div>
             </div>
             <iframe src={modalRun.result_url!} className="flex-1 w-full border-0" style={{ minHeight: '60vh' }} />
