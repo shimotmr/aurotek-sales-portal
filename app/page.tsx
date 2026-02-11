@@ -48,7 +48,7 @@ export default function Home() {
           <a href="/products" className="block p-6 bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow hover:shadow-lg transition text-white">
             <div className="text-4xl mb-4">🔍</div>
             <h2 className="text-xl font-semibold mb-2">產品查詢</h2>
-            <p className="text-green-100">搜尋產品 / 價格資訊</p>
+            <p className="text-green-100">搜尋產品 / 價格資訊 / 庫存情況</p>
           </a>
 
           {/* 報價單 */}
@@ -65,13 +65,6 @@ export default function Home() {
             <p className="text-indigo-100">語音轉文字 / 智慧校正</p>
           </a>
           
-          {/* 庫存查詢 */}
-          <a href="/inventory" className="block p-6 bg-white rounded-lg shadow hover:shadow-lg transition">
-            <div className="text-4xl mb-4">📊</div>
-            <h2 className="text-xl font-semibold mb-2">庫存查詢</h2>
-            <p className="text-gray-600">即時庫存狀態</p>
-          </a>
-
           {/* Agent 儀表板 */}
           <a href="/agents" className="block p-6 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-lg shadow hover:shadow-lg transition text-white">
             <div className="text-4xl mb-4">🤖</div>
