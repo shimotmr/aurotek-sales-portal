@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { createClient } from '@/lib/supabase'
+import { supabase } from "@/lib/supabase"
 
 interface AgentTask {
   id: number
@@ -91,7 +91,7 @@ export default function AgentsPage() {
   }, [])
 
   const loadRuns = useCallback(async () => {
-    const supabase = createClient()
+    
     const { data } = await supabase
       .from('task_runs')
       .select('*')
@@ -108,7 +108,7 @@ export default function AgentsPage() {
 
   async function fetchTasks() {
     try {
-      const supabase = createClient()
+      
       const { data, error } = await supabase
         .from('agent_tasks')
         .select('*')
