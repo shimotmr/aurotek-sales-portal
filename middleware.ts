@@ -5,7 +5,7 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   
   // 公開路徑（不需要登入）
-  const publicPaths = ['/login', '/api/auth']
+  const publicPaths = ['/login', '/api/auth', '/monitor']
   if (publicPaths.some(path => pathname.startsWith(path))) {
     return NextResponse.next()
   }
