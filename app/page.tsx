@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import UserMenu from './components/UserMenu'
-import TaskMonitor from './components/TaskMonitor'
 
 export default function Home() {
   return (
@@ -79,11 +78,6 @@ export default function Home() {
             <h2 className="text-xl font-semibold mb-2">後台管理</h2>
             <p className="text-gray-300">目標設定 / 團隊管理 / 經銷商</p>
           </a>
-        </div>
-
-        {/* Agent 任務監控 */}
-        <div className="mt-8">
-          <TaskMonitor />
         </div>
       </div>
     </main>
