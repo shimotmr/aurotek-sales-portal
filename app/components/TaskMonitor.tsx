@@ -32,6 +32,7 @@ export default function TaskMonitor() {
   const [loading, setLoading] = useState(true)
   const [date, setDate] = useState(fmtDate(new Date()))
   const [expandedId, setExpandedId] = useState<number | null>(null)
+  const [modalRun, setModalRun] = useState<TaskRun | null>(null)
 
   const load = useCallback(async () => {
     const { data } = await supabase
@@ -94,8 +95,8 @@ export default function TaskMonitor() {
                   <span className="text-xs px-2 py-0.5 rounded-full font-medium shrink-0"
                     style={{ background: s.bg, color: s.color }}>{s.label}</span>
                   {hasUrl ? (
-                    <a href={run.result_url!} target="_blank" rel="noopener noreferrer"
-                      onClick={e => e.stopPropagation()} className="text-lg" title="查看報告">📄</a>
+                    <button onClick={e => { e.stopPropagation(); setModalRun(run) }}
+                      className="text-lg hover:scale-110 transition-transform" title="查看報告">📄</button>
                   ) : hasText ? (
                     <span className={`text-xs text-gray-400 transition-transform ${expanded ? 'rotate-180' : ''}`}>▼</span>
                   ) : null}
@@ -114,6 +115,35 @@ export default function TaskMonitor() {
         </div>
       )}
       <p className="text-center text-xs text-gray-300 mt-3">每 30 秒自動刷新</p>
+
+      {/* 報告浮窗 */}
+      {modalRun && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={() => setModalRun(null)}>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden"
+            onClick={e => e.stopPropagation()}>
+            {/* 浮窗 header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 shrink-0">
+              <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-gray-900 truncate">{modalRun.task_name}</h3>
+                <p className="text-xs text-gray-400">{modalRun.agent} · {fmtTime(modalRun.started_at)}</p>
+              </div>
+              <div className="flex items-center gap-2 ml-3 shrink-0">
+                <a href={modalRun.result_url!} target="_blank" rel="noopener noreferrer"
+                  className="px-3 py-1.5 text-xs font-medium bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">
+                  另開視窗 ↗
+                </a>
+                <button onClick={() => setModalRun(null)}
+                  className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 text-lg">
+                  ✕
+                </button>
+              </div>
+            </div>
+            {/* iframe 內容 */}
+            <iframe src={modalRun.result_url!} className="flex-1 w-full border-0" style={{ minHeight: '60vh' }} />
+          </div>
+        </div>
+      )}
     </div>
   )
 }
