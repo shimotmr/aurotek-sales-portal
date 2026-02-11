@@ -349,16 +349,21 @@ export default function ProductsPage() {
   const activeFilterCount = (materialTypeFilter ? 1 : 0) + productTypeFilters.length + tagFilters.length
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b sticky top-0 z-20">
-        <div className="max-w-full mx-auto px-3 sm:px-4 py-3">
+      <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 z-20">
+        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link href="/" className="text-gray-500 hover:text-gray-700 text-xl">←</Link>
-            <h1 className="text-lg sm:text-xl font-bold text-gray-900">普渡料號資料庫</h1>
+            <Link href="/" className="text-slate-400 hover:text-slate-600 transition">
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd"/></svg>
+            </Link>
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-white">
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z" clipRule="evenodd"/></svg>
+            </div>
+            <span className="font-bold text-slate-800 text-sm sm:text-base">普渡料號資料庫</span>
           </div>
         </div>
-      </div>
+      </header>
 
       {/* Search Bar (Mobile) */}
       {isMobile && (
