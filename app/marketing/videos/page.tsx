@@ -83,18 +83,22 @@ export default function VideosPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <a href="/" className="text-purple-600 hover:underline text-sm">← 返回首頁</a>
-            <h1 className="text-3xl font-bold text-gray-900 mt-2">🎬 影片案例</h1>
+    <main className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
+      <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 z-10">
+        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Link href="/marketing" className="text-slate-400 hover:text-slate-700 transition">
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd"/></svg>
+            </Link>
+            <span className="text-lg bg-gradient-to-br from-violet-500 to-violet-600 bg-clip-text text-transparent">🎬</span>
+            <h1 className="text-lg font-bold text-slate-800">影片案例</h1>
           </div>
-          <a href="/marketing/slides" className="btn bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600">
+          <a href="/marketing/slides" className="btn bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 text-sm">
             📑 簡報案例
           </a>
         </div>
+      </header>
+      <div className="max-w-7xl mx-auto px-4 py-8">
 
         {/* Filters */}
         <div className="bg-white rounded-lg shadow p-4 mb-6">
