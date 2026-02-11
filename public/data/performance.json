@@ -1,14 +1,14 @@
 {
   "summary": {
     "totalCases": 881,
-    "activeCases": 378,
+    "activeCases": 353,
     "thisMonth": {
       "month": 2,
       "actual": 1298,
-      "forecast": 1553,
+      "forecast": 26,
       "target": 7700,
-      "gap": -4848,
-      "rate": 37,
+      "gap": -6376,
+      "rate": 17,
       "type": "forecast"
     },
     "ytd": {
@@ -30,55 +30,55 @@
     {
       "month": 2,
       "actual": 1298,
-      "forecast": 1553,
+      "forecast": 26,
       "target": 7700,
-      "gap": -4848,
-      "rate": 37,
+      "gap": -6376,
+      "rate": 17,
       "type": "forecast"
     },
     {
       "month": 3,
       "actual": 0,
-      "forecast": 77119,
+      "forecast": 73964,
       "target": 8800,
-      "gap": 68319,
-      "rate": 876,
+      "gap": 65164,
+      "rate": 841,
       "type": "forecast"
     },
     {
       "month": 4,
       "actual": 0,
-      "forecast": 7396,
+      "forecast": 7053,
       "target": 11600,
-      "gap": -4204,
-      "rate": 64,
+      "gap": -4547,
+      "rate": 61,
       "type": "forecast"
     },
     {
       "month": 5,
       "actual": 0,
-      "forecast": 2900,
+      "forecast": 3900,
       "target": 9950,
-      "gap": -7050,
-      "rate": 29,
+      "gap": -6050,
+      "rate": 39,
       "type": "forecast"
     },
     {
       "month": 6,
       "actual": 0,
-      "forecast": 2662,
+      "forecast": 3162,
       "target": 10600,
-      "gap": -7938,
-      "rate": 25,
+      "gap": -7438,
+      "rate": 30,
       "type": "forecast"
     },
     {
       "month": 7,
       "actual": 0,
-      "forecast": 7238,
+      "forecast": 7362,
       "target": 12800,
-      "gap": -5562,
-      "rate": 57,
+      "gap": -5438,
+      "rate": 58,
       "type": "forecast"
     },
     {
@@ -111,19 +111,19 @@
     {
       "month": 11,
       "actual": 0,
-      "forecast": 5562,
+      "forecast": 4712,
       "target": 17700,
-      "gap": -12138,
-      "rate": 31,
+      "gap": -12988,
+      "rate": 27,
       "type": "forecast"
     },
     {
       "month": 12,
       "actual": 0,
-      "forecast": 5412,
+      "forecast": 4412,
       "target": 18800,
-      "gap": -13388,
-      "rate": 29,
+      "gap": -14388,
+      "rate": 23,
       "type": "forecast"
     }
   ],
@@ -131,7 +131,7 @@
     {
       "rep": "喬紹恆 (u2625)",
       "totalShipped": 10162,
-      "totalForecast": 115915,
+      "totalForecast": 110665,
       "totalTarget": 52650,
       "rate": 19,
       "caseCount": 483
@@ -208,8 +208,8 @@
   "stageStats": [
     {
       "stage": "進行中",
-      "count": 371,
-      "amount": 245695
+      "count": 346,
+      "amount": 227545
     },
     {
       "stage": "待出貨",
@@ -223,10 +223,10 @@
     },
     {
       "stage": "失敗",
-      "count": 428,
+      "count": 453,
       "amount": 0
     }
   ],
-  "updatedAt": "2026-02-11T11:00:07.913061",
+  "updatedAt": "2026-02-11T16:00:08.359556",
   "currentMonth": 2
 }
