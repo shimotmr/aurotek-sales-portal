@@ -72,6 +72,13 @@ export default function Home() {
             <p className="text-gray-600">即時庫存狀態</p>
           </a>
 
+          {/* Agent 儀表板 */}
+          <a href="/agents" className="block p-6 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-lg shadow hover:shadow-lg transition text-white">
+            <div className="text-4xl mb-4">🤖</div>
+            <h2 className="text-xl font-semibold mb-2">Agent 儀表板</h2>
+            <p className="text-cyan-100">多 Agent 狀態 / 任務監控</p>
+          </a>
+
           {/* 後台管理 */}
           <a href="/admin" className="block p-6 bg-gradient-to-br from-gray-700 to-gray-800 rounded-lg shadow hover:shadow-lg transition text-white">
             <div className="text-4xl mb-4">⚙️</div>
