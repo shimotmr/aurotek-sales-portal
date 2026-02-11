@@ -1,18 +1,18 @@
 {
   "summary": {
-    "totalCases": 879,
-    "activeCases": 379,
+    "totalCases": 881,
+    "activeCases": 378,
     "thisMonth": {
       "month": 2,
-      "actual": 1295,
-      "forecast": 1928,
+      "actual": 1298,
+      "forecast": 1553,
       "target": 7700,
-      "gap": -4477,
-      "rate": 42,
+      "gap": -4848,
+      "rate": 37,
       "type": "forecast"
     },
     "ytd": {
-      "shipped": 10159,
+      "shipped": 10162,
       "target": 17500,
       "rate": 58
     }
@@ -29,29 +29,29 @@
     },
     {
       "month": 2,
-      "actual": 1295,
-      "forecast": 1928,
+      "actual": 1298,
+      "forecast": 1553,
       "target": 7700,
-      "gap": -4477,
-      "rate": 42,
+      "gap": -4848,
+      "rate": 37,
       "type": "forecast"
     },
     {
       "month": 3,
       "actual": 0,
-      "forecast": 77463,
+      "forecast": 77119,
       "target": 8800,
-      "gap": 68663,
-      "rate": 880,
+      "gap": 68319,
+      "rate": 876,
       "type": "forecast"
     },
     {
       "month": 4,
       "actual": 0,
-      "forecast": 7120,
+      "forecast": 7396,
       "target": 11600,
-      "gap": -4480,
-      "rate": 61,
+      "gap": -4204,
+      "rate": 64,
       "type": "forecast"
     },
     {
@@ -66,10 +66,10 @@
     {
       "month": 6,
       "actual": 0,
-      "forecast": 1912,
+      "forecast": 2662,
       "target": 10600,
-      "gap": -8688,
-      "rate": 18,
+      "gap": -7938,
+      "rate": 25,
       "type": "forecast"
     },
     {
@@ -93,19 +93,19 @@
     {
       "month": 9,
       "actual": 0,
-      "forecast": 338,
+      "forecast": 588,
       "target": 15100,
-      "gap": -14762,
-      "rate": 2,
+      "gap": -14512,
+      "rate": 4,
       "type": "forecast"
     },
     {
       "month": 10,
       "actual": 0,
-      "forecast": 3875,
+      "forecast": 3860,
       "target": 14600,
-      "gap": -10725,
-      "rate": 27,
+      "gap": -10740,
+      "rate": 26,
       "type": "forecast"
     },
     {
@@ -120,21 +120,21 @@
     {
       "month": 12,
       "actual": 0,
-      "forecast": 6012,
+      "forecast": 5412,
       "target": 18800,
-      "gap": -12788,
-      "rate": 32,
+      "gap": -13388,
+      "rate": 29,
       "type": "forecast"
     }
   ],
   "repStats": [
     {
       "rep": "喬紹恆 (u2625)",
-      "totalShipped": 10159,
-      "totalForecast": 115974,
+      "totalShipped": 10162,
+      "totalForecast": 115915,
       "totalTarget": 52650,
       "rate": 19,
-      "caseCount": 481
+      "caseCount": 483
     },
     {
       "rep": "張哲銘 (u2668)",
@@ -166,8 +166,8 @@
     },
     {
       "dealer": "智領未來",
-      "shipped": 926,
-      "caseCount": 11
+      "shipped": 930,
+      "caseCount": 12
     },
     {
       "dealer": "禾達工業",
@@ -208,25 +208,25 @@
   "stageStats": [
     {
       "stage": "進行中",
-      "count": 373,
-      "amount": 245813
+      "count": 371,
+      "amount": 245695
     },
     {
       "stage": "待出貨",
-      "count": 6,
-      "amount": 653
+      "count": 7,
+      "amount": 654
     },
     {
       "stage": "已出貨",
-      "count": 74,
-      "amount": 10159
+      "count": 75,
+      "amount": 10162
     },
     {
       "stage": "失敗",
-      "count": 426,
+      "count": 428,
       "amount": 0
     }
   ],
-  "updatedAt": "2026-02-10T16:00:09.001313",
+  "updatedAt": "2026-02-11T11:00:07.913061",
   "currentMonth": 2
 }
