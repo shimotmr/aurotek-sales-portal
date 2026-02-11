@@ -10,6 +10,7 @@ interface TaskRun {
   agent: string
   status: 'running' | 'completed' | 'failed'
   result_text: string | null
+  result_url: string | null
   error_message: string | null
   started_at: string
   completed_at: string | null
@@ -103,6 +104,7 @@ export default function MonitorPage() {
             const cfg = STATUS_CONFIG[run.status] || STATUS_CONFIG.running
             const isExpanded = expandedId === run.id
             const hasResult = !!(run.result_text || run.error_message)
+            const hasUrl = !!run.result_url
 
             return (
               <div key={run.id} style={{
@@ -141,12 +143,24 @@ export default function MonitorPage() {
                     {cfg.label}
                   </span>
 
-                  {/* 展開箭頭 */}
-                  {hasResult && (
+                  {/* 報告連結 or 展開箭頭 */}
+                  {hasUrl ? (
+                    <a
+                      href={run.result_url!}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      style={{
+                        fontSize: 18, textDecoration: 'none',
+                        display: 'flex', alignItems: 'center',
+                      }}
+                      title="查看報告"
+                    >📄</a>
+                  ) : hasResult ? (
                     <span style={{ fontSize: 12, color: '#9CA3AF', transition: 'transform 0.2s', transform: isExpanded ? 'rotate(180deg)' : '' }}>
                       ▼
                     </span>
-                  )}
+                  ) : null}
                 </div>
 
                 {/* 展開內容 */}
