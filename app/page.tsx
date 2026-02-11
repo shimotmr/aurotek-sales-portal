@@ -108,7 +108,7 @@ const MENU_ITEMS: MenuItem[] = [
   { id: 'quotations', title: '報價單', desc: '快速開立報價 · PDF 匯出 · 歷史查詢', href: '/quotations', icon: 'quotation', gradient: 'from-orange-500 to-orange-600', textColor: 'text-orange-100', status: 'beta', group: 'sales' },
   // 效率工具
   { id: 'transcripts', title: '會議逐字稿', desc: 'AI 語音轉文字 · 講者辨識 · 智慧校正', href: '/transcripts', icon: 'transcript', gradient: 'from-indigo-500 to-indigo-600', textColor: 'text-indigo-100', status: 'live', group: 'tools' },
-  { id: 'marketing', title: '數位資源庫', desc: '產品影片 · 簡報範本 · 技術文件', href: '/marketing', icon: 'marketing', gradient: 'from-violet-500 to-violet-600', textColor: 'text-violet-100', status: 'soon', group: 'tools' },
+  { id: 'marketing', title: '數位資源庫', desc: '產品影片 · 簡報範本 · 技術文件', href: '/marketing', icon: 'marketing', gradient: 'from-violet-500 to-violet-600', textColor: 'text-violet-100', status: 'live', group: 'tools' },
   { id: 'samples', title: '樣品借用', desc: '借出歸還追蹤 · 庫位管理', href: '/samples', icon: 'samples', gradient: 'from-amber-500 to-amber-600', textColor: 'text-amber-100', status: 'soon', group: 'tools' },
   // 系統管理
   { id: 'agents', title: 'Agent 中控台', desc: '多 Agent 狀態 · 任務監控 · 執行紀錄', href: '/agents', icon: 'agent', gradient: 'from-cyan-500 to-cyan-600', textColor: 'text-cyan-100', status: 'live', group: 'system' },
