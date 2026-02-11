@@ -2,126 +2,56 @@
 
 import { useEffect, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import UserMenu from '../components/UserMenu'
 
+// ─── Types ───
 interface MonthStat {
-  month: number
-  actual: number      // 已出貨（實際業績）
-  forecast: number    // 預測（進行中+待出貨）
-  target: number
-  gap: number
-  rate: number
-  type: 'actual' | 'forecast'
+  month: number; actual: number; forecast: number; target: number; gap: number; rate: number; type: 'actual' | 'forecast'
 }
-
 interface PerformanceData {
-  summary: {
-    totalCases: number
-    activeCases: number
-    thisMonth: MonthStat
-    ytd: {
-      shipped: number
-      target: number
-      rate: number
-    }
-  }
-  monthlyStats: MonthStat[]
-  repStats: {
-    rep: string
-    totalShipped: number
-    totalForecast: number
-    totalTarget: number
-    rate: number
-    caseCount: number
-  }[]
-  dealerStats: {
-    dealer: string
-    shipped: number
-    caseCount: number
-  }[]
-  stageStats: {
-    stage: string
-    count: number
-    amount: number
-  }[]
-  updatedAt: string
-  currentMonth: number
+  summary: { totalCases: number; activeCases: number; thisMonth: MonthStat; ytd: { shipped: number; target: number; rate: number } }
+  monthlyStats: MonthStat[]; repStats: { rep: string; totalShipped: number; totalForecast: number; totalTarget: number; rate: number; caseCount: number }[]
+  dealerStats: { dealer: string; shipped: number; caseCount: number }[]; stageStats: { stage: string; count: number; amount: number }[]
+  updatedAt: string; currentMonth: number
 }
+interface Case { id: string; stage: string; rep: string; dealer: string; probability: number; amount: number; orderDate?: string; shipDate?: string; customer?: string }
+interface AlertRule { id: string; name: string; description: string; check: (c: Case[], t: string) => Case[]; filterUrl: (c: Case[]) => string }
 
-interface Case {
-  id: string
-  stage: string
-  rep: string
-  dealer: string
-  probability: number
-  amount: number
-  orderDate?: string
-  shipDate?: string
-  customer?: string
-}
-
-// 警告規則定義
-interface AlertRule {
-  id: string
-  name: string
-  description: string
-  check: (cases: Case[], today: string) => Case[]
-  filterUrl: (cases: Case[]) => string
-}
-
+// ─── Constants ───
 const ALERT_RULES: AlertRule[] = [
-  {
-    id: 'overdue-in-progress',
-    name: '進行中案件出貨日已過期',
-    description: '進行中的案件出貨日早於今天，應調整出貨日或標記失敗',
-    check: (cases, today) => cases.filter(c => 
-      c.stage === '進行中' && c.shipDate && c.shipDate < today
-    ),
-    filterUrl: (cases) => `/cases?stage=進行中&overdue=true`
-  },
-  {
-    id: 'overdue-order-date',
-    name: '預計取得訂單日已過期',
-    description: '進行中的案件預計取得訂單日早於今天，應調整日期或結案',
-    check: (cases, today) => cases.filter(c => 
-      c.stage === '進行中' && c.orderDate && c.orderDate < today
-    ),
-    filterUrl: (cases) => `/cases?stage=進行中`
-  },
+  { id: 'overdue-in-progress', name: '進行中案件出貨日已過期', description: '進行中的案件出貨日早於今天，應調整出貨日或標記失敗',
+    check: (cases, today) => cases.filter(c => c.stage === '進行中' && c.shipDate && c.shipDate < today), filterUrl: () => `/cases?stage=進行中&overdue=true` },
+  { id: 'overdue-order-date', name: '預計取得訂單日已過期', description: '進行中的案件預計取得訂單日早於今天，應調整日期或結案',
+    check: (cases, today) => cases.filter(c => c.stage === '進行中' && c.orderDate && c.orderDate < today), filterUrl: () => `/cases?stage=進行中` },
 ]
-
-interface CasesData {
-  cases: Case[]
-}
-
-// 目前在職的業務員（與 admin/team 同步）
 const ACTIVE_REPS = ['喬紹恆']
-
-// 經銷商清單（有效的經銷商）
 const VALID_DEALERS = ['阜爾運通', '禾煜科技', '智領未來', '禾達工業', '季河資訊', '鋥承', '鴻匠', '傑融科技', '谷得智能', '瑞興']
-
-// 漏斗階段（只有 25%, 50%, 75%）
 const FUNNEL_STAGES = [
   { label: '25', minProb: 0, maxProb: 25, color: '#5DADE2' },
   { label: '50', minProb: 26, maxProb: 50, color: '#E67E22' },
   { label: '75', minProb: 51, maxProb: 75, color: '#F4D03F' },
 ]
+const monthNames = ['', '1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
 
-function formatNumber(num: number): string {
-  return num.toLocaleString('zh-TW')
+// ─── SVG Icons ───
+const icons = {
+  chart: <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4"><rect x="3" y="14" width="4" height="7" rx="1" fill="currentColor" opacity="0.4"/><rect x="10" y="9" width="4" height="12" rx="1" fill="currentColor" opacity="0.7"/><rect x="17" y="4" width="4" height="17" rx="1" fill="currentColor"/></svg>,
+  target: <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5"><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2"/><circle cx="12" cy="12" r="5" stroke="currentColor" strokeWidth="2" opacity="0.5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>,
+  shipped: <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5"><path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" strokeWidth="2"/></svg>,
+  cases: <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5"><rect x="4" y="4" width="16" height="16" rx="2" stroke="currentColor" strokeWidth="2"/><path d="M9 9h6M9 13h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.6"/></svg>,
+  warning: <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5"><path d="M12 9v4M12 17h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="currentColor" strokeWidth="2"/></svg>,
+  funnel: <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5"><path d="M3 4h18l-6 8v6l-6 2V12L3 4z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/></svg>,
+  person: <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5"><circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="2"/><path d="M6 21c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>,
+  building: <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5"><rect x="4" y="6" width="16" height="15" rx="1" stroke="currentColor" strokeWidth="2"/><path d="M9 3h6v3H9z" stroke="currentColor" strokeWidth="2"/><path d="M9 13h6v8H9z" stroke="currentColor" strokeWidth="1.5" opacity="0.5"/></svg>,
+  grid: <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5"><rect x="3" y="3" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="2"/><rect x="13" y="3" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="2" opacity="0.5"/><rect x="3" y="13" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="2" opacity="0.5"/><rect x="13" y="13" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="2" opacity="0.3"/></svg>,
+  arrow: <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd"/></svg>,
 }
 
-function getStatusColor(rate: number): string {
-  if (rate >= 100) return 'text-green-600'
-  if (rate >= 80) return 'text-yellow-600'
-  return 'text-red-600'
-}
-
-function getStatusBg(rate: number): string {
-  if (rate >= 100) return 'bg-green-100'
-  if (rate >= 80) return 'bg-yellow-100'
-  return 'bg-red-100'
-}
+// ─── Helpers ───
+function fmt(n: number) { return n.toLocaleString('zh-TW') }
+function statusColor(r: number) { return r >= 100 ? '#059669' : r >= 80 ? '#D97706' : '#DC2626' }
+function statusBg(r: number) { return r >= 100 ? '#ECFDF5' : r >= 80 ? '#FFFBEB' : '#FEF2F2' }
 
 export default function PerformancePage() {
   const router = useRouter()
@@ -129,29 +59,16 @@ export default function PerformancePage() {
   const [cases, setCases] = useState<Case[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  
-  // 漏斗篩選
   const [funnelFilter, setFunnelFilter] = useState<'all' | 'rep' | 'dealer'>('all')
-  const [selectedRep, setSelectedRep] = useState<string>('')
-  const [selectedDealer, setSelectedDealer] = useState<string>('')
+  const [selectedRep, setSelectedRep] = useState('')
+  const [selectedDealer, setSelectedDealer] = useState('')
 
   useEffect(() => {
-    Promise.all([
-      fetch('/api/performance').then(res => res.json()),
-      fetch('/data/cases.json').then(res => res.json())
-    ])
-      .then(([perfData, casesData]) => {
-        setData(perfData)
-        setCases(casesData.cases || [])
-        setLoading(false)
-      })
-      .catch(err => {
-        setError(err.message)
-        setLoading(false)
-      })
+    Promise.all([fetch('/api/performance').then(r => r.json()), fetch('/data/cases.json').then(r => r.json())])
+      .then(([p, c]) => { setData(p); setCases(c.cases || []); setLoading(false) })
+      .catch(e => { setError(e.message); setLoading(false) })
   }, [])
 
-  // 計算漏斗資料
   const funnelData = useMemo(() => {
     const filtered = cases.filter(c => {
       if (c.stage !== '進行中') return false
@@ -159,151 +76,95 @@ export default function PerformancePage() {
       if (funnelFilter === 'dealer' && selectedDealer && c.dealer !== selectedDealer) return false
       return true
     })
-
-    return FUNNEL_STAGES.map(stage => {
-      const stageCases = filtered.filter(c => 
-        c.probability >= stage.minProb && c.probability <= stage.maxProb
-      )
-      const totalAmount = stageCases.reduce((sum, c) => sum + (c.amount || 0), 0)
-      return { ...stage, count: stageCases.length, amount: totalAmount }
+    return FUNNEL_STAGES.map(s => {
+      const sc = filtered.filter(c => c.probability >= s.minProb && c.probability <= s.maxProb)
+      return { ...s, count: sc.length, amount: sc.reduce((sum, c) => sum + (c.amount || 0), 0) }
     })
   }, [cases, funnelFilter, selectedRep, selectedDealer])
 
-  // 漏斗點擊跳轉
   const handleFunnelClick = (stage: typeof FUNNEL_STAGES[0]) => {
-    const params = new URLSearchParams()
-    params.set('probMin', stage.minProb.toString())
-    params.set('probMax', stage.maxProb.toString())
-    params.set('stage', '進行中')
-    if (funnelFilter === 'rep' && selectedRep) params.set('rep', selectedRep)
-    if (funnelFilter === 'dealer' && selectedDealer) params.set('dealer', selectedDealer)
-    router.push(`/cases?${params.toString()}`)
+    const p = new URLSearchParams()
+    p.set('probMin', stage.minProb.toString()); p.set('probMax', stage.maxProb.toString()); p.set('stage', '進行中')
+    if (funnelFilter === 'rep' && selectedRep) p.set('rep', selectedRep)
+    if (funnelFilter === 'dealer' && selectedDealer) p.set('dealer', selectedDealer)
+    router.push(`/cases?${p.toString()}`)
   }
 
-  // 漏斗 SVG 計算
   const maxAmount = Math.max(...funnelData.map(d => d.amount), 1)
-  const getWidthForAmount = (amount: number) => {
-    const ratio = amount / maxAmount
-    return 60 + 340 * (0.15 + ratio * 0.85)
-  }
+  const getW = (a: number) => 60 + 340 * (0.15 + (a / maxAmount) * 0.85)
 
-  // 計算警告
   const alerts = useMemo(() => {
-    const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD
+    const today = new Date().toISOString().split('T')[0]
     return ALERT_RULES.map(rule => {
-      const violatingCases = rule.check(cases, today)
-      const totalAmount = violatingCases.reduce((sum, c) => sum + (c.amount || 0), 0)
-      return {
-        ...rule,
-        cases: violatingCases,
-        count: violatingCases.length,
-        amount: totalAmount,
-      }
-    }).filter(alert => alert.count > 0)
+      const v = rule.check(cases, today)
+      return { ...rule, cases: v, count: v.length, amount: v.reduce((s, c) => s + (c.amount || 0), 0) }
+    }).filter(a => a.count > 0)
   }, [cases])
 
-  // 計算每月各成交率的預測金額
   const monthlyForecastByProb = useMemo(() => {
-    const result: Record<number, { prob25: number; prob50: number; prob75: number; total: number }> = {}
-    
-    // 初始化 1-12 月
-    for (let m = 1; m <= 12; m++) {
-      result[m] = { prob25: 0, prob50: 0, prob75: 0, total: 0 }
-    }
-    
-    // 只計算進行中的案件
+    const r: Record<number, { prob25: number; prob50: number; prob75: number; total: number }> = {}
+    for (let m = 1; m <= 12; m++) r[m] = { prob25: 0, prob50: 0, prob75: 0, total: 0 }
     cases.filter(c => c.stage === '進行中').forEach(c => {
-      // 從 shipDate 取得月份 (假設格式為 YYYY-MM-DD)
-      const shipDate = (c as any).shipDate
-      if (!shipDate) return
-      
-      const month = parseInt(shipDate.split('-')[1], 10)
-      if (month < 1 || month > 12) return
-      
-      const amount = c.amount || 0
-      
-      if (c.probability <= 25) {
-        result[month].prob25 += amount
-      } else if (c.probability <= 50) {
-        result[month].prob50 += amount
-      } else if (c.probability <= 75) {
-        result[month].prob75 += amount
-      }
-      result[month].total += amount
+      const sd = (c as any).shipDate; if (!sd) return
+      const month = parseInt(sd.split('-')[1], 10); if (month < 1 || month > 12) return
+      const a = c.amount || 0
+      if (c.probability <= 25) r[month].prob25 += a
+      else if (c.probability <= 50) r[month].prob50 += a
+      else if (c.probability <= 75) r[month].prob75 += a
+      r[month].total += a
     })
-    
-    return result
+    return r
   }, [cases])
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">載入中...</p>
-        </div>
-      </div>
-    )
-  }
+  if (loading) return (
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 flex items-center justify-center">
+      <div className="text-center"><div className="animate-spin rounded-full h-10 w-10 border-2 border-blue-500 border-t-transparent mx-auto"/><p className="mt-3 text-sm text-slate-500">載入中...</p></div>
+    </div>
+  )
+  if (error || !data) return (
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 flex items-center justify-center">
+      <div className="text-center"><p className="text-red-500 text-sm">載入失敗：{error || '未知錯誤'}</p><Link href="/" className="text-sm text-blue-500 hover:underline mt-2 inline-block">返回首頁</Link></div>
+    </div>
+  )
 
-  if (error || !data) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center text-red-600">
-          <p>載入失敗：{error || '未知錯誤'}</p>
-          <a href="/" className="text-blue-600 hover:underline mt-4 block">返回首頁</a>
-        </div>
-      </div>
-    )
-  }
-
-  const monthNames = ['', '1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
   const currentMonth = data.currentMonth || new Date().getMonth() + 1
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <a href="/" className="text-blue-600 hover:underline text-sm">← 返回首頁</a>
-            <h1 className="text-3xl font-bold text-gray-900 mt-2">📈 業績管理 Dashboard</h1>
-            <p className="text-sm text-gray-500 mt-1">
-              ⚠️ 過去月份顯示實際業績（已出貨），當月及未來顯示預測
-            </p>
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
+      {/* Header */}
+      <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 z-10">
+        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Link href="/" className="text-slate-400 hover:text-slate-600 transition">
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd"/></svg>
+            </Link>
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white">{icons.chart}</div>
+            <span className="font-bold text-slate-800 text-sm sm:text-base">業績管理</span>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="text-sm text-gray-500">
-              更新時間：{new Date(data.updatedAt).toLocaleString('zh-TW')}
-            </div>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-slate-400 hidden sm:inline">更新 {new Date(data.updatedAt).toLocaleString('zh-TW')}</span>
             <UserMenu />
           </div>
         </div>
+      </header>
 
-        {/* ⚠️ 警告區塊 - 規則檢查結果 */}
+      <div className="max-w-5xl mx-auto px-4 py-6">
+        <p className="text-xs text-slate-400 mb-4">過去月份顯示實際業績（已出貨），當月及未來顯示預測</p>
+
+        {/* Alerts */}
         {alerts.length > 0 && (
-          <div className="bg-red-50 border-2 border-red-300 rounded-xl p-4 mb-6">
-            <h2 className="text-lg font-bold text-red-700 mb-3 flex items-center gap-2">
-              ⚠️ 需要處理的問題 ({alerts.reduce((sum, a) => sum + a.count, 0)} 件)
-            </h2>
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
+            <div className="flex items-center gap-2 mb-3 text-red-700 font-semibold text-sm">
+              <span className="text-red-500">{icons.warning}</span>
+              需要處理 ({alerts.reduce((s, a) => s + a.count, 0)} 件)
+            </div>
             <div className="space-y-2">
-              {alerts.map(alert => (
-                <a
-                  key={alert.id}
-                  href={alert.filterUrl(alert.cases)}
-                  className="block p-3 bg-white border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
-                >
+              {alerts.map(a => (
+                <a key={a.id} href={a.filterUrl(a.cases)} className="block p-3 bg-white border border-red-100 rounded-lg hover:bg-red-50/50 transition">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium text-red-700">{alert.name}</div>
-                      <div className="text-sm text-gray-600">{alert.description}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-xl font-bold text-red-600">{alert.count} 件</div>
-                      <div className="text-sm text-gray-500">{formatNumber(Math.round(alert.amount))}K</div>
-                    </div>
+                    <div><div className="text-sm font-medium text-red-700">{a.name}</div><div className="text-xs text-slate-500">{a.description}</div></div>
+                    <div className="text-right"><div className="text-lg font-bold text-red-600">{a.count}</div><div className="text-xs text-slate-400">{fmt(Math.round(a.amount))}K</div></div>
                   </div>
-                  <div className="text-xs text-blue-600 mt-2">→ 點擊查看案件明細</div>
                 </a>
               ))}
             </div>
@@ -311,459 +172,245 @@ export default function PerformancePage() {
         )}
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          {/* YTD 達成率 */}
-          <div className={`p-6 rounded-lg shadow ${getStatusBg(data.summary.ytd.rate)}`}>
-            <div className="text-sm text-gray-600">YTD 達成率</div>
-            <div className={`text-4xl font-bold mt-2 ${getStatusColor(data.summary.ytd.rate)}`}>
-              {data.summary.ytd.rate}%
-            </div>
-            <div className="text-sm text-gray-500 mt-2">
-              已出貨 {formatNumber(data.summary.ytd.shipped)}K / 目標 {formatNumber(data.summary.ytd.target)}K
-            </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+          <div className="rounded-xl p-4 shadow-sm border border-slate-100" style={{ background: statusBg(data.summary.ytd.rate) }}>
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 mb-1"><span className="text-slate-400">{icons.target}</span>YTD 達成率</div>
+            <div className="text-3xl font-bold" style={{ color: statusColor(data.summary.ytd.rate) }}>{data.summary.ytd.rate}%</div>
+            <div className="text-xs text-slate-500 mt-1">已出貨 {fmt(data.summary.ytd.shipped)}K / 目標 {fmt(data.summary.ytd.target)}K</div>
           </div>
-
-          {/* 本月狀況 */}
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="text-sm text-gray-600">{monthNames[currentMonth]} 狀況</div>
-            <div className="mt-2">
-              <div className="text-2xl font-bold text-blue-600">
-                已出貨 {formatNumber(data.summary.thisMonth.actual)}K
-              </div>
-              <div className="text-lg text-purple-600">
-                + 預測 {formatNumber(data.summary.thisMonth.forecast)}K
-              </div>
-            </div>
-            <div className="text-sm text-gray-500 mt-2">
-              目標 {formatNumber(data.summary.thisMonth.target)}K
-            </div>
+          <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100">
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 mb-1"><span className="text-blue-400">{icons.shipped}</span>{monthNames[currentMonth]}</div>
+            <div className="text-2xl font-bold text-blue-600">{fmt(data.summary.thisMonth.actual)}K</div>
+            <div className="text-sm text-violet-500">+預測 {fmt(data.summary.thisMonth.forecast)}K</div>
+            <div className="text-xs text-slate-400 mt-1">目標 {fmt(data.summary.thisMonth.target)}K</div>
           </div>
-
-          {/* 進行中案件 */}
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="text-sm text-gray-600">進行中案件</div>
-            <div className="text-4xl font-bold mt-2 text-orange-600">
-              {formatNumber(data.summary.activeCases)}
-            </div>
-            <div className="text-sm text-gray-500 mt-2">
-              進行中 + 待出貨
-            </div>
+          <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100">
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 mb-1"><span className="text-orange-400">{icons.cases}</span>進行中案件</div>
+            <div className="text-3xl font-bold text-orange-500">{fmt(data.summary.activeCases)}</div>
+            <div className="text-xs text-slate-400 mt-1">進行中 + 待出貨</div>
           </div>
-
-          {/* 總案件數 */}
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="text-sm text-gray-600">總案件數</div>
-            <div className="text-4xl font-bold mt-2 text-gray-600">
-              {formatNumber(data.summary.totalCases)}
-            </div>
-            <div className="text-sm text-gray-500 mt-2">
-              含已出貨、失敗案件
-            </div>
+          <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100">
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 mb-1"><span className="text-slate-400">{icons.grid}</span>總案件數</div>
+            <div className="text-3xl font-bold text-slate-600">{fmt(data.summary.totalCases)}</div>
+            <div className="text-xs text-slate-400 mt-1">含已出貨、失敗</div>
           </div>
         </div>
 
-        {/* 月度趨勢 - 手機友善卡片式設計 */}
-        <div className="bg-white rounded-lg shadow p-4 md:p-6 mb-8">
-          <h2 className="text-xl font-semibold mb-4">📊 月度業績趨勢</h2>
-          
-          {/* 圖例 - 隱藏在手機版，桌面版顯示 */}
-          <div className="hidden md:flex flex-wrap gap-4 text-xs mb-4">
-            <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 bg-green-500 rounded"></span>已出貨</span>
-            <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded" style={{backgroundColor: '#5DADE2'}}></span>25%</span>
-            <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded" style={{backgroundColor: '#E67E22'}}></span>50%</span>
-            <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded" style={{backgroundColor: '#F4D03F'}}></span>75%</span>
+        {/* Monthly Trend */}
+        <section className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 sm:p-6 mb-6">
+          <h2 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2"><span className="text-blue-500">{icons.chart}</span>月度業績趨勢</h2>
+          <div className="hidden sm:flex flex-wrap gap-3 text-xs mb-4">
+            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 bg-emerald-500 rounded-sm"/><span className="text-slate-500">已出貨</span></span>
+            {FUNNEL_STAGES.map(s => <span key={s.label} className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm" style={{backgroundColor: s.color}}/><span className="text-slate-500">{s.label}%</span></span>)}
           </div>
-          
-          {/* 月份卡片列表 */}
-          {(() => {
-            const maxValue = Math.max(
-              ...data.monthlyStats.map(m => Math.max(m.target, m.actual + m.forecast))
-            )
-            
-            return (
-              <div className="space-y-3">
-                {data.monthlyStats.map(m => {
-                  const mf = monthlyForecastByProb[m.month] || { prob25: 0, prob50: 0, prob75: 0, total: 0 }
-                  const isActual = m.type === 'actual'
-                  const totalPerformance = m.actual + m.forecast
-                  const isOver = totalPerformance >= m.target
-                  const gap = totalPerformance - m.target
-                  
-                  // 進度條比例（以目標為 100%）
-                  const actualPct = m.target > 0 ? Math.min((m.actual / m.target) * 100, 100) : 0
-                  const p25Pct = m.target > 0 ? (mf.prob25 / m.target) * 100 : 0
-                  const p50Pct = m.target > 0 ? (mf.prob50 / m.target) * 100 : 0
-                  const p75Pct = m.target > 0 ? (mf.prob75 / m.target) * 100 : 0
-                  const totalPct = actualPct + p25Pct + p50Pct + p75Pct
-                  
-                  // 過去月份有預測案件 = 需要警告
-                  const hasStaleForecasts = isActual && m.forecast > 0
-                  
-                  return (
-                    <div key={m.month} className={`p-4 rounded-xl border-2 ${
-                      hasStaleForecasts
-                        ? 'border-orange-400 bg-orange-50'
-                        : m.month === currentMonth 
-                          ? 'border-blue-500 bg-blue-50' 
-                          : isOver ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-white'
-                    }`}>
-                      {/* 第一行：月份 + 達成率 */}
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <span className="text-2xl font-bold text-gray-800">{monthNames[m.month]}</span>
-                          {m.month === currentMonth && (
-                            <span className="text-xs bg-blue-500 text-white px-2 py-1 rounded-full">當月</span>
-                          )}
-                          <span className={`text-xs px-2 py-0.5 rounded ${m.month === currentMonth ? 'bg-blue-100 text-blue-600' : isActual ? 'bg-gray-200 text-gray-600' : 'bg-purple-100 text-purple-600'}`}>
-                            {m.month === currentMonth ? '實際+預測' : isActual ? '實際' : '預測'}
-                          </span>
-                        </div>
-                        <span className={`text-2xl font-bold ${getStatusColor(m.month === currentMonth && m.target > 0 ? Math.round(totalPerformance / m.target * 100) : m.rate)}`}>
-                          {m.month === currentMonth && m.target > 0 ? Math.round(totalPerformance / m.target * 100) : m.rate}%
-                        </span>
-                      </div>
-                      
-                      {/* 過去月份：只顯示目標 vs 已出貨；當月：顯示目標+已出貨+預測 */}
-                      {isActual && m.month !== currentMonth ? (
-                        <>
-                          <div className="grid grid-cols-2 gap-3 mb-3">
-                            <div className="text-center p-3 bg-gray-100 rounded-lg">
-                              <div className="text-xs text-gray-500 mb-1">🎯 目標</div>
-                              <div className="text-xl font-bold text-gray-700">{formatNumber(m.target)}K</div>
-                            </div>
-                            <div className={`text-center p-3 rounded-lg ${m.actual >= m.target ? 'bg-green-100' : 'bg-red-50'}`}>
-                              <div className="text-xs text-gray-500 mb-1">✅ 已出貨</div>
-                              <div className={`text-xl font-bold ${m.actual >= m.target ? 'text-green-600' : 'text-red-500'}`}>
-                                {formatNumber(m.actual)}K
-                              </div>
-                            </div>
-                          </div>
-                          
-                          {/* 差距 */}
-                          <div className={`text-center text-sm font-medium mb-3 p-2 rounded-lg ${m.actual >= m.target ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-500'}`}>
-                            {m.actual >= m.target ? '▲' : '▼'} 差距 {m.actual >= m.target ? '+' : ''}{formatNumber(m.actual - m.target)}K
-                          </div>
-                          
-                          {/* 進度條 - 只顯示已出貨 */}
-                          <div className="relative h-4 bg-gray-200 rounded-full overflow-hidden mb-2">
-                            <div className="absolute right-0 top-0 h-full w-0.5 bg-gray-400 z-10"></div>
-                            <div className="h-full bg-green-500" style={{ width: `${Math.min(actualPct, 100)}%` }}></div>
-                          </div>
-                          
-                          {/* 過期預測提示（簡化版，詳細警告在頁面頂部） */}
-                          {hasStaleForecasts && (
-                            <div className="mt-2 text-xs text-orange-600 text-center">
-                              ⚠️ 有過期預測案件，請查看頁面頂部警告
-                            </div>
-                          )}
-                        </>
-                      ) : (
-                        <>
-                          {/* 當月/未來：顯示目標 vs 已出貨 vs 預測 */}
-                          <div className="grid grid-cols-3 gap-2 mb-3">
-                            <div className="text-center p-2 bg-gray-100 rounded-lg">
-                              <div className="text-xs text-gray-500 mb-1">🎯 目標</div>
-                              <div className="text-lg font-bold text-gray-700">{formatNumber(m.target)}K</div>
-                            </div>
-                            <div className="text-center p-2 bg-green-100 rounded-lg">
-                              <div className="text-xs text-gray-500 mb-1">✅ 已出貨</div>
-                              <div className="text-lg font-bold text-green-600">
-                                {m.actual > 0 ? `${formatNumber(m.actual)}K` : '-'}
-                              </div>
-                            </div>
-                            <div className="text-center p-2 bg-purple-50 rounded-lg">
-                              <div className="text-xs text-gray-500 mb-1">📊 預測</div>
-                              <div className="text-lg font-bold text-purple-600">
-                                {m.forecast > 0 ? `${formatNumber(Math.round(m.forecast))}K` : '-'}
-                              </div>
-                            </div>
-                          </div>
-                          
-                          {/* 合計 vs 目標 差距 */}
-                          <div className={`flex items-center justify-center gap-2 text-sm font-medium mb-3 p-2 rounded-lg ${isOver ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-500'}`}>
-                            <span>合計 {formatNumber(Math.round(totalPerformance))}K</span>
-                            <span>|</span>
-                            <span>{isOver ? '▲' : '▼'} {isOver ? '+' : ''}{formatNumber(Math.round(gap))}K</span>
-                          </div>
-                          
-                          {/* 進度條 */}
-                          <div className="relative h-4 bg-gray-200 rounded-full overflow-hidden mb-2">
-                            <div className="absolute right-0 top-0 h-full w-0.5 bg-gray-400 z-10"></div>
-                            <div className="h-full flex">
-                              {actualPct > 0 && (
-                                <div className="h-full bg-green-500" style={{ width: `${Math.min(actualPct, 100)}%` }}></div>
-                              )}
-                              {p25Pct > 0 && (
-                                <div className="h-full" style={{ width: `${p25Pct}%`, backgroundColor: '#5DADE2' }}></div>
-                              )}
-                              {p50Pct > 0 && (
-                                <div className="h-full" style={{ width: `${p50Pct}%`, backgroundColor: '#E67E22' }}></div>
-                              )}
-                              {p75Pct > 0 && (
-                                <div className="h-full" style={{ width: `${p75Pct}%`, backgroundColor: '#F4D03F' }}></div>
-                              )}
-                            </div>
-                          </div>
-                          
-                          {/* 預測明細 */}
-                          {m.forecast > 0 && (
-                            <div className="flex flex-wrap gap-2 text-xs justify-center">
-                              {m.actual > 0 && (
-                                <span className="flex items-center gap-1 px-2 py-1 bg-green-100 rounded-full">
-                                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                                  已出貨 {formatNumber(m.actual)}
-                                </span>
-                              )}
-                              {mf.prob25 > 0 && (
-                                <span className="flex items-center gap-1 px-2 py-1 rounded-full" style={{backgroundColor: '#5DADE220'}}>
-                                  <span className="w-2 h-2 rounded-full" style={{backgroundColor: '#5DADE2'}}></span>
-                                  25% {formatNumber(Math.round(mf.prob25))}
-                                </span>
-                              )}
-                              {mf.prob50 > 0 && (
-                                <span className="flex items-center gap-1 px-2 py-1 rounded-full" style={{backgroundColor: '#E67E2220'}}>
-                                  <span className="w-2 h-2 rounded-full" style={{backgroundColor: '#E67E22'}}></span>
-                                  50% {formatNumber(Math.round(mf.prob50))}
-                                </span>
-                              )}
-                              {mf.prob75 > 0 && (
-                                <span className="flex items-center gap-1 px-2 py-1 rounded-full" style={{backgroundColor: '#F4D03F20'}}>
-                                  <span className="w-2 h-2 rounded-full" style={{backgroundColor: '#F4D03F'}}></span>
-                                  75% {formatNumber(Math.round(mf.prob75))}
-                                </span>
-                              )}
-                            </div>
-                          )}
-                        </>
-                      )}
+          <div className="space-y-3">
+            {data.monthlyStats.map(m => {
+              const mf = monthlyForecastByProb[m.month] || { prob25: 0, prob50: 0, prob75: 0, total: 0 }
+              const isActual = m.type === 'actual'
+              const totalPerf = m.actual + m.forecast
+              const isOver = totalPerf >= m.target
+              const gap = totalPerf - m.target
+              const rate = m.month === currentMonth && m.target > 0 ? Math.round(totalPerf / m.target * 100) : m.rate
+              const actualPct = m.target > 0 ? Math.min((m.actual / m.target) * 100, 100) : 0
+              const p25Pct = m.target > 0 ? (mf.prob25 / m.target) * 100 : 0
+              const p50Pct = m.target > 0 ? (mf.prob50 / m.target) * 100 : 0
+              const p75Pct = m.target > 0 ? (mf.prob75 / m.target) * 100 : 0
+              const hasStale = isActual && m.forecast > 0
+
+              return (
+                <div key={m.month} className={`p-4 rounded-xl border ${
+                  hasStale ? 'border-orange-300 bg-orange-50/50' :
+                  m.month === currentMonth ? 'border-blue-300 bg-blue-50/30' :
+                  'border-slate-200 bg-white'
+                }`}>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg font-bold text-slate-800">{monthNames[m.month]}</span>
+                      {m.month === currentMonth && <span className="text-[10px] bg-blue-500 text-white px-1.5 py-0.5 rounded-full font-medium">當月</span>}
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
+                        m.month === currentMonth ? 'bg-blue-100 text-blue-600' : isActual ? 'bg-slate-100 text-slate-500' : 'bg-violet-100 text-violet-600'
+                      }`}>{m.month === currentMonth ? '實際+預測' : isActual ? '實際' : '預測'}</span>
                     </div>
-                  )
-                })}
-              </div>
-            )
-          })()}
-          
-          <p className="text-xs text-gray-400 mt-4 text-center">
-            ⚠️ 過去月份顯示實際業績，當月及未來顯示預測
-          </p>
-        </div>
+                    <span className="text-xl font-bold" style={{ color: statusColor(rate) }}>{rate}%</span>
+                  </div>
 
-        {/* 銷售漏斗 */}
-        <div className="bg-white rounded-lg shadow p-6 mb-8">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-            <h2 className="text-xl font-semibold">📊 Funnel分析（進行中案件）</h2>
-            
-            {/* 快速篩選 */}
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => { setFunnelFilter('all'); setSelectedRep(''); setSelectedDealer(''); }}
-                className={`px-3 py-1.5 rounded-full text-sm font-medium transition ${
-                  funnelFilter === 'all' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                全部
-              </button>
-              
-              {/* 業務員快速選擇 */}
+                  {isActual && m.month !== currentMonth ? (
+                    <>
+                      <div className="grid grid-cols-2 gap-2 mb-3">
+                        <div className="text-center p-2.5 bg-slate-50 rounded-lg">
+                          <div className="text-[10px] text-slate-400 mb-0.5">目標</div>
+                          <div className="text-lg font-bold text-slate-700">{fmt(m.target)}K</div>
+                        </div>
+                        <div className={`text-center p-2.5 rounded-lg ${m.actual >= m.target ? 'bg-emerald-50' : 'bg-red-50'}`}>
+                          <div className="text-[10px] text-slate-400 mb-0.5">已出貨</div>
+                          <div className={`text-lg font-bold ${m.actual >= m.target ? 'text-emerald-600' : 'text-red-500'}`}>{fmt(m.actual)}K</div>
+                        </div>
+                      </div>
+                      <div className={`text-center text-xs font-medium p-1.5 rounded-lg ${m.actual >= m.target ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'}`}>
+                        差距 {m.actual >= m.target ? '+' : ''}{fmt(m.actual - m.target)}K
+                      </div>
+                      <div className="relative h-3 bg-slate-200 rounded-full overflow-hidden mt-3">
+                        <div className="absolute right-0 top-0 h-full w-px bg-slate-400 z-10"/>
+                        <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${Math.min(actualPct, 100)}%` }}/>
+                      </div>
+                      {hasStale && <div className="mt-2 text-[10px] text-orange-600 text-center">有過期預測案件，請查看頂部警告</div>}
+                    </>
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-3 gap-2 mb-3">
+                        <div className="text-center p-2 bg-slate-50 rounded-lg"><div className="text-[10px] text-slate-400 mb-0.5">目標</div><div className="text-base font-bold text-slate-700">{fmt(m.target)}K</div></div>
+                        <div className="text-center p-2 bg-emerald-50 rounded-lg"><div className="text-[10px] text-slate-400 mb-0.5">已出貨</div><div className="text-base font-bold text-emerald-600">{m.actual > 0 ? `${fmt(m.actual)}K` : '-'}</div></div>
+                        <div className="text-center p-2 bg-violet-50 rounded-lg"><div className="text-[10px] text-slate-400 mb-0.5">預測</div><div className="text-base font-bold text-violet-600">{m.forecast > 0 ? `${fmt(Math.round(m.forecast))}K` : '-'}</div></div>
+                      </div>
+                      <div className={`flex items-center justify-center gap-2 text-xs font-medium p-1.5 rounded-lg ${isOver ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'}`}>
+                        <span>合計 {fmt(Math.round(totalPerf))}K</span><span className="text-slate-300">|</span><span>{isOver ? '+' : ''}{fmt(Math.round(gap))}K</span>
+                      </div>
+                      <div className="relative h-3 bg-slate-200 rounded-full overflow-hidden mt-3">
+                        <div className="absolute right-0 top-0 h-full w-px bg-slate-400 z-10"/>
+                        <div className="h-full flex">
+                          {actualPct > 0 && <div className="h-full bg-emerald-500" style={{ width: `${Math.min(actualPct, 100)}%` }}/>}
+                          {p25Pct > 0 && <div className="h-full" style={{ width: `${p25Pct}%`, backgroundColor: '#5DADE2' }}/>}
+                          {p50Pct > 0 && <div className="h-full" style={{ width: `${p50Pct}%`, backgroundColor: '#E67E22' }}/>}
+                          {p75Pct > 0 && <div className="h-full" style={{ width: `${p75Pct}%`, backgroundColor: '#F4D03F' }}/>}
+                        </div>
+                      </div>
+                      {m.forecast > 0 && (
+                        <div className="flex flex-wrap gap-1.5 text-[10px] justify-center mt-2">
+                          {m.actual > 0 && <span className="flex items-center gap-1 px-1.5 py-0.5 bg-emerald-50 text-emerald-700 rounded-full"><span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"/>已出貨 {fmt(m.actual)}</span>}
+                          {mf.prob25 > 0 && <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full" style={{backgroundColor:'#5DADE215', color:'#2980B9'}}><span className="w-1.5 h-1.5 rounded-full" style={{backgroundColor:'#5DADE2'}}/>25% {fmt(Math.round(mf.prob25))}</span>}
+                          {mf.prob50 > 0 && <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full" style={{backgroundColor:'#E67E2215', color:'#D35400'}}><span className="w-1.5 h-1.5 rounded-full" style={{backgroundColor:'#E67E22'}}/>50% {fmt(Math.round(mf.prob50))}</span>}
+                          {mf.prob75 > 0 && <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full" style={{backgroundColor:'#F4D03F15', color:'#B7950B'}}><span className="w-1.5 h-1.5 rounded-full" style={{backgroundColor:'#F4D03F'}}/>75% {fmt(Math.round(mf.prob75))}</span>}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </section>
+
+        {/* Funnel */}
+        <section className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 sm:p-6 mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+            <h2 className="text-sm font-semibold text-slate-700 flex items-center gap-2"><span className="text-orange-500">{icons.funnel}</span>Funnel 分析（進行中）</h2>
+            <div className="flex flex-wrap gap-1.5">
+              <button onClick={() => { setFunnelFilter('all'); setSelectedRep(''); setSelectedDealer('') }}
+                className={`px-2.5 py-1 rounded-full text-xs font-medium transition ${funnelFilter === 'all' ? 'bg-blue-500 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>全部</button>
               {ACTIVE_REPS.map(rep => (
-                <button
-                  key={rep}
-                  onClick={() => { setFunnelFilter('rep'); setSelectedRep(rep); setSelectedDealer(''); }}
-                  className={`px-3 py-1.5 rounded-full text-sm font-medium transition ${
-                    funnelFilter === 'rep' && selectedRep === rep 
-                      ? 'bg-purple-500 text-white' 
-                      : 'bg-purple-50 text-purple-600 hover:bg-purple-100'
-                  }`}
-                >
-                  👤 {rep}
-                </button>
+                <button key={rep} onClick={() => { setFunnelFilter('rep'); setSelectedRep(rep); setSelectedDealer('') }}
+                  className={`px-2.5 py-1 rounded-full text-xs font-medium transition ${funnelFilter === 'rep' && selectedRep === rep ? 'bg-violet-500 text-white' : 'bg-violet-50 text-violet-600 hover:bg-violet-100'}`}>{rep}</button>
               ))}
-              
-              {/* 經銷商下拉 */}
-              <select
-                value={funnelFilter === 'dealer' ? selectedDealer : ''}
-                onChange={(e) => {
-                  if (e.target.value) {
-                    setFunnelFilter('dealer')
-                    setSelectedDealer(e.target.value)
-                    setSelectedRep('')
-                  }
-                }}
-                className={`px-3 py-1.5 rounded-full text-sm font-medium border-0 cursor-pointer transition ${
-                  funnelFilter === 'dealer' ? 'bg-green-500 text-white' : 'bg-green-50 text-green-600'
-                }`}
-              >
-                <option value="">🏢 經銷商</option>
-                {VALID_DEALERS.map(dealer => (
-                  <option key={dealer} value={dealer}>{dealer}</option>
-                ))}
+              <select value={funnelFilter === 'dealer' ? selectedDealer : ''} onChange={e => { if (e.target.value) { setFunnelFilter('dealer'); setSelectedDealer(e.target.value); setSelectedRep('') } }}
+                className={`px-2.5 py-1 rounded-full text-xs font-medium border-0 cursor-pointer transition ${funnelFilter === 'dealer' ? 'bg-emerald-500 text-white' : 'bg-emerald-50 text-emerald-600'}`}>
+                <option value="">經銷商</option>
+                {VALID_DEALERS.map(d => <option key={d} value={d}>{d}</option>)}
               </select>
             </div>
           </div>
-
-          {/* 漏斗圖 + 統計 */}
-          <div className="flex flex-col lg:flex-row gap-8 items-center">
-            {/* SVG 漏斗 */}
+          <div className="flex flex-col lg:flex-row gap-6 items-center">
             <div className="flex-1 flex justify-center">
-              <svg viewBox="0 0 700 250" className="w-full max-w-lg" style={{ height: 'auto' }}>
-                {funnelData.map((stage, index) => {
-                  const layerHeight = 250 / funnelData.length
-                  const topY = index * layerHeight
-                  const bottomY = (index + 1) * layerHeight
-                  const topWidth = getWidthForAmount(stage.amount)
-                  const bottomWidth = index < funnelData.length - 1 
-                    ? getWidthForAmount(funnelData[index + 1].amount)
-                    : 60
-                  const centerX = 220
-                  
-                  const points = `${centerX - topWidth/2},${topY} ${centerX + topWidth/2},${topY} ${centerX + bottomWidth/2},${bottomY} ${centerX - bottomWidth/2},${bottomY}`
-                  // 固定文字位置在右側，統一對齊
-                  const labelX = 500
-                  const labelY = topY + layerHeight/2
-                  
+              <svg viewBox="0 0 700 250" className="w-full max-w-lg">
+                {funnelData.map((stage, i) => {
+                  const lh = 250 / funnelData.length, ty = i * lh, by = (i + 1) * lh
+                  const tw = getW(stage.amount), bw = i < funnelData.length - 1 ? getW(funnelData[i + 1].amount) : 60
+                  const cx = 220
                   return (
                     <g key={stage.label}>
-                      <polygon
-                        points={points}
-                        fill={stage.color}
-                        className="cursor-pointer transition-opacity hover:opacity-80"
-                        onClick={() => handleFunnelClick(stage)}
-                      />
-                      <text x={labelX} y={labelY - 6} fill={stage.color} fontSize="18" fontWeight="bold">
-                        {stage.label}%
-                      </text>
-                      <text x={labelX} y={labelY + 16} fill="#666" fontSize="15">
-                        {formatNumber(Math.round(stage.amount))}
-                      </text>
+                      <polygon points={`${cx-tw/2},${ty} ${cx+tw/2},${ty} ${cx+bw/2},${by} ${cx-bw/2},${by}`} fill={stage.color}
+                        className="cursor-pointer transition-opacity hover:opacity-80" onClick={() => handleFunnelClick(stage)}/>
+                      <text x={500} y={ty + lh/2 - 6} fill={stage.color} fontSize="18" fontWeight="bold">{stage.label}%</text>
+                      <text x={500} y={ty + lh/2 + 16} fill="#64748B" fontSize="15">{fmt(Math.round(stage.amount))}</text>
                     </g>
                   )
                 })}
               </svg>
             </div>
-
-            {/* 統計卡片 */}
-            <div className="grid grid-cols-3 gap-3 lg:grid-cols-1 lg:gap-4">
-              {funnelData.map(stage => (
-                <div 
-                  key={stage.label} 
-                  className="p-3 rounded-lg text-center cursor-pointer hover:shadow-md transition"
-                  style={{ backgroundColor: `${stage.color}20` }}
-                  onClick={() => handleFunnelClick(stage)}
-                >
-                  <div className="text-xl font-bold" style={{ color: stage.color }}>{stage.count}</div>
-                  <div className="text-xs text-gray-600">{stage.label}% 案件</div>
-                  <div className="text-sm font-medium text-gray-700">{formatNumber(Math.round(stage.amount))}K</div>
+            <div className="grid grid-cols-3 gap-2 lg:grid-cols-1 lg:gap-3">
+              {funnelData.map(s => (
+                <div key={s.label} className="p-3 rounded-xl text-center cursor-pointer hover:shadow-md transition border border-slate-100"
+                  style={{ backgroundColor: `${s.color}10` }} onClick={() => handleFunnelClick(s)}>
+                  <div className="text-xl font-bold" style={{ color: s.color }}>{s.count}</div>
+                  <div className="text-[10px] text-slate-500">{s.label}% 案件</div>
+                  <div className="text-xs font-medium text-slate-700">{fmt(Math.round(s.amount))}K</div>
                 </div>
               ))}
             </div>
           </div>
+          <p className="text-center text-[10px] text-slate-400 mt-4">漏斗寬度依金額比例變化，點擊區塊查看案件明細</p>
+        </section>
 
-          <p className="text-center text-xs text-gray-400 mt-4">
-            💡 漏斗寬度依金額比例變化，點擊區塊查看案件明細
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* 業務績效 */}
-          <div id="rep-stats" className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">👤 業務績效（依已出貨排名）</h2>
+        {/* Rep + Dealer */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+          <section className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 sm:p-6">
+            <h2 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2"><span className="text-violet-500">{icons.person}</span>業務績效（依已出貨）</h2>
             <div className="space-y-4">
               {data.repStats.map(rep => (
-                <div key={rep.rep} className="border-b pb-4">
+                <div key={rep.rep} className="border-b border-slate-100 pb-4 last:border-0">
                   <div className="flex justify-between items-center mb-2">
-                    <span className="font-medium">{rep.rep}</span>
-                    <span className={`font-semibold ${getStatusColor(rep.rate)}`}>
-                      {rep.rate}%
-                    </span>
+                    <span className="text-sm font-medium text-slate-800">{rep.rep}</span>
+                    <span className="text-sm font-bold" style={{ color: statusColor(rep.rate) }}>{rep.rate}%</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3 mb-2 overflow-hidden">
-                    <div className="h-3 flex">
-                      <div 
-                        className="h-3 bg-green-500"
-                        style={{ width: `${Math.min(rep.rate, 100)}%` }}
-                      ></div>
-                    </div>
+                  <div className="w-full bg-slate-200 rounded-full h-2.5 mb-2 overflow-hidden">
+                    <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${Math.min(rep.rate, 100)}%` }}/>
                   </div>
-                  <div className="flex justify-between text-sm text-gray-500">
-                    <span className="text-green-600">已出貨：{formatNumber(rep.totalShipped)}K</span>
-                    <span className="text-purple-600">預測：{formatNumber(rep.totalForecast)}K</span>
-                    <span>目標：{formatNumber(rep.totalTarget)}K</span>
+                  <div className="flex justify-between text-xs text-slate-500">
+                    <span className="text-emerald-600">已出貨 {fmt(rep.totalShipped)}K</span>
+                    <span className="text-violet-600">預測 {fmt(rep.totalForecast)}K</span>
+                    <span>目標 {fmt(rep.totalTarget)}K</span>
                   </div>
-                  <div className="text-xs text-gray-400 mt-1">
-                    案件數：{rep.caseCount} 件
-                  </div>
+                  <div className="text-[10px] text-slate-400 mt-1">案件數 {rep.caseCount}</div>
                 </div>
               ))}
             </div>
-          </div>
+          </section>
 
-          {/* 經銷商排名 - 可點擊查看該經銷商已出貨案件 */}
-          <div id="dealer-stats" className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">🏢 經銷商排名（依已出貨，點擊查看明細）</h2>
-            <div className="space-y-3">
-              {data.dealerStats.map((dealer, idx) => (
-                <a 
-                  key={dealer.dealer} 
-                  href={`/cases?stage=已出貨&dealer=${encodeURIComponent(dealer.dealer)}`}
-                  className="flex items-center hover:bg-gray-50 rounded-lg p-2 -mx-2 transition-colors cursor-pointer"
-                >
-                  <span className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold mr-3 ${
-                    idx === 0 ? 'bg-yellow-500' : idx === 1 ? 'bg-gray-400' : idx === 2 ? 'bg-amber-600' : 'bg-gray-300'
-                  }`}>
-                    {idx + 1}
-                  </span>
-                  <div className="flex-1">
-                    <div className="font-medium truncate text-blue-600 hover:underline">{dealer.dealer}</div>
-                    <div className="text-sm text-gray-500">
-                      <span className="text-green-600 font-semibold">{formatNumber(dealer.shipped)}K</span>
-                      <span className="text-gray-400 ml-2">· {dealer.caseCount} 件出貨</span>
-                    </div>
+          <section className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 sm:p-6">
+            <h2 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2"><span className="text-emerald-500">{icons.building}</span>經銷商排名（依已出貨）</h2>
+            <div className="space-y-1">
+              {data.dealerStats.map((d, i) => (
+                <a key={d.dealer} href={`/cases?stage=已出貨&dealer=${encodeURIComponent(d.dealer)}`}
+                  className="flex items-center gap-3 py-2.5 px-2 -mx-2 rounded-lg hover:bg-slate-50 transition group">
+                  <span className={`w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 ${
+                    i === 0 ? 'bg-amber-500' : i === 1 ? 'bg-slate-400' : i === 2 ? 'bg-amber-700' : 'bg-slate-300'
+                  }`}>{i + 1}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-slate-800 truncate">{d.dealer}</div>
+                    <div className="text-xs text-slate-500"><span className="text-emerald-600 font-semibold">{fmt(d.shipped)}K</span> · {d.caseCount} 件</div>
                   </div>
-                  <span className="text-gray-400 text-sm">→</span>
+                  <span className="text-slate-300 group-hover:text-slate-500 transition">{icons.arrow}</span>
                 </a>
               ))}
             </div>
-          </div>
+          </section>
         </div>
 
-        {/* 案件階段分布 - 可點擊跳轉到案件列表 */}
-        <div className="bg-white rounded-lg shadow p-6 mt-8">
-          <h2 className="text-xl font-semibold mb-4">📋 案件階段分布（點擊查看明細）</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {data.stageStats.map(stage => {
-              const stageColors: Record<string, string> = {
-                '進行中': 'bg-orange-50 border-orange-200 hover:bg-orange-100 hover:border-orange-300',
-                '待出貨': 'bg-yellow-50 border-yellow-200 hover:bg-yellow-100 hover:border-yellow-300',
-                '已出貨': 'bg-green-50 border-green-200 hover:bg-green-100 hover:border-green-300',
-                '失敗': 'bg-gray-50 border-gray-200 hover:bg-gray-100 hover:border-gray-300'
+        {/* Stage Distribution */}
+        <section className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 sm:p-6 mb-6">
+          <h2 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2"><span className="text-slate-400">{icons.grid}</span>案件階段分布</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {data.stageStats.map(s => {
+              const cfg: Record<string, { bg: string; border: string; text: string }> = {
+                '進行中': { bg: 'bg-orange-50', border: 'border-orange-200 hover:border-orange-300', text: 'text-orange-600' },
+                '待出貨': { bg: 'bg-amber-50', border: 'border-amber-200 hover:border-amber-300', text: 'text-amber-600' },
+                '已出貨': { bg: 'bg-emerald-50', border: 'border-emerald-200 hover:border-emerald-300', text: 'text-emerald-600' },
+                '失敗': { bg: 'bg-slate-50', border: 'border-slate-200 hover:border-slate-300', text: 'text-slate-500' },
               }
-              const textColors: Record<string, string> = {
-                '進行中': 'text-orange-600',
-                '待出貨': 'text-yellow-600',
-                '已出貨': 'text-green-600',
-                '失敗': 'text-gray-500'
-              }
+              const c = cfg[s.stage] || cfg['失敗']
               return (
-                <a 
-                  key={stage.stage} 
-                  href={`/cases?stage=${encodeURIComponent(stage.stage)}`}
-                  className={`block p-4 rounded-lg border cursor-pointer transition-all ${stageColors[stage.stage] || 'bg-gray-50 hover:bg-gray-100'}`}
-                >
-                  <div className="font-medium">{stage.stage}</div>
-                  <div className={`text-2xl font-bold mt-1 ${textColors[stage.stage] || 'text-gray-600'}`}>
-                    {stage.count} 件
-                  </div>
-                  <div className="text-sm text-gray-500">{formatNumber(stage.amount)}K</div>
-                  <div className="text-xs text-blue-500 mt-2">→ 查看明細</div>
+                <a key={s.stage} href={`/cases?stage=${encodeURIComponent(s.stage)}`}
+                  className={`block p-4 rounded-xl border transition-all hover:shadow-sm ${c.bg} ${c.border}`}>
+                  <div className="text-xs font-medium text-slate-600">{s.stage}</div>
+                  <div className={`text-2xl font-bold mt-1 ${c.text}`}>{s.count}</div>
+                  <div className="text-xs text-slate-400">{fmt(s.amount)}K</div>
                 </a>
               )
             })}
           </div>
-        </div>
+        </section>
 
-        {/* 底部間距 */}
-        <div className="mt-8"></div>
+        <footer className="text-center text-xs text-slate-400 mt-8 pb-6">Aurotek Sales Portal · Powered by Jarvis</footer>
       </div>
-    </main>
+    </div>
   )
 }
