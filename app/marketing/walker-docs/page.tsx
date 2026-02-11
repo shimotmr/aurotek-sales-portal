@@ -391,26 +391,27 @@ export default function WalkerDocsPage() {
   }, {} as Record<string, typeof docs>)
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
       {/* Header */}
-      <header className="bg-gradient-to-r from-blue-600 to-purple-600 text-white sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+      <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 z-10">
+        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-3">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 hover:bg-white/10 rounded-lg md:hidden"
+              className="p-2 hover:bg-slate-100 rounded-lg md:hidden"
             >
               ☰
             </button>
-            <Link href="/marketing" className="text-white/80 hover:text-white text-sm">
-              ← 返回資源庫
+            <Link href="/marketing" className="text-slate-400 hover:text-slate-700 transition">
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd"/></svg>
             </Link>
+            <span className="text-lg bg-gradient-to-br from-violet-500 to-violet-600 bg-clip-text text-transparent">🤖</span>
+            <h1 className="text-lg font-bold text-slate-800">Walker 天工文档</h1>
           </div>
-          <h1 className="text-xl font-bold">🤖 Walker 天工文档</h1>
           <a 
             href="https://docs.ubtrobot.com/walker-tienkung/" 
             target="_blank"
-            className="text-sm text-white/80 hover:text-white"
+            className="text-sm text-slate-500 hover:text-slate-700"
           >
             原站 ↗
           </a>
