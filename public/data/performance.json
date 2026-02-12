@@ -1,7 +1,7 @@
 {
   "summary": {
     "totalCases": 881,
-    "activeCases": 353,
+    "activeCases": 333,
     "thisMonth": {
       "month": 2,
       "actual": 1298,
@@ -39,28 +39,28 @@
     {
       "month": 3,
       "actual": 0,
-      "forecast": 73964,
+      "forecast": 74714,
       "target": 8800,
-      "gap": 65164,
-      "rate": 841,
+      "gap": 65914,
+      "rate": 849,
       "type": "forecast"
     },
     {
       "month": 4,
       "actual": 0,
-      "forecast": 7053,
+      "forecast": 6303,
       "target": 11600,
-      "gap": -4547,
-      "rate": 61,
+      "gap": -5297,
+      "rate": 54,
       "type": "forecast"
     },
     {
       "month": 5,
       "actual": 0,
-      "forecast": 3900,
+      "forecast": 3650,
       "target": 9950,
-      "gap": -6050,
-      "rate": 39,
+      "gap": -6300,
+      "rate": 37,
       "type": "forecast"
     },
     {
@@ -102,28 +102,28 @@
     {
       "month": 10,
       "actual": 0,
-      "forecast": 3860,
+      "forecast": 1610,
       "target": 14600,
-      "gap": -10740,
-      "rate": 26,
+      "gap": -12990,
+      "rate": 11,
       "type": "forecast"
     },
     {
       "month": 11,
       "actual": 0,
-      "forecast": 4712,
+      "forecast": 112,
       "target": 17700,
-      "gap": -12988,
-      "rate": 27,
+      "gap": -17588,
+      "rate": 1,
       "type": "forecast"
     },
     {
       "month": 12,
       "actual": 0,
-      "forecast": 4412,
+      "forecast": 450,
       "target": 18800,
-      "gap": -14388,
-      "rate": 23,
+      "gap": -18350,
+      "rate": 2,
       "type": "forecast"
     }
   ],
@@ -131,7 +131,7 @@
     {
       "rep": "喬紹恆 (u2625)",
       "totalShipped": 10162,
-      "totalForecast": 110665,
+      "totalForecast": 97978,
       "totalTarget": 52650,
       "rate": 19,
       "caseCount": 483
@@ -208,8 +208,8 @@
   "stageStats": [
     {
       "stage": "進行中",
-      "count": 346,
-      "amount": 227545
+      "count": 326,
+      "amount": 201195
     },
     {
       "stage": "待出貨",
@@ -223,10 +223,10 @@
     },
     {
       "stage": "失敗",
-      "count": 453,
+      "count": 473,
       "amount": 0
     }
   ],
-  "updatedAt": "2026-02-11T16:00:08.359556",
+  "updatedAt": "2026-02-12T11:00:08.106103",
   "currentMonth": 2
 }
