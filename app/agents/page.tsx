@@ -19,15 +19,46 @@ interface AgentTask {
   completed_at: string | null
 }
 
-// TODO: 改為從 Supabase agents 表動態讀取，不 hardcode
-const AGENTS = [
-  { id: 'main', name: 'Jarvis', role: '總調度 — 對話、任務分配、系統管理', status: 'active', model: 'Opus 4.6', color: '#4F46E5', emoji: '🤖' },
-  { id: 'secretary', name: 'Secretary', role: '行政秘書 — 簽核、郵件、報表同步', status: 'active', model: 'Opus 4.6', color: '#059669', emoji: '📋' },
-  { id: 'inspector', name: 'Inspector', role: 'QA 工程師 — 測試、Bug修復、效能優化', status: 'active', model: 'Opus 4.6', color: '#F59E0B', emoji: '🔍' },
-  { id: 'researcher', name: 'Researcher', role: '研究員 — 深度研究、產業分析', status: 'active', model: 'Opus 4.6', color: '#8B5CF6', emoji: '🔬' },
-  { id: 'writer', name: 'Writer', role: '內容創作 — 報告撰寫、文章發布', status: 'active', model: 'Opus 4.6', color: '#EC4899', emoji: '✍️' },
-  { id: 'trader', name: 'Trader', role: '交易分析 — 股票分析、交易策略', status: 'active', model: 'Opus 4.6', color: '#EF4444', emoji: '📈' },
-]
+// Agent 顏色映射
+const AGENT_COLORS: Record<string, string> = {
+  main: '#4F46E5',
+  secretary: '#059669',
+  inspector: '#F59E0B',
+  researcher: '#8B5CF6',
+  writer: '#EC4899',
+  trader: '#EF4444',
+}
+
+// 模型顯示名稱
+function fmtModel(m: string | null) {
+  if (!m) return '—'
+  if (m.includes('opus-4-6')) return 'Opus 4.6'
+  if (m.includes('opus-4-5')) return 'Opus 4.5'
+  if (m.includes('sonnet-4-5')) return 'Sonnet 4.5'
+  if (m.includes('haiku-4-5')) return 'Haiku 4.5'
+  return m
+}
+
+interface AgentDashboard {
+  id: string
+  name: string
+  emoji: string
+  role: string
+  model_primary: string
+  model_fallback: string
+  cron_schedule: string
+  last_run_at: string | null
+  last_status: string | null
+  runtime_status: 'active' | 'idle' | 'standby' | 'inactive'
+  hours_since_last_run: number | null
+}
+
+const RUNTIME_STATUS_CONFIG: Record<string, { label: string; dot: string; border: string }> = {
+  active:   { label: '活躍',  dot: 'bg-emerald-400', border: 'border-emerald-200' },
+  idle:     { label: '閒置',  dot: 'bg-amber-400',   border: 'border-amber-200' },
+  standby:  { label: '待命',  dot: 'bg-slate-300',   border: 'border-slate-200' },
+  inactive: { label: '離線',  dot: 'bg-red-400',     border: 'border-red-200' },
+}
 
 /* SVG Icons */
 const IconBot = () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="8.5" cy="16" r="1.5"/><circle cx="15.5" cy="16" r="1.5"/><path d="M12 2v4M8 7h8a2 2 0 012 2v2H6v-2a2 2 0 012-2z"/></svg>
@@ -103,6 +134,7 @@ function fmtTime(iso: string) {
 function fmtDateStr(d: Date) { return d.toISOString().split('T')[0] }
 
 export default function AgentsPage() {
+  const [agents, setAgents] = useState<AgentDashboard[]>([])
   const [tasks, setTasks] = useState<AgentTask[]>([])
   const [loading, setLoading] = useState(true)
   // Task Runs
@@ -114,13 +146,19 @@ export default function AgentsPage() {
   // Auth
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null)
 
+  const loadAgents = useCallback(async () => {
+    const { data } = await supabase.from('agents_dashboard').select('*')
+    if (data) setAgents(data)
+  }, [])
+
   useEffect(() => {
     // Check admin cookie
     const admin = document.cookie.split(';').some(c => c.trim().startsWith('is_admin=true'))
     setIsAdmin(admin)
     if (admin) {
       fetchTasks()
-      const interval = setInterval(fetchTasks, 30000)
+      loadAgents()
+      const interval = setInterval(() => { fetchTasks(); loadAgents() }, 30000)
       return () => clearInterval(interval)
     }
   }, [])
@@ -192,10 +230,7 @@ export default function AgentsPage() {
     )
   }
 
-  const agentColor = (agentId: string) => {
-    const a = AGENTS.find(a => a.id === agentId)
-    return a?.color || '#6B7280'
-  }
+  const agentColor = (agentId: string) => AGENT_COLORS[agentId] || '#6B7280'
 
   const AgentIcon = ({ agentId, className }: { agentId: string; className?: string }) => {
     const Ic = AGENT_ICONS[agentId] || IconBot
@@ -220,23 +255,37 @@ export default function AgentsPage() {
         <section>
           <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Agent 狀態</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            {AGENTS.map(agent => (
-              <div
-                key={agent.id}
-                className={`bg-white rounded-xl shadow-sm border border-slate-100 p-3 ${agent.status === 'active' ? 'border-l-4' : 'opacity-50'}`}
-                style={agent.status === 'active' ? { borderLeftColor: agent.color } : {}}
-              >
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-slate-600"><AgentIcon agentId={agent.id} /></span>
-                  <span className="font-semibold text-sm text-slate-900">{agent.name}</span>
+            {agents.map(agent => {
+              const color = AGENT_COLORS[agent.id] || '#6B7280'
+              const rs = RUNTIME_STATUS_CONFIG[agent.runtime_status] || RUNTIME_STATUS_CONFIG.inactive
+              const hoursAgo = agent.hours_since_last_run !== null ? Math.round(agent.hours_since_last_run) : null
+              return (
+                <div
+                  key={agent.id}
+                  className={`bg-white rounded-xl shadow-sm border border-slate-100 p-3 border-l-4`}
+                  style={{ borderLeftColor: color }}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-slate-600"><AgentIcon agentId={agent.id} /></span>
+                    <span className="font-semibold text-sm text-slate-900">{agent.name}</span>
+                  </div>
+                  <p className="text-xs text-slate-500 mb-2 leading-tight">{agent.role}</p>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-full border ${rs.border} bg-white`}>
+                      <span className={`w-2 h-2 rounded-full ${rs.dot} ${agent.runtime_status === 'active' ? 'animate-pulse' : ''}`} />
+                      {rs.label}
+                    </span>
+                    <span className="text-[10px] text-slate-400">{fmtModel(agent.model_primary)}</span>
+                  </div>
+                  {agent.last_status && (
+                    <p className="text-[10px] text-slate-400 truncate" title={agent.last_status}>{agent.last_status}</p>
+                  )}
+                  {hoursAgo !== null && (
+                    <p className="text-[10px] text-slate-300">{hoursAgo < 1 ? '剛剛執行' : `${hoursAgo}h 前`}</p>
+                  )}
                 </div>
-                <p className="text-xs text-slate-500 mb-2 leading-tight">{agent.role}</p>
-                <div className="flex items-center justify-between">
-                  {statusBadge(agent.status)}
-                  <span className="text-[10px] text-slate-400">{agent.model}</span>
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </section>
 
