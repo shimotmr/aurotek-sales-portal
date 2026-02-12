@@ -796,16 +796,16 @@ export default function ProductsPage() {
         <div className="fixed inset-0 z-30">
           <div className="absolute inset-0 bg-black/30 transition-opacity" onClick={closeDrawer} />
           <div className={`absolute top-0 right-0 h-full w-full sm:w-[480px] max-w-full bg-white flex flex-col shadow-2xl transform transition-transform duration-300 ${drawerOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-            {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b bg-gray-50">
-              <div className="font-bold text-lg text-gray-800">產品明細</div>
+            {/* Header - sticky so it's always visible */}
+            <div className="flex items-center justify-between px-4 py-3 border-b bg-white sticky top-0 z-10">
               <button 
                 onClick={closeDrawer}
-                className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-500 hover:text-gray-800 hover:bg-gray-200 rounded-lg transition-colors"
+                className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                <span>關閉</span>
-                <span className="text-lg">×</span>
+                <span>←</span>
+                <span>返回目錄</span>
               </button>
+              <div className="font-bold text-sm text-gray-500">產品明細</div>
             </div>
             
             {/* Content */}
