@@ -14,11 +14,21 @@ export async function GET(request: Request) {
   if (!isAdmin && employee_id !== currentUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
   if (!employee_id) return NextResponse.json({ error: 'employee_id required' }, { status: 400 })
 
-  const { data, error } = await supabase
-    .from('employees')
-    .select('employee_id, name, email, department, title')
-    .eq('employee_id', employee_id)
-    .maybeSingle()
+  // Support both emp_code (u2349) and employee_id (email prefix)
+  let data, error
+  if (employee_id.startsWith('u') && /^u\d+$/.test(employee_id)) {
+    ({ data, error } = await supabase
+      .from('employees')
+      .select('employee_id, emp_code, name, email, department, title')
+      .eq('emp_code', employee_id)
+      .maybeSingle())
+  } else {
+    ({ data, error } = await supabase
+      .from('employees')
+      .select('employee_id, emp_code, name, email, department, title')
+      .eq('employee_id', employee_id)
+      .maybeSingle())
+  }
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   if (!data) return NextResponse.json({ error: '查無此工號' }, { status: 404 })
