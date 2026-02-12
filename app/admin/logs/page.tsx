@@ -17,6 +17,18 @@ interface AuditLog {
   created_at: string
 }
 
+const pageNames: Record<string, string> = {
+  '/': '首頁',
+  '/admin': '後台管理',
+  '/admin/logs': '後台管理 / 系統日誌',
+  '/admin/admins': '後台管理 / 管理員',
+  '/performance': '業績總覽',
+  '/products': '產品管理',
+  '/quotations': '報價單',
+  '/cases': '案件管理',
+  '/transcripts': '逐字稿',
+}
+
 type IconCategory = 'login' | 'login_failed' | 'logout' | 'page_view' | 'crud' | 'other'
 
 const actionLabels: Record<string, string> = {
@@ -125,7 +137,15 @@ export default function LogsPage() {
   const formatTime = (ts: string) => {
     try {
       return new Date(ts).toLocaleString('zh-TW', {
-        month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit'
+        hour: '2-digit', minute: '2-digit', hour12: false
+      })
+    } catch { return ts }
+  }
+
+  const formatTimeFull = (ts: string) => {
+    try {
+      return new Date(ts).toLocaleString('zh-TW', {
+        year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit'
       })
     } catch { return ts }
   }
@@ -285,7 +305,7 @@ export default function LogsPage() {
             <tbody className="divide-y divide-slate-50">
               {logs.map((log) => (
                 <tr key={log.id} className="hover:bg-slate-50/50 transition">
-                  <td className="py-2 px-4 text-xs text-slate-500 font-mono whitespace-nowrap">
+                  <td className="py-2 px-4 text-xs text-slate-500 font-mono whitespace-nowrap" title={formatTimeFull(log.created_at)}>
                     {formatTime(log.created_at)}
                   </td>
                   <td className="py-2 px-3 text-center">
@@ -294,9 +314,13 @@ export default function LogsPage() {
                   <td className="py-2 px-4 text-sm text-slate-700 whitespace-nowrap">
                     {(log.user_name || '-').replace('@aurotek.com', '')}
                   </td>
-                  <td className="py-2 px-4 text-xs text-slate-500 truncate max-w-xs" title={log.details || ''}>
-                    {log.page && <span className="text-slate-400 mr-1">{log.page}</span>}
-                    {parseDetails(log.details)}
+                  <td className="py-2 px-4 text-xs text-slate-500 truncate max-w-xs" title={log.page || log.details || ''}>
+                    {log.action === 'page_view' && log.page
+                      ? (pageNames[log.page] || log.page)
+                      : log.page
+                        ? (pageNames[log.page] || log.page)
+                        : parseDetails(log.details)
+                    }
                   </td>
                   <td className="py-2 px-4 text-xs text-slate-400 font-mono whitespace-nowrap">
                     {log.ip?.substring(0, 15) || '-'}
