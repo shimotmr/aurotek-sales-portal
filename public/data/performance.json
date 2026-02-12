@@ -1,18 +1,18 @@
 {
   "summary": {
     "totalCases": 881,
-    "activeCases": 333,
+    "activeCases": 332,
     "thisMonth": {
       "month": 2,
-      "actual": 1298,
-      "forecast": 26,
+      "actual": 1299,
+      "forecast": 25,
       "target": 7700,
       "gap": -6376,
       "rate": 17,
       "type": "forecast"
     },
     "ytd": {
-      "shipped": 10162,
+      "shipped": 10163,
       "target": 17500,
       "rate": 58
     }
@@ -29,8 +29,8 @@
     },
     {
       "month": 2,
-      "actual": 1298,
-      "forecast": 26,
+      "actual": 1299,
+      "forecast": 25,
       "target": 7700,
       "gap": -6376,
       "rate": 17,
@@ -130,8 +130,8 @@
   "repStats": [
     {
       "rep": "喬紹恆 (u2625)",
-      "totalShipped": 10162,
-      "totalForecast": 97978,
+      "totalShipped": 10163,
+      "totalForecast": 97977,
       "totalTarget": 52650,
       "rate": 19,
       "caseCount": 483
@@ -213,13 +213,13 @@
     },
     {
       "stage": "待出貨",
-      "count": 7,
-      "amount": 654
+      "count": 6,
+      "amount": 653
     },
     {
       "stage": "已出貨",
-      "count": 75,
-      "amount": 10162
+      "count": 76,
+      "amount": 10163
     },
     {
       "stage": "失敗",
@@ -227,6 +227,6 @@
       "amount": 0
     }
   ],
-  "updatedAt": "2026-02-12T11:00:08.106103",
+  "updatedAt": "2026-02-12T16:00:10.930564",
   "currentMonth": 2
 }
