@@ -57,7 +57,7 @@ export async function updateAdmin(employee_id: string, updates: Partial<Pick<Adm
 
 // 移除管理員
 export async function removeAdmin(employee_id: string): Promise<boolean> {
-  if (employee_id === 'williamhsiao') return false
+  if (employee_id === 'u1612' || employee_id === 'williamhsiao') return false
   const { error, count } = await supabase
     .from('portal_admins')
     .delete()
@@ -66,24 +66,39 @@ export async function removeAdmin(employee_id: string): Promise<boolean> {
   return true
 }
 
-// 檢查是否為管理員
+// 檢查是否為管理員（支援工號 u1612 或 email 帳號 williamhsiao）
 export async function isAdmin(identifier: string): Promise<boolean> {
   const id = identifier.includes('@') ? identifier.split('@')[0] : identifier
-  const { data } = await supabase
+  // Try direct match first
+  let { data } = await supabase
     .from('portal_admins')
     .select('id')
     .eq('employee_id', id)
     .maybeSingle()
+  if (data) return true
+  // Fallback: match by email
+  ;({ data } = await supabase
+    .from('portal_admins')
+    .select('id')
+    .ilike('email', `${id}@%`)
+    .maybeSingle())
   return !!data
 }
 
-// 檢查是否為超級管理員
+// 檢查是否為超級管理員（支援工號或 email 帳號）
 export async function isSuperAdmin(identifier: string): Promise<boolean> {
   const id = identifier.includes('@') ? identifier.split('@')[0] : identifier
-  const { data } = await supabase
+  let { data } = await supabase
     .from('portal_admins')
     .select('role')
     .eq('employee_id', id)
     .maybeSingle()
+  if (!data) {
+    ;({ data } = await supabase
+      .from('portal_admins')
+      .select('role')
+      .ilike('email', `${id}@%`)
+      .maybeSingle())
+  }
   return data?.role === 'super_admin'
 }

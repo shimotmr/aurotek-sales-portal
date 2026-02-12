@@ -14,19 +14,20 @@ export async function GET(request: Request) {
   if (!isAdmin && employee_id !== currentUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
   if (!employee_id) return NextResponse.json({ error: 'employee_id required' }, { status: 400 })
 
-  // Support both emp_code (u2349) and employee_id (email prefix)
+  // 工號查詢（employee_id = u-number）,也支援 email 帳號查詢
   let data, error
-  if (employee_id.startsWith('u') && /^u\d+$/.test(employee_id)) {
-    ({ data, error } = await supabase
+  ;({ data, error } = await supabase
+    .from('employees')
+    .select('employee_id, emp_code, name, email, department, title')
+    .eq('employee_id', employee_id)
+    .maybeSingle())
+  
+  // Fallback: try email prefix match
+  if (!data && !error) {
+    ;({ data, error } = await supabase
       .from('employees')
       .select('employee_id, emp_code, name, email, department, title')
-      .eq('emp_code', employee_id)
-      .maybeSingle())
-  } else {
-    ({ data, error } = await supabase
-      .from('employees')
-      .select('employee_id, emp_code, name, email, department, title')
-      .eq('employee_id', employee_id)
+      .ilike('email', `${employee_id}@%`)
       .maybeSingle())
   }
 
