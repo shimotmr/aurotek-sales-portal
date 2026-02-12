@@ -23,6 +23,16 @@ export async function logActivity(data: LogData): Promise<boolean> {
       .from('logs')
       .insert(entry)
     
+    // 同時寫入 audit_logs
+    await supabase.from('audit_logs').insert({
+      action: data.action,
+      user_id: null,
+      user_name: data.user,
+      ip: data.ip || null,
+      details: typeof data.details === 'string' ? data.details : JSON.stringify(data.details || {}),
+      page: null,
+    }).then(() => {}).catch(() => {})
+    
     if (error) {
       console.error('Failed to log activity:', error)
       return false

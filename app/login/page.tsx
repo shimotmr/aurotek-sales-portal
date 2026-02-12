@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { logActionWithIP } from '@/lib/audit'
 
 function LoginForm() {
   const router = useRouter()
@@ -47,10 +48,15 @@ function LoginForm() {
           localStorage.removeItem('saved_username')
         }
         
+        // 記錄登入成功
+        logActionWithIP('login', JSON.stringify({ redirect }), '/login', username)
+        
         // 登入成功，跳轉到原始頁面
         router.push(redirect)
         router.refresh()
       } else {
+        // 記錄登入失敗
+        logActionWithIP('login_failed', JSON.stringify({ reason: data.message }), '/login', username)
         setError(data.message || '登入失敗')
       }
     } catch (err) {

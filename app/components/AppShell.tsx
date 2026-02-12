@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
+import { logAction } from '@/lib/audit'
 
 // Navigation data
 interface NavItem {
@@ -118,6 +119,8 @@ export default function AppShell({ children }: AppShellProps) {
   const [isAdmin, setIsAdmin] = useState(false)
   const [moreOpen, setMoreOpen] = useState(false)
 
+  const lastLoggedPath = useRef('')
+
   useEffect(() => {
     // Read cookies
     const name = document.cookie.split(';').map(c => c.trim()).find(c => c.startsWith('user_name='))
@@ -126,6 +129,14 @@ export default function AppShell({ children }: AppShellProps) {
     const admin = document.cookie.split(';').some(c => c.trim().startsWith('is_admin=true'))
     setIsAdmin(admin)
   }, [])
+
+  // 管理員頁面瀏覽日誌
+  useEffect(() => {
+    if (isAdmin && pathname && pathname !== lastLoggedPath.current) {
+      lastLoggedPath.current = pathname
+      logAction('page_view', pathname, pathname)
+    }
+  }, [pathname, isAdmin])
 
   const isActive = (href: string) => {
     if (href === '/') return pathname === '/'
