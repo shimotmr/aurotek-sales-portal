@@ -417,7 +417,7 @@ export default function AgentsPage() {
           <p className="text-center text-xs text-slate-300 mt-2">每 30 秒自動刷新</p>
         </section>
 
-        {/* Task Queue (agent_tasks) */}
+        {/* // Phase 3 啟用時恢復此區塊
         <section>
           <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
             <IconRefresh /> 任務佇列（agent_tasks）
@@ -469,6 +469,7 @@ export default function AgentsPage() {
             )}
           </div>
         </section>
+        */}
 
         {/* Architecture Note */}
         <section className="bg-white rounded-xl shadow-sm border border-slate-100 p-4">
