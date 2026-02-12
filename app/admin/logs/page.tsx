@@ -156,7 +156,7 @@ export default function LogsPage() {
           onClick={exportCSV}
           className="text-sm px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 transition shadow-sm"
         >
-          📥 匯出 CSV
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 inline-block mr-1 -mt-0.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>匯出 CSV
         </button>
       </div>
 
@@ -220,7 +220,7 @@ export default function LogsPage() {
             onClick={fetchLogs}
             className="text-sm px-3 py-1.5 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition"
           >
-            🔄 重新整理
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 inline-block mr-1 -mt-0.5"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>重新整理
           </button>
           {isLoading && <span className="text-xs text-slate-400">載入中...</span>}
         </div>
