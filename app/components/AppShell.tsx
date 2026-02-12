@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { logAction } from '@/lib/audit'
+import { logActionWithIP } from '@/lib/audit'
 
 // Navigation data
 interface NavItem {
@@ -134,7 +134,7 @@ export default function AppShell({ children }: AppShellProps) {
   useEffect(() => {
     if (isAdmin && pathname && pathname !== lastLoggedPath.current) {
       lastLoggedPath.current = pathname
-      logAction('page_view', pathname, pathname)
+      logActionWithIP('page_view', pathname, pathname)
     }
   }, [pathname, isAdmin])
 
