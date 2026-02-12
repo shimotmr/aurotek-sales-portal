@@ -801,9 +801,10 @@ export default function ProductsPage() {
               <div className="font-bold text-lg text-gray-800">產品明細</div>
               <button 
                 onClick={closeDrawer}
-                className="text-2xl text-gray-400 hover:text-gray-600 w-10 h-10 flex items-center justify-center"
+                className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-500 hover:text-gray-800 hover:bg-gray-200 rounded-lg transition-colors"
               >
-                ×
+                <span>關閉</span>
+                <span className="text-lg">×</span>
               </button>
             </div>
             
@@ -824,11 +825,12 @@ export default function ProductsPage() {
                 <>
                   {/* 產品圖片 */}
                   {selectedProduct.image_url && (
-                    <div className="mb-4 rounded-lg overflow-hidden border">
+                    <div className="mb-4 rounded-lg overflow-hidden border bg-gray-50 flex items-center justify-center" style={{ maxHeight: '200px' }}>
                       <img 
                         src={`https://eznawjbgzmcnkxcisrjj.supabase.co/storage/v1/object/public/product-images/${encodeURIComponent(selectedProduct.image_url)}`}
                         alt={selectedProduct.name}
-                        className="w-full h-auto"
+                        className="max-h-[200px] w-auto object-contain"
+                        loading="lazy"
                         onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
                       />
                     </div>
