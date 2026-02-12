@@ -124,7 +124,6 @@ function DetailTabs({ product, formatPrice }: { product: ProductDetail; formatPr
           ['產品類型(和椿)', product.product_types?.join(', ')],
           ['產品標籤', product.product_tags?.join(', ')],
           ['是否可售', product.is_sellable ? '✓ 是' : '✗ 否'],
-          ['圖片', product.image_url],
         ]
       case 'spec':
         return [
@@ -827,7 +826,7 @@ export default function ProductsPage() {
                   {selectedProduct.image_url && (
                     <div className="mb-4 rounded-lg overflow-hidden border">
                       <img 
-                        src={selectedProduct.image_url} 
+                        src={`https://eznawjbgzmcnkxcisrjj.supabase.co/storage/v1/object/public/product-images/${encodeURIComponent(selectedProduct.image_url)}`}
                         alt={selectedProduct.name}
                         className="w-full h-auto"
                         onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
