@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
+import { LogIn, Eye, Pencil, Settings, LogOut, Download, RefreshCw, Trash2, Plus, Play, FileText, Upload, AlertCircle, MousePointer, ShieldCheck } from 'lucide-react'
 
 interface AuditLog {
   id: string
@@ -16,35 +17,71 @@ interface AuditLog {
   created_at: string
 }
 
-const actionConfig: Record<string, { label: string; color: string }> = {
-  login: { label: '登入', color: 'bg-green-50 text-green-700 border-green-200' },
-  login_failed: { label: '登入失敗', color: 'bg-red-50 text-red-700 border-red-200' },
-  logout: { label: '登出', color: 'bg-slate-50 text-slate-600 border-slate-200' },
-  page_view: { label: '瀏覽頁面', color: 'bg-blue-50 text-blue-700 border-blue-200' },
-  click: { label: '點擊', color: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
-  team_create: { label: '新增業務員', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-  team_update: { label: '編輯業務員', color: 'bg-amber-50 text-amber-700 border-amber-200' },
-  team_delete: { label: '刪除業務員', color: 'bg-red-50 text-red-700 border-red-200' },
-  dealer_create: { label: '新增經銷商', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-  dealer_update: { label: '編輯經銷商', color: 'bg-amber-50 text-amber-700 border-amber-200' },
-  dealer_delete: { label: '刪除經銷商', color: 'bg-red-50 text-red-700 border-red-200' },
-  target_create: { label: '新增目標', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-  target_update: { label: '編輯目標', color: 'bg-amber-50 text-amber-700 border-amber-200' },
-  video_create: { label: '新增影片', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-  video_update: { label: '編輯影片', color: 'bg-amber-50 text-amber-700 border-amber-200' },
-  video_delete: { label: '刪除影片', color: 'bg-red-50 text-red-700 border-red-200' },
-  video_play: { label: '播放影片', color: 'bg-purple-50 text-purple-700 border-purple-200' },
-  slide_create: { label: '新增簡報', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-  slide_update: { label: '編輯簡報', color: 'bg-amber-50 text-amber-700 border-amber-200' },
-  slide_delete: { label: '刪除簡報', color: 'bg-red-50 text-red-700 border-red-200' },
-  slide_open: { label: '開啟簡報', color: 'bg-purple-50 text-purple-700 border-purple-200' },
-  admin_add: { label: '新增管理員', color: 'bg-orange-50 text-orange-700 border-orange-200' },
-  admin_remove: { label: '移除管理員', color: 'bg-orange-50 text-orange-700 border-orange-200' },
-  sync_upload: { label: '上傳同步', color: 'bg-cyan-50 text-cyan-700 border-cyan-200' },
-  sync_complete: { label: '同步完成', color: 'bg-cyan-50 text-cyan-700 border-cyan-200' },
-  system: { label: '系統', color: 'bg-purple-50 text-purple-700 border-purple-200' },
-  error: { label: '錯誤', color: 'bg-red-50 text-red-700 border-red-200' },
+type IconCategory = 'login' | 'login_failed' | 'logout' | 'page_view' | 'crud' | 'other'
+
+const actionLabels: Record<string, string> = {
+  login: '登入',
+  login_failed: '登入失敗',
+  logout: '登出',
+  page_view: '瀏覽頁面',
+  click: '點擊',
+  team_create: '新增業務員',
+  team_update: '編輯業務員',
+  team_delete: '刪除業務員',
+  dealer_create: '新增經銷商',
+  dealer_update: '編輯經銷商',
+  dealer_delete: '刪除經銷商',
+  target_create: '新增目標',
+  target_update: '編輯目標',
+  video_create: '新增影片',
+  video_update: '編輯影片',
+  video_delete: '刪除影片',
+  video_play: '播放影片',
+  slide_create: '新增簡報',
+  slide_update: '編輯簡報',
+  slide_delete: '刪除簡報',
+  slide_open: '開啟簡報',
+  admin_add: '新增管理員',
+  admin_remove: '移除管理員',
+  sync_upload: '上傳同步',
+  sync_complete: '同步完成',
+  system: '系統',
+  error: '錯誤',
 }
+
+function getIconCategory(action: string): IconCategory {
+  if (action === 'login') return 'login'
+  if (action === 'login_failed') return 'login_failed'
+  if (action === 'logout') return 'logout'
+  if (action === 'page_view' || action === 'click' || action === 'video_play' || action === 'slide_open') return 'page_view'
+  if (action.includes('create') || action.includes('update') || action.includes('delete') || action === 'sync_upload' || action === 'sync_complete' || action === 'admin_add' || action === 'admin_remove') return 'crud'
+  return 'other'
+}
+
+function ActionIcon({ action }: { action: string }) {
+  const cat = getIconCategory(action)
+  const label = actionLabels[action] || action
+  const base = 'w-4 h-4'
+  let icon
+  switch (cat) {
+    case 'login': icon = <LogIn className={`${base} text-green-600`} />; break
+    case 'login_failed': icon = <LogIn className={`${base} text-red-500`} />; break
+    case 'logout': icon = <LogOut className={`${base} text-slate-500`} />; break
+    case 'page_view': icon = <Eye className={`${base} text-blue-500`} />; break
+    case 'crud': icon = <Pencil className={`${base} text-orange-500`} />; break
+    default: icon = <Settings className={`${base} text-slate-400`} />; break
+  }
+  return <span title={label} className="cursor-help">{icon}</span>
+}
+
+const legendItems = [
+  { icon: <LogIn className="w-3.5 h-3.5 text-green-600" />, label: '登入' },
+  { icon: <LogIn className="w-3.5 h-3.5 text-red-500" />, label: '登入失敗' },
+  { icon: <LogOut className="w-3.5 h-3.5 text-slate-500" />, label: '登出' },
+  { icon: <Eye className="w-3.5 h-3.5 text-blue-500" />, label: '瀏覽' },
+  { icon: <Pencil className="w-3.5 h-3.5 text-orange-500" />, label: '資料操作' },
+  { icon: <Settings className="w-3.5 h-3.5 text-slate-400" />, label: '其他' },
+]
 
 export default function LogsPage() {
   const [logs, setLogs] = useState<AuditLog[]>([])
@@ -85,11 +122,6 @@ export default function LogsPage() {
     return () => clearInterval(interval)
   }, [fetchLogs])
 
-  const getActionBadge = (action: string) => {
-    const config = actionConfig[action] || { label: action, color: 'bg-slate-50 text-slate-600 border-slate-200' }
-    return <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium border ${config.color}`}>{config.label}</span>
-  }
-
   const formatTime = (ts: string) => {
     try {
       return new Date(ts).toLocaleString('zh-TW', {
@@ -116,7 +148,7 @@ export default function LogsPage() {
     const headers = ['時間', '操作', '用戶', 'IP', '詳情', '頁面']
     const rows = logs.map(log => [
       formatTime(log.created_at),
-      actionConfig[log.action]?.label || log.action,
+      actionLabels[log.action] || log.action,
       log.user_name,
       log.ip || '',
       parseDetails(log.details),
@@ -131,7 +163,6 @@ export default function LogsPage() {
     a.click()
   }
 
-  // Stats
   const stats = {
     total: totalCount,
     logins: logs.filter(l => l.action === 'login').length,
@@ -149,14 +180,15 @@ export default function LogsPage() {
           </Link>
           <div>
             <h1 className="text-lg font-bold text-slate-800">系統日誌</h1>
-            <p className="text-xs text-slate-400">audit_logs · 即時監控</p>
+            <p className="text-xs text-slate-400">audit_logs</p>
           </div>
         </div>
         <button
           onClick={exportCSV}
-          className="text-sm px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 transition shadow-sm"
+          className="text-sm px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 transition shadow-sm flex items-center gap-1.5"
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 inline-block mr-1 -mt-0.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>匯出 CSV
+          <Download className="w-4 h-4" />
+          匯出 CSV
         </button>
       </div>
 
@@ -176,7 +208,7 @@ export default function LogsPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 mb-4">
+      <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 mb-2">
         <div className="flex flex-wrap gap-3 items-center">
           <input
             type="text"
@@ -218,49 +250,62 @@ export default function LogsPage() {
           </select>
           <button
             onClick={fetchLogs}
-            className="text-sm px-3 py-1.5 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition"
+            className="text-sm px-3 py-1.5 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition flex items-center gap-1.5"
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 inline-block mr-1 -mt-0.5"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>重新整理
+            <RefreshCw className="w-4 h-4" />
+            重新整理
           </button>
           {isLoading && <span className="text-xs text-slate-400">載入中...</span>}
         </div>
       </div>
 
+      {/* Legend */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-1 mb-2 text-xs text-slate-500">
+        {legendItems.map(item => (
+          <span key={item.label} className="inline-flex items-center gap-1">
+            {item.icon}
+            {item.label}
+          </span>
+        ))}
+      </div>
+
       {/* Logs Table */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-slate-100">
-              <th className="text-left py-2.5 px-4 text-xs font-medium text-slate-400 uppercase tracking-wider w-36">時間</th>
-              <th className="text-left py-2.5 px-4 text-xs font-medium text-slate-400 uppercase tracking-wider w-28">操作</th>
-              <th className="text-left py-2.5 px-4 text-xs font-medium text-slate-400 uppercase tracking-wider w-28">用戶</th>
-              <th className="text-left py-2.5 px-4 text-xs font-medium text-slate-400 uppercase tracking-wider">詳情</th>
-              <th className="text-left py-2.5 px-4 text-xs font-medium text-slate-400 uppercase tracking-wider w-24">IP</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-50">
-            {logs.map((log) => (
-              <tr key={log.id} className="hover:bg-slate-50/50 transition">
-                <td className="py-2 px-4 text-xs text-slate-500 font-mono">
-                  {formatTime(log.created_at)}
-                </td>
-                <td className="py-2 px-4">
-                  {getActionBadge(log.action)}
-                </td>
-                <td className="py-2 px-4 text-sm text-slate-700">
-                  {(log.user_name || '-').replace('@aurotek.com', '')}
-                </td>
-                <td className="py-2 px-4 text-xs text-slate-500 truncate max-w-xs" title={log.details || ''}>
-                  {log.page && <span className="text-slate-400 mr-1">{log.page}</span>}
-                  {parseDetails(log.details)}
-                </td>
-                <td className="py-2 px-4 text-xs text-slate-400 font-mono">
-                  {log.ip?.substring(0, 15) || '-'}
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[640px]">
+            <thead>
+              <tr className="border-b border-slate-100">
+                <th className="text-left py-2.5 px-4 text-xs font-medium text-slate-400 uppercase tracking-wider w-36">時間</th>
+                <th className="text-center py-2.5 px-3 text-xs font-medium text-slate-400 uppercase tracking-wider w-12">操作</th>
+                <th className="text-left py-2.5 px-4 text-xs font-medium text-slate-400 uppercase tracking-wider w-28">用戶</th>
+                <th className="text-left py-2.5 px-4 text-xs font-medium text-slate-400 uppercase tracking-wider">詳情</th>
+                <th className="text-left py-2.5 px-4 text-xs font-medium text-slate-400 uppercase tracking-wider w-24">IP</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-slate-50">
+              {logs.map((log) => (
+                <tr key={log.id} className="hover:bg-slate-50/50 transition">
+                  <td className="py-2 px-4 text-xs text-slate-500 font-mono whitespace-nowrap">
+                    {formatTime(log.created_at)}
+                  </td>
+                  <td className="py-2 px-3 text-center">
+                    <ActionIcon action={log.action} />
+                  </td>
+                  <td className="py-2 px-4 text-sm text-slate-700 whitespace-nowrap">
+                    {(log.user_name || '-').replace('@aurotek.com', '')}
+                  </td>
+                  <td className="py-2 px-4 text-xs text-slate-500 truncate max-w-xs" title={log.details || ''}>
+                    {log.page && <span className="text-slate-400 mr-1">{log.page}</span>}
+                    {parseDetails(log.details)}
+                  </td>
+                  <td className="py-2 px-4 text-xs text-slate-400 font-mono whitespace-nowrap">
+                    {log.ip?.substring(0, 15) || '-'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
         {logs.length === 0 && !isLoading && (
           <div className="text-center py-16 text-slate-400 text-sm">
