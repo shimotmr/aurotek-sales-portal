@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import UserMenu from './components/UserMenu'
+import { MobileTabBar } from './components/AppShell'
 
 // SVG Icons as components — clean, consistent, scalable
 const icons = {
@@ -232,10 +233,13 @@ export default function Home() {
         })}
 
         {/* Footer */}
-        <footer className="text-center text-xs text-slate-400 mt-8 pb-6">
+        <footer className="text-center text-xs text-slate-400 mt-8 pb-20 md:pb-6">
           Aurotek Sales Portal · Powered by Jarvis 🤖
         </footer>
       </div>
+
+      {/* Mobile Tab Bar */}
+      <MobileTabBar />
     </main>
   )
 }

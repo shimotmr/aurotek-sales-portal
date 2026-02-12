@@ -115,8 +115,8 @@ export default function QuotationDetailPage({ params }: { params: Promise<{ id: 
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 z-10">
+      {/* Page Header */}
+      <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 md:top-0 z-10">
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link href="/quotations" className="text-slate-400 hover:text-slate-600 transition">
@@ -126,7 +126,7 @@ export default function QuotationDetailPage({ params }: { params: Promise<{ id: 
               <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd"/></svg>
             </div>
             <div>
-              <span className="font-bold text-slate-800 text-sm sm:text-base font-mono">{quotation.quotation_no}</span>
+              <span className="font-bold text-slate-800 text-sm sm:text-base">報價單詳情</span>
               <span className="ml-2 px-2 py-0.5 rounded-full text-xs font-medium" style={{ backgroundColor: st.bg, color: st.color }}>
                 {st.label}
               </span>

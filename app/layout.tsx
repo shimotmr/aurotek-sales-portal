@@ -1,6 +1,7 @@
 import './globals.css'
 import type { Metadata } from 'next'
 import { TrackingProvider } from './components/TrackingProvider'
+import LayoutWrapper from './components/LayoutWrapper'
 
 export const metadata: Metadata = {
   title: '和椿通路營業管理系統',
@@ -16,7 +17,9 @@ export default function RootLayout({
     <html lang="zh-TW">
       <body>
         <TrackingProvider>
-          {children}
+          <LayoutWrapper>
+            {children}
+          </LayoutWrapper>
         </TrackingProvider>
       </body>
     </html>
