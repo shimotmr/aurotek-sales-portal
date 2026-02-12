@@ -17,7 +17,7 @@ export async function POST(request: Request) {
   if (!isSuperAdmin) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
 
   try {
-    const { employee_id, email, nickname, role } = await request.json()
+    const { employee_id, email, nickname, role, name, title } = await request.json()
     if (!employee_id) return NextResponse.json({ error: '帳號為必填' }, { status: 400 })
 
     const result = await addAdmin({
@@ -26,6 +26,8 @@ export async function POST(request: Request) {
       nickname: nickname || null,
       role: role === 'super_admin' ? 'super_admin' : 'admin',
       added_by: currentUser,
+      name: name || null,
+      title: title || null,
     })
 
     if (!result.success) return NextResponse.json({ error: result.error }, { status: 400 })

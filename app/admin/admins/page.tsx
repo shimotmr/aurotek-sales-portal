@@ -26,13 +26,14 @@ const RoleIcon = ({ role }: { role: string }) => role === 'super_admin' ? (
 
 export default function AdminsManagementPage() {
   const [admins, setAdmins] = useState<Admin[]>([])
-  const [form, setForm] = useState({ employee_id: '', email: '', nickname: '', role: 'admin' as const })
+  const [form, setForm] = useState({ employee_id: '', email: '', nickname: '', role: 'admin' as const, name: '', title: '' })
   const [isSuperAdmin, setIsSuperAdmin] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [msg, setMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
   const [editing, setEditing] = useState<string | null>(null)
   const [editForm, setEditForm] = useState({ email: '', nickname: '', role: 'admin' as string })
+  const [lookupLoading, setLookupLoading] = useState(false)
 
   const fetchAdmins = useCallback(async () => {
     try {
@@ -52,6 +53,26 @@ export default function AdminsManagementPage() {
 
   const flash = (type: 'ok' | 'err', text: string) => { setMsg({ type, text }); setTimeout(() => setMsg(null), 3000) }
 
+  const lookupEmployee = async (eid: string) => {
+    if (!eid || eid.length < 2) return
+    setLookupLoading(true)
+    try {
+      const res = await fetch(`/api/employees/lookup?employee_id=${encodeURIComponent(eid)}`)
+      if (res.ok) {
+        const data = await res.json()
+        setForm(prev => ({
+          ...prev,
+          name: data.name || '',
+          email: data.email || '',
+          nickname: data.name || '',
+          title: data.title || '',
+        }))
+        flash('ok', `已帶入 ${data.name} 的資料`)
+      }
+    } catch {}
+    setLookupLoading(false)
+  }
+
   const handleAdd = async () => {
     if (!form.employee_id) return
     const res = await fetch('/api/admins', {
@@ -61,7 +82,7 @@ export default function AdminsManagementPage() {
     const data = await res.json()
     if (res.ok) {
       flash('ok', `已新增 ${form.nickname || form.employee_id}`)
-      setForm({ employee_id: '', email: '', nickname: '', role: 'admin' })
+      setForm({ employee_id: '', email: '', nickname: '', role: 'admin', name: '', title: '' })
       setShowForm(false)
       fetchAdmins()
     } else flash('err', data.error || '新增失敗')
@@ -151,25 +172,53 @@ export default function AdminsManagementPage() {
               </button>
             </div>
             <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] font-medium text-slate-500 mb-1">工號 *</label>
+              {/* 工號 + 查詢按鈕 */}
+              <div>
+                <label className="block text-[11px] font-medium text-slate-500 mb-1">工號 *（輸入後點查詢自動帶入資料）</label>
+                <div className="flex gap-2">
                   <input
                     type="text" placeholder="u1234"
                     value={form.employee_id} onChange={e => setForm({ ...form, employee_id: e.target.value })}
+                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); lookupEmployee(form.employee_id) } }}
+                    className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:bg-white transition"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => lookupEmployee(form.employee_id)}
+                    disabled={!form.employee_id || lookupLoading}
+                    className="px-4 py-2 bg-slate-100 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-200 disabled:opacity-40 transition whitespace-nowrap"
+                  >
+                    {lookupLoading ? '查詢中...' : '🔍 查詢'}
+                  </button>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-medium text-slate-500 mb-1">姓名</label>
+                  <input
+                    type="text" placeholder="王小明"
+                    value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:bg-white transition"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-medium text-slate-500 mb-1">別名</label>
+                  <label className="block text-[11px] font-medium text-slate-500 mb-1">職稱</label>
                   <input
-                    type="text" placeholder="王小明"
-                    value={form.nickname} onChange={e => setForm({ ...form, nickname: e.target.value })}
+                    type="text" placeholder="經理"
+                    value={form.title} onChange={e => setForm({ ...form, title: e.target.value })}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:bg-white transition"
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-medium text-slate-500 mb-1">別名</label>
+                  <input
+                    type="text" placeholder="暱稱"
+                    value={form.nickname} onChange={e => setForm({ ...form, nickname: e.target.value })}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:bg-white transition"
+                  />
+                </div>
                 <div>
                   <label className="block text-[11px] font-medium text-slate-500 mb-1">郵箱</label>
                   <input
@@ -178,16 +227,16 @@ export default function AdminsManagementPage() {
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:bg-white transition"
                   />
                 </div>
-                <div>
-                  <label className="block text-[11px] font-medium text-slate-500 mb-1">權限</label>
-                  <select
-                    value={form.role} onChange={e => setForm({ ...form, role: e.target.value as any })}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:border-blue-400 focus:outline-none bg-white"
-                  >
-                    <option value="admin">一般管理員</option>
-                    <option value="super_admin">超級管理員</option>
-                  </select>
-                </div>
+              </div>
+              <div>
+                <label className="block text-[11px] font-medium text-slate-500 mb-1">權限</label>
+                <select
+                  value={form.role} onChange={e => setForm({ ...form, role: e.target.value as any })}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:border-blue-400 focus:outline-none bg-white"
+                >
+                  <option value="admin">一般管理員</option>
+                  <option value="super_admin">超級管理員</option>
+                </select>
               </div>
               <button
                 onClick={handleAdd} disabled={!form.employee_id}

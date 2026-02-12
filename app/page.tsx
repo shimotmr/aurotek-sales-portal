@@ -140,8 +140,21 @@ export default function Home() {
     else if (hour < 18) setGreeting('午安')
     else setGreeting('晚安')
 
-    const name = document.cookie.split(';').map(c => c.trim()).find(c => c.startsWith('user_name='))
-    if (name) setUserName(decodeURIComponent(name.split('=')[1]).split('@')[0])
+    const nameCookie = document.cookie.split(';').map(c => c.trim()).find(c => c.startsWith('user_name='))
+    const employeeId = nameCookie ? decodeURIComponent(nameCookie.split('=')[1]).split('@')[0] : ''
+    if (employeeId) {
+      setUserName(employeeId)
+      // 從 employees 表查詢姓名+職稱
+      fetch(`/api/employees/lookup?employee_id=${encodeURIComponent(employeeId)}`)
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data?.name) {
+            const display = data.title ? `${data.name} ${data.title}` : data.name
+            setUserName(display)
+          }
+        })
+        .catch(() => {})
+    }
 
     const admin = document.cookie.split(';').some(c => c.trim().startsWith('is_admin=true'))
     setIsAdmin(admin)

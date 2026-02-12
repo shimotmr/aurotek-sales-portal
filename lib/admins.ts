@@ -5,6 +5,8 @@ export interface Admin {
   employee_id: string
   email: string | null
   nickname: string | null
+  name: string | null
+  title: string | null
   role: 'admin' | 'super_admin'
   added_by: string
   created_at?: string
@@ -22,13 +24,15 @@ export async function getAdminList(): Promise<Admin[]> {
 }
 
 // 新增管理員
-export async function addAdmin(admin: Pick<Admin, 'employee_id' | 'email' | 'nickname' | 'role' | 'added_by'>): Promise<{ success: boolean; admin?: Admin; error?: string }> {
+export async function addAdmin(admin: Pick<Admin, 'employee_id' | 'email' | 'nickname' | 'role' | 'added_by' | 'name' | 'title'>): Promise<{ success: boolean; admin?: Admin; error?: string }> {
   const { data, error } = await supabase
     .from('portal_admins')
     .insert({
       employee_id: admin.employee_id,
       email: admin.email || null,
       nickname: admin.nickname || null,
+      name: admin.name || null,
+      title: admin.title || null,
       role: admin.role,
       added_by: admin.added_by,
     })
