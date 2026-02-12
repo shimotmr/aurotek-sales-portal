@@ -793,7 +793,7 @@ export default function ProductsPage() {
 
       {/* Detail Drawer */}
       {drawerOpen && (
-        <div className="fixed inset-0 z-30">
+        <div className="fixed inset-0 z-50">
           <div className="absolute inset-0 bg-black/30 transition-opacity" onClick={closeDrawer} />
           <div className={`absolute top-0 right-0 h-full w-full sm:w-[480px] max-w-full bg-white flex flex-col shadow-2xl transform transition-transform duration-300 ${drawerOpen ? 'translate-x-0' : 'translate-x-full'}`}>
             {/* Header - sticky so it's always visible */}
@@ -839,7 +839,21 @@ export default function ProductsPage() {
                   {/* 標題區 */}
                   <div className="mb-4">
                     <div className="font-mono text-sm text-gray-500 mb-1">{selectedProduct.aurotek_pn}</div>
-                    <h2 className="text-lg font-bold text-gray-900">{selectedProduct.spec || selectedProduct.name}</h2>
+                    <h2 className="text-lg font-bold text-gray-900">
+                      {(() => {
+                        const text = selectedProduct.spec || selectedProduct.name
+                        const match = text.match(/^([^(（]+)([(（].+[)）])$/)
+                        if (match) {
+                          return (
+                            <>
+                              {match[1].trim()}
+                              <span className="text-sm font-normal text-gray-400 ml-1">{match[2]}</span>
+                            </>
+                          )
+                        }
+                        return text
+                      })()}
+                    </h2>
                     {selectedProduct.list_price && (
                       <div className="text-xl font-bold text-[#E60012] mt-1">
                         NT$ {formatPrice(selectedProduct.list_price)}
