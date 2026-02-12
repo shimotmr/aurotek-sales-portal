@@ -86,6 +86,23 @@ const AGENT_ICONS: Record<string, () => JSX.Element> = {
   trader: IconChart,
 }
 
+const AGENT_LETTERS: Record<string, string> = {
+  main: 'J', secretary: 'S', inspector: 'I', researcher: 'R', writer: 'W', trader: 'T',
+}
+
+// Compact colored badge: single letter + color dot
+const AgentBadge = ({ agentId }: { agentId: string }) => {
+  const letter = AGENT_LETTERS[agentId] || agentId?.[0]?.toUpperCase() || '?'
+  const color = AGENT_COLORS[agentId] || '#6B7280'
+  return (
+    <span
+      className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold text-white shrink-0"
+      style={{ backgroundColor: color }}
+      title={agentId}
+    >{letter}</span>
+  )
+}
+
 const CRON_JOBS = [
   { time: '01:00', name: 'Pipeline 風險日報', agent: 'secretary', type: 'spawn' },
   { time: '02:00', name: 'AI 動態研究', agent: 'researcher', type: 'spawn' },
@@ -311,9 +328,7 @@ export default function AgentsPage() {
                       <td className="px-4 py-2 font-mono text-xs text-slate-500">{job.time}</td>
                       <td className="px-4 py-2 text-slate-900">{job.name}</td>
                       <td className="px-4 py-2">
-                        <span className="inline-flex items-center gap-1 text-xs" style={{ color: agentColor(job.agent) }}>
-                          <AgentIcon agentId={job.agent} /> {job.agent}
-                        </span>
+                        <AgentBadge agentId={job.agent} />
                       </td>
                       <td className="px-4 py-2">
                         <span className={`inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded ${
@@ -373,9 +388,10 @@ export default function AgentsPage() {
                       >
                         <span className="text-xs font-mono text-slate-400 w-11 shrink-0">{fmtTime(run.started_at)}</span>
                         <RunStatusIcon status={run.status} />
+                        <AgentBadge agentId={run.agent} />
                         <div className="flex-1 min-w-0">
                           <span className="text-sm font-medium text-slate-900">{run.task_name}</span>
-                          <span className="text-xs text-slate-400 ml-2">{run.agent}{dur !== null ? ` · ${dur}s` : ''}</span>
+                          {dur !== null && <span className="text-xs text-slate-400 ml-2">{dur}s</span>}
                         </div>
                         <span className="text-xs px-2 py-0.5 rounded-full font-medium shrink-0" style={{ background: s.bg, color: s.color }}>{s.label}</span>
                         {hasUrl ? (
@@ -438,9 +454,7 @@ export default function AgentsPage() {
                           </td>
                           <td className="px-4 py-2 text-slate-900">{task.task_type}</td>
                           <td className="px-4 py-2">
-                            <span className="inline-flex items-center gap-1 text-xs" style={{ color: agentColor(task.assigned_to) }}>
-                              <AgentIcon agentId={task.assigned_to} /> {task.assigned_to}
-                            </span>
+                            <AgentBadge agentId={task.assigned_to} />
                           </td>
                           <td className="px-4 py-2">{statusBadge(task.status)}</td>
                           <td className="px-4 py-2 text-xs text-slate-500">
@@ -483,7 +497,7 @@ export default function AgentsPage() {
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 shrink-0">
               <div className="flex-1 min-w-0">
                 <h3 className="font-bold text-slate-900 truncate">{modalRun.task_name}</h3>
-                <p className="text-xs text-slate-400">{modalRun.agent} · {fmtTime(modalRun.started_at)}</p>
+                <p className="text-xs text-slate-400 flex items-center gap-1"><AgentBadge agentId={modalRun.agent} /> {fmtTime(modalRun.started_at)}</p>
               </div>
               <div className="flex items-center gap-2 ml-3 shrink-0">
                 <a href={modalRun.result_url!} target="_blank" rel="noopener noreferrer"
