@@ -1,80 +1,85 @@
-// 管理員資料結構
+import { supabase } from './supabase'
+
 export interface Admin {
-  email: string
-  name: string
+  id?: number
+  employee_id: string
+  email: string | null
+  nickname: string | null
   role: 'admin' | 'super_admin'
-  addedAt: string
-  addedBy: string
+  added_by: string
+  created_at?: string
+  updated_at?: string
 }
-
-// 預設管理員
-const DEFAULT_ADMINS: Admin[] = [
-  { 
-    email: 'williamhsiao@aurotek.com', 
-    name: 'williamhsiao', 
-    role: 'super_admin', 
-    addedAt: '2026-02-01', 
-    addedBy: 'system' 
-  }
-]
-
-// 從環境變數讀取額外管理員
-// 格式: EXTRA_ADMINS=email1:role1,email2:role2
-function getExtraAdmins(): Admin[] {
-  const extraAdminsStr = process.env.EXTRA_ADMINS || ''
-  if (!extraAdminsStr) return []
-  
-  return extraAdminsStr.split(',').map(item => {
-    const [email, role] = item.split(':')
-    if (!email) return null
-    return {
-      email: email.includes('@') ? email : `${email}@aurotek.com`,
-      name: email.split('@')[0],
-      role: (role === 'super_admin' ? 'super_admin' : 'admin') as 'admin' | 'super_admin',
-      addedAt: '2026-02-01',
-      addedBy: 'env'
-    }
-  }).filter((a): a is Admin => a !== null)
-}
-
-// 全局管理員列表（在 serverless 環境中每個實例獨立）
-let adminList: Admin[] = [...DEFAULT_ADMINS, ...getExtraAdmins()]
 
 // 取得所有管理員
-export function getAdminList(): Admin[] {
-  return [...adminList]
+export async function getAdminList(): Promise<Admin[]> {
+  const { data, error } = await supabase
+    .from('portal_admins')
+    .select('*')
+    .order('created_at', { ascending: true })
+  if (error) { console.error('getAdminList error:', error); return [] }
+  return data || []
 }
 
 // 新增管理員
-export function addAdmin(admin: Admin): boolean {
-  if (adminList.some(a => a.email === admin.email)) {
-    return false
+export async function addAdmin(admin: Pick<Admin, 'employee_id' | 'email' | 'nickname' | 'role' | 'added_by'>): Promise<{ success: boolean; admin?: Admin; error?: string }> {
+  const { data, error } = await supabase
+    .from('portal_admins')
+    .insert({
+      employee_id: admin.employee_id,
+      email: admin.email || null,
+      nickname: admin.nickname || null,
+      role: admin.role,
+      added_by: admin.added_by,
+    })
+    .select()
+    .single()
+  if (error) {
+    if (error.code === '23505') return { success: false, error: '此帳號已是管理員' }
+    return { success: false, error: error.message }
   }
-  adminList.push(admin)
+  return { success: true, admin: data }
+}
+
+// 更新管理員
+export async function updateAdmin(employee_id: string, updates: Partial<Pick<Admin, 'email' | 'nickname' | 'role'>>): Promise<boolean> {
+  const { error } = await supabase
+    .from('portal_admins')
+    .update({ ...updates, updated_at: new Date().toISOString() })
+    .eq('employee_id', employee_id)
+  if (error) { console.error('updateAdmin error:', error); return false }
   return true
 }
 
 // 移除管理員
-export function removeAdmin(email: string): boolean {
-  if (email === 'williamhsiao@aurotek.com') {
-    return false
-  }
-  const before = adminList.length
-  adminList = adminList.filter(a => a.email !== email)
-  return adminList.length < before
+export async function removeAdmin(employee_id: string): Promise<boolean> {
+  if (employee_id === 'williamhsiao') return false
+  const { error, count } = await supabase
+    .from('portal_admins')
+    .delete()
+    .eq('employee_id', employee_id)
+  if (error) { console.error('removeAdmin error:', error); return false }
+  return true
 }
 
 // 檢查是否為管理員
-export function isAdmin(email: string): boolean {
-  const normalized = email.includes('@') ? email : `${email}@aurotek.com`
-  const name = normalized.split('@')[0]
-  return adminList.some(a => a.email === normalized || a.name === name)
+export async function isAdmin(identifier: string): Promise<boolean> {
+  const id = identifier.includes('@') ? identifier.split('@')[0] : identifier
+  const { data } = await supabase
+    .from('portal_admins')
+    .select('id')
+    .eq('employee_id', id)
+    .maybeSingle()
+  return !!data
 }
 
 // 檢查是否為超級管理員
-export function isSuperAdmin(email: string): boolean {
-  const normalized = email.includes('@') ? email : `${email}@aurotek.com`
-  const name = normalized.split('@')[0]
-  const admin = adminList.find(a => a.email === normalized || a.name === name)
-  return admin?.role === 'super_admin'
+export async function isSuperAdmin(identifier: string): Promise<boolean> {
+  const id = identifier.includes('@') ? identifier.split('@')[0] : identifier
+  const { data } = await supabase
+    .from('portal_admins')
+    .select('role')
+    .eq('employee_id', id)
+    .maybeSingle()
+  return data?.role === 'super_admin'
 }

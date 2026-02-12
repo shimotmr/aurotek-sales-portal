@@ -19,8 +19,8 @@ export async function POST(request: Request) {
     
     if (isValid) {
       // 檢查是否為管理員（從共用模組讀取）
-      const isUserAdmin = isAdmin(account)
-      const isUserSuperAdmin = isSuperAdmin(account)
+      const isUserAdmin = await isAdmin(account)
+      const isUserSuperAdmin = await isSuperAdmin(account)
       
       // 生成 session token
       const token = generateToken()

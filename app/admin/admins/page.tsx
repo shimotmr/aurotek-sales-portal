@@ -1,123 +1,100 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import Link from 'next/link'
 
 interface Admin {
-  email: string
-  name: string
+  id: number
+  employee_id: string
+  email: string | null
+  nickname: string | null
   role: 'admin' | 'super_admin'
-  addedAt: string
-  addedBy: string
+  added_by: string
+  created_at: string
 }
 
 export default function AdminsManagementPage() {
   const [admins, setAdmins] = useState<Admin[]>([])
-  const [newEmail, setNewEmail] = useState('')
-  const [newRole, setNewRole] = useState<'admin' | 'super_admin'>('admin')
+  const [form, setForm] = useState({ employee_id: '', email: '', nickname: '', role: 'admin' as const })
   const [isSuperAdmin, setIsSuperAdmin] = useState(false)
   const [currentUser, setCurrentUser] = useState('')
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
+  const [msg, setMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
+  const [editing, setEditing] = useState<string | null>(null)
+  const [editForm, setEditForm] = useState({ email: '', nickname: '', role: 'admin' as string })
 
   const fetchAdmins = useCallback(async () => {
     try {
       const res = await fetch('/api/admins')
-      if (res.ok) {
-        const data = await res.json()
-        setAdmins(data.admins || [])
-      } else if (res.status === 403) {
-        setError('權限不足')
-      }
-    } catch (err) {
-      console.error('Failed to fetch admins:', err)
-      setError('讀取管理員名單失敗')
-    }
+      if (res.ok) { const data = await res.json(); setAdmins(data.admins || []) }
+      else if (res.status === 403) setMsg({ type: 'err', text: '權限不足' })
+    } catch { setMsg({ type: 'err', text: '讀取管理員名單失敗' }) }
     setIsLoading(false)
   }, [])
 
   useEffect(() => {
-    // 從 cookie 讀取當前用戶權限
-    const getCookie = (name: string) => {
-      const value = `; ${document.cookie}`
-      const parts = value.split(`; ${name}=`)
-      if (parts.length === 2) return parts.pop()?.split(';').shift()
-      return ''
-    }
-    
-    const superAdmin = getCookie('is_super_admin') === 'true'
-    setIsSuperAdmin(superAdmin)
-    setCurrentUser(getCookie('user_email') || '')
-    
-    if (superAdmin) {
-      fetchAdmins()
-    } else {
-      setIsLoading(false)
-    }
+    const gc = (n: string) => { const v = `; ${document.cookie}`; const p = v.split(`; ${n}=`); return p.length === 2 ? p.pop()?.split(';').shift() || '' : '' }
+    const sa = gc('is_super_admin') === 'true'
+    setIsSuperAdmin(sa)
+    setCurrentUser(gc('user_name') || '')
+    if (sa) fetchAdmins()
+    else setIsLoading(false)
   }, [fetchAdmins])
 
-  const handleAddAdmin = async () => {
-    if (!newEmail) return
-    
-    setError('')
-    setSuccess('')
-    
+  const flash = (type: 'ok' | 'err', text: string) => { setMsg({ type, text }); setTimeout(() => setMsg(null), 3000) }
+
+  const handleAdd = async () => {
+    if (!form.employee_id) return
     try {
       const res = await fetch('/api/admins', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: newEmail, role: newRole })
+        body: JSON.stringify(form),
       })
-      
       const data = await res.json()
-      
-      if (res.ok) {
-        setSuccess(`已新增管理員：${data.admin.email}`)
-        setNewEmail('')
-        fetchAdmins()
-      } else {
-        setError(data.error || '新增失敗')
-      }
-    } catch (err) {
-      setError('新增管理員失敗')
-    }
+      if (res.ok) { flash('ok', `已新增：${form.nickname || form.employee_id}`); setForm({ employee_id: '', email: '', nickname: '', role: 'admin' }); fetchAdmins() }
+      else flash('err', data.error || '新增失敗')
+    } catch { flash('err', '新增失敗') }
   }
 
-  const handleRemoveAdmin = async (email: string) => {
-    if (!confirm(`確定要移除 ${email} 的管理員權限嗎？`)) return
-    
-    setError('')
-    setSuccess('')
-    
+  const handleRemove = async (admin: Admin) => {
+    if (!confirm(`確定移除 ${admin.nickname || admin.employee_id}？`)) return
     try {
       const res = await fetch('/api/admins', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
+        body: JSON.stringify({ employee_id: admin.employee_id }),
       })
-      
-      const data = await res.json()
-      
-      if (res.ok) {
-        setSuccess(`已移除管理員：${email}`)
-        fetchAdmins()
-      } else {
-        setError(data.error || '移除失敗')
-      }
-    } catch (err) {
-      setError('移除管理員失敗')
-    }
+      if (res.ok) { flash('ok', `已移除：${admin.nickname || admin.employee_id}`); fetchAdmins() }
+      else { const d = await res.json(); flash('err', d.error || '移除失敗') }
+    } catch { flash('err', '移除失敗') }
+  }
+
+  const startEdit = (admin: Admin) => {
+    setEditing(admin.employee_id)
+    setEditForm({ email: admin.email || '', nickname: admin.nickname || '', role: admin.role })
+  }
+
+  const handleUpdate = async (employee_id: string) => {
+    try {
+      const res = await fetch('/api/admins', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ employee_id, ...editForm }),
+      })
+      if (res.ok) { flash('ok', '已更新'); setEditing(null); fetchAdmins() }
+      else flash('err', '更新失敗')
+    } catch { flash('err', '更新失敗') }
   }
 
   if (!isSuperAdmin && !isLoading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="bg-white p-8 rounded-xl shadow-lg text-center">
-          <div className="text-6xl mb-4">🔒</div>
-          <h1 className="text-xl font-bold text-gray-800 mb-2">權限不足</h1>
-          <p className="text-gray-600 mb-4">只有超級管理員可以存取此頁面</p>
-          <Link href="/admin" className="text-blue-600 hover:underline">返回後台</Link>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="bg-white p-8 rounded-xl shadow-sm text-center">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-8 h-8 text-slate-400"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          </div>
+          <h1 className="text-lg font-bold text-slate-800 mb-1">權限不足</h1>
+          <p className="text-sm text-slate-500">只有超級管理員可以存取此頁面</p>
         </div>
       </div>
     )
@@ -125,146 +102,153 @@ export default function AdminsManagementPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link href="/admin" className="text-slate-400 hover:text-slate-700 transition">
-              <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd"/></svg>
-            </Link>
-            <span className="text-lg bg-gradient-to-br from-gray-600 to-gray-800 bg-clip-text text-transparent">👑</span>
-            <h1 className="text-lg font-bold text-slate-800">管理員管理</h1>
-          </div>
-          <button
-            onClick={fetchAdmins}
-            className="text-blue-600 hover:text-blue-800"
-          >
-            🔄 重新整理
-          </button>
-        </div>
-      </header>
-
-      <main className="max-w-4xl mx-auto px-4 py-8">
-        {/* 提示訊息 */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
-            {error}
-          </div>
-        )}
-        {success && (
-          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6">
-            {success}
+      <div className="max-w-3xl mx-auto px-4 py-6">
+        {/* Toast */}
+        {msg && (
+          <div className={`mb-4 px-4 py-3 rounded-lg text-sm ${msg.type === 'ok' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+            {msg.text}
           </div>
         )}
 
-        {/* 新增管理員 */}
-        <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
-          <h2 className="text-lg font-bold mb-4">➕ 新增管理員</h2>
-          <div className="flex gap-4 items-end flex-wrap">
-            <div className="flex-1 min-w-[200px]">
-              <label className="block text-sm text-gray-600 mb-1">帳號</label>
+        {/* Add Form */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5 mb-6">
+          <h2 className="text-sm font-bold text-slate-700 mb-4">新增管理員</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+            <div>
+              <label className="block text-xs text-slate-500 mb-1">工號（登入帳號）<span className="text-red-400">*</span></label>
               <input
-                type="text"
-                placeholder="輸入帳號（如 u1234 或 email）"
-                value={newEmail}
-                onChange={(e) => setNewEmail(e.target.value)}
-                className="w-full p-3 border rounded-lg focus:border-blue-500 focus:outline-none"
+                type="text" placeholder="如 u1234"
+                value={form.employee_id} onChange={e => setForm({ ...form, employee_id: e.target.value })}
+                className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-100"
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-600 mb-1">權限</label>
+              <label className="block text-xs text-slate-500 mb-1">別名（中文名字）</label>
+              <input
+                type="text" placeholder="如 王小明"
+                value={form.nickname} onChange={e => setForm({ ...form, nickname: e.target.value })}
+                className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-100"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-slate-500 mb-1">郵箱</label>
+              <input
+                type="text" placeholder="如 wang@aurotek.com"
+                value={form.email} onChange={e => setForm({ ...form, email: e.target.value })}
+                className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-100"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-slate-500 mb-1">權限</label>
               <select
-                value={newRole}
-                onChange={(e) => setNewRole(e.target.value as 'admin' | 'super_admin')}
-                className="p-3 border rounded-lg focus:border-blue-500 focus:outline-none"
+                value={form.role} onChange={e => setForm({ ...form, role: e.target.value as any })}
+                className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:border-blue-400 focus:outline-none bg-white"
               >
                 <option value="admin">一般管理員</option>
                 <option value="super_admin">超級管理員</option>
               </select>
             </div>
-            <button
-              onClick={handleAddAdmin}
-              disabled={!newEmail}
-              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              新增
-            </button>
           </div>
+          <button
+            onClick={handleAdd} disabled={!form.employee_id}
+            className="w-full sm:w-auto px-6 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition"
+          >
+            新增
+          </button>
         </div>
 
-        {/* 管理員列表 */}
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b">
-            <h2 className="text-lg font-bold">📋 管理員名單</h2>
+        {/* Admin List */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+          <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+            <h2 className="text-sm font-bold text-slate-700">管理員名單 ({admins.length})</h2>
+            <button onClick={fetchAdmins} className="text-xs text-blue-600 hover:text-blue-800">重新整理</button>
           </div>
-          
+
           {isLoading ? (
-            <div className="p-8 text-center text-gray-500">載入中...</div>
+            <div className="p-8 text-center text-sm text-slate-400">載入中...</div>
           ) : admins.length === 0 ? (
-            <div className="p-8 text-center text-gray-500">沒有管理員</div>
+            <div className="p-8 text-center text-sm text-slate-400">沒有管理員</div>
           ) : (
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">帳號</th>
-                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">權限</th>
-                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">新增時間</th>
-                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">新增者</th>
-                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">操作</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {admins.map(admin => (
-                  <tr key={admin.email} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">
-                      <div className="font-medium">{admin.name}</div>
-                      <div className="text-sm text-gray-500">{admin.email}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      {admin.role === 'super_admin' ? (
-                        <span className="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs">
-                          👑 超級管理員
-                        </span>
-                      ) : (
-                        <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
-                          🔧 一般管理員
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{admin.addedAt}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{admin.addedBy}</td>
-                    <td className="px-6 py-4">
-                      {admin.email === 'williamhsiao@aurotek.com' ? (
-                        <span className="text-gray-400 text-sm">系統管理員</span>
-                      ) : admin.email === currentUser ? (
-                        <span className="text-gray-400 text-sm">目前登入</span>
-                      ) : (
-                        <button
-                          onClick={() => handleRemoveAdmin(admin.email)}
-                          className="text-red-600 hover:text-red-800 text-sm"
+            <div className="divide-y divide-slate-100">
+              {admins.map(admin => (
+                <div key={admin.employee_id} className="px-5 py-4">
+                  {editing === admin.employee_id ? (
+                    /* Edit Mode */
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-sm font-mono font-bold text-slate-800">{admin.employee_id}</span>
+                        <span className="text-xs text-slate-400">編輯中</span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <input
+                          type="text" placeholder="別名" value={editForm.nickname}
+                          onChange={e => setEditForm({ ...editForm, nickname: e.target.value })}
+                          className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:border-blue-400 focus:outline-none"
+                        />
+                        <input
+                          type="text" placeholder="郵箱" value={editForm.email}
+                          onChange={e => setEditForm({ ...editForm, email: e.target.value })}
+                          className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:border-blue-400 focus:outline-none"
+                        />
+                        <select
+                          value={editForm.role}
+                          onChange={e => setEditForm({ ...editForm, role: e.target.value })}
+                          className="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:border-blue-400 focus:outline-none"
                         >
-                          移除
+                          <option value="admin">一般管理員</option>
+                          <option value="super_admin">超級管理員</option>
+                        </select>
+                      </div>
+                      <div className="flex gap-2">
+                        <button onClick={() => handleUpdate(admin.employee_id)} className="px-4 py-1.5 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700">儲存</button>
+                        <button onClick={() => setEditing(null)} className="px-4 py-1.5 text-slate-500 text-xs rounded-lg hover:bg-slate-100">取消</button>
+                      </div>
+                    </div>
+                  ) : (
+                    /* Display Mode */
+                    <div className="flex items-center justify-between">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-bold text-slate-800">
+                            {admin.nickname || admin.employee_id}
+                          </span>
+                          {admin.nickname && (
+                            <span className="text-xs font-mono text-slate-400">{admin.employee_id}</span>
+                          )}
+                          {admin.role === 'super_admin' ? (
+                            <span className="px-1.5 py-0.5 bg-amber-50 text-amber-600 rounded text-[10px] font-medium border border-amber-200">超級管理</span>
+                          ) : (
+                            <span className="px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-medium border border-blue-200">管理員</span>
+                          )}
+                        </div>
+                        <div className="text-xs text-slate-400 mt-0.5">
+                          {admin.email || '未設定郵箱'}
+                          <span className="mx-1.5">·</span>
+                          {admin.created_at?.split('T')[0]}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button onClick={() => startEdit(admin)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition">
+                          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/></svg>
                         </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                        {admin.employee_id !== 'williamhsiao' && (
+                          <button onClick={() => handleRemove(admin)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition">
+                            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd"/></svg>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           )}
         </div>
 
-        <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-xl p-4">
-          <h3 className="font-bold text-yellow-800 mb-2">⚠️ 注意事項</h3>
-          <ul className="text-sm text-yellow-700 space-y-1">
-            <li>• 管理員可存取後台管理功能</li>
-            <li>• 超級管理員可管理其他管理員帳號</li>
-            <li>• 新增的管理員需要重新登入才會生效</li>
-            <li>• 目前管理員名單存於伺服器記憶體，部署後會重置為預設值</li>
-            <li>• 如需永久新增管理員，請聯繫系統管理員更新環境變數</li>
-          </ul>
+        <div className="mt-4 text-xs text-slate-400 text-center">
+          資料儲存於 Supabase · 部署不會遺失
         </div>
-      </main>
+      </div>
     </div>
   )
 }
