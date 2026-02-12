@@ -349,8 +349,8 @@ export default function ProductsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
-      {/* Page Header */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 md:top-0 z-20">
+      {/* Page Header - hidden when drawer is open on mobile */}
+      <header className={`bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 md:top-0 z-20 ${drawerOpen ? 'hidden sm:block' : ''}`}>
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-white">
@@ -839,7 +839,7 @@ export default function ProductsPage() {
                   {/* 標題區 */}
                   <div className="mb-4">
                     <div className="font-mono text-sm text-gray-500 mb-1">{selectedProduct.aurotek_pn}</div>
-                    <h2 className="text-lg font-bold text-gray-900">{selectedProduct.name}</h2>
+                    <h2 className="text-lg font-bold text-gray-900">{selectedProduct.spec || selectedProduct.name}</h2>
                     {selectedProduct.list_price && (
                       <div className="text-xl font-bold text-[#E60012] mt-1">
                         NT$ {formatPrice(selectedProduct.list_price)}
