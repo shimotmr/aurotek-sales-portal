@@ -369,13 +369,12 @@ export default function TranscriptDetailPage() {
   const headerHeight = isMobile ? (audioUrl ? '140px' : '60px') : (audioUrl ? '120px' : '60px')
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100" style={{ paddingTop: headerHeight, paddingBottom: isMobile ? '70px' : '80px' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: '#f5f5f5', paddingTop: headerHeight, paddingBottom: isMobile ? '70px' : '80px' }}>
       {/* Header + Audio Player - 固定頂部 */}
-      <header style={{ 
-        background: 'rgba(255,255,255,0.8)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
-        borderBottom: '1px solid #e2e8f0', 
+      <div style={{ 
+        backgroundColor: 'white', 
+        boxShadow: '0 2px 4px rgba(0,0,0,0.1)', 
+        borderBottom: '1px solid #e5e7eb', 
         position: 'fixed', 
         top: 0, 
         left: 0,
@@ -384,13 +383,12 @@ export default function TranscriptDetailPage() {
       }}>
         <div style={{ maxWidth: '1024px', margin: '0 auto', padding: isMobile ? '12px 12px' : '12px 16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '12px', marginBottom: audioUrl ? (isMobile ? '12px' : '10px') : 0 }}>
-            <Link href="/transcripts" className="text-slate-400 hover:text-slate-600 transition" style={{ flexShrink: 0 }}>
-              <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd"/></svg>
+            <Link href="/transcripts" style={{ color: '#9CA3AF', flexShrink: 0 }}>
+              <svg style={{ width: isMobile ? '18px' : '20px', height: isMobile ? '18px' : '20px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
             </Link>
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center text-white" style={{ flexShrink: 0 }}>
-              <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd"/></svg>
-            </div>
-            <h1 style={{ fontSize: isMobile ? '15px' : '18px', fontWeight: 'bold', color: '#1e293b', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <h1 style={{ fontSize: isMobile ? '15px' : '18px', fontWeight: 'bold', color: '#111827', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {transcript.title || `逐字稿 ${transcript.id.slice(0, 8)}`}
             </h1>
             <span
