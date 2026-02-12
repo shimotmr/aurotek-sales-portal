@@ -19,13 +19,14 @@ interface AgentTask {
   completed_at: string | null
 }
 
+// TODO: 改為從 Supabase agents 表動態讀取，不 hardcode
 const AGENTS = [
-  { id: 'main', name: 'Jarvis', role: '主協調員・對話・調度・決策', status: 'active', model: 'Opus 4.6', color: '#4F46E5' },
-  { id: 'secretary', name: 'Secretary', role: '簽核・郵件・行事曆', status: 'active', model: 'Opus 4.6', color: '#059669' },
-  { id: 'analyst', name: 'Analyst', role: 'Pipeline・業績・報表', status: 'planned', model: 'Opus 4.6', color: '#9CA3AF' },
-  { id: 'researcher', name: 'Researcher', role: '市場・競品・技術研究', status: 'planned', model: 'Opus 4.6', color: '#9CA3AF' },
-  { id: 'developer', name: 'Developer', role: 'Portal・腳本・API', status: 'planned', model: 'Opus 4.6', color: '#9CA3AF' },
-  { id: 'editor', name: 'Editor', role: 'Travis Daily・報告', status: 'planned', model: 'Opus 4.6', color: '#9CA3AF' },
+  { id: 'main', name: 'Jarvis', role: '總調度 — 對話、任務分配、系統管理', status: 'active', model: 'Opus 4.6', color: '#4F46E5', emoji: '🤖' },
+  { id: 'secretary', name: 'Secretary', role: '行政秘書 — 簽核、郵件、報表同步', status: 'active', model: 'Opus 4.6', color: '#059669', emoji: '📋' },
+  { id: 'inspector', name: 'Inspector', role: 'QA 工程師 — 測試、Bug修復、效能優化', status: 'active', model: 'Opus 4.6', color: '#F59E0B', emoji: '🔍' },
+  { id: 'researcher', name: 'Researcher', role: '研究員 — 深度研究、產業分析', status: 'active', model: 'Opus 4.6', color: '#8B5CF6', emoji: '🔬' },
+  { id: 'writer', name: 'Writer', role: '內容創作 — 報告撰寫、文章發布', status: 'active', model: 'Opus 4.6', color: '#EC4899', emoji: '✍️' },
+  { id: 'trader', name: 'Trader', role: '交易分析 — 股票分析、交易策略', status: 'active', model: 'Opus 4.6', color: '#EF4444', emoji: '📈' },
 ]
 
 /* SVG Icons */
@@ -48,26 +49,27 @@ const IconFork = () => <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 
 const AGENT_ICONS: Record<string, () => JSX.Element> = {
   main: IconBot,
   secretary: IconClipboard,
-  analyst: IconChart,
-  researcher: IconSearch,
-  developer: IconCode,
-  editor: IconPen,
+  inspector: IconSearch,
+  researcher: IconChart,
+  writer: IconPen,
+  trader: IconChart,
 }
 
 const CRON_JOBS = [
   { time: '01:00', name: 'Pipeline 風險日報', agent: 'main', type: 'main' },
-  { time: '02:00', name: 'OpenClaw 動態研究', agent: 'main', type: 'isolated' },
-  { time: '02:30', name: 'Opus 4.6 版本檢查', agent: 'main', type: 'isolated' },
+  { time: '02:00', name: 'AI 動態研究', agent: 'researcher', type: 'isolated' },
+  { time: '02:30', name: 'OpenClaw 版本檢查', agent: 'main', type: 'isolated' },
   { time: '03:00', name: 'Google Drive 備份', agent: 'main', type: 'main' },
   { time: '03:30', name: 'qmd 記憶同步', agent: 'main', type: 'main' },
   { time: '04:00', name: '硬碟巡檢', agent: 'main', type: 'main' },
-  { time: '06:00', name: 'Materialized View 刷新', agent: 'main', type: 'main' },
+  { time: '06:00', name: 'MV 刷新', agent: 'main', type: 'main' },
   { time: '07:00', name: '行事曆同步', agent: 'secretary', type: 'spawn' },
-  { time: '08:30', name: '郵件摘要 (工作日)', agent: 'secretary', type: 'spawn' },
+  { time: '08:30', name: '郵件摘要', agent: 'secretary', type: 'spawn' },
   { time: '09:00', name: '每日任務提醒', agent: 'main', type: 'main' },
   { time: '09:00-18:00', name: '簽核檢查 (每30分)', agent: 'secretary', type: 'spawn' },
-  { time: '10:30', name: 'LINE 業績週報 (工作日)', agent: 'main', type: 'main' },
-  { time: '11:00/16:00', name: 'Funnel 同步 (工作日)', agent: 'main', type: 'isolated' },
+  { time: '10:30', name: 'LINE 業績週報', agent: 'main', type: 'main' },
+  { time: '11:00/16:00', name: 'Funnel 同步', agent: 'secretary', type: 'spawn' },
+  { time: '12:00', name: '每日系統巡視', agent: 'inspector', type: 'spawn' },
   { time: '18:00', name: '晚間任務回顧', agent: 'main', type: 'main' },
 ]
 
@@ -411,10 +413,10 @@ export default function AgentsPage() {
             <IconBuild /> 架構說明
           </h2>
           <div className="text-xs text-slate-500 space-y-1">
-            <p><strong className="text-slate-700">Phase 1（當前）</strong>：Jarvis (Coordinator) + Secretary Agent — 簽核/郵件/行事曆自動化</p>
-            <p><strong className="text-slate-700">Phase 2</strong>：+ Analyst (Pipeline/業績) + Researcher (市場/技術)</p>
-            <p><strong className="text-slate-700">Phase 3</strong>：+ Developer (Portal) + Editor (Travis Daily)</p>
-            <p className="text-slate-400 mt-2">通訊方式：Cron → Jarvis (調度) → sessions_spawn → Secretary → Telegram 直接通知</p>
+            <p><strong className="text-slate-700">Phase 1（已完成）</strong>：Jarvis + Secretary — 簽核/郵件/行事曆自動化</p>
+            <p><strong className="text-slate-700">Phase 2（已完成）</strong>：+ Inspector (QA) + Researcher (研究) + Writer (內容) + Trader (交易)</p>
+            <p><strong className="text-slate-700">Phase 3（規劃中）</strong>：跨 Agent 自動協作、Agent 自主排程</p>
+            <p className="text-slate-400 mt-2">通訊方式：Cron → Jarvis (調度) → sessions_spawn → 各 Agent → Telegram 通知</p>
             <p className="text-slate-400">跨 Agent 協作透過 Supabase agent_tasks 任務佇列</p>
           </div>
         </section>
