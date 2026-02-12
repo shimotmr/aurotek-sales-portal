@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import UserMenu from './components/UserMenu'
+import { supabase } from '@/lib/supabase'
 import { MobileTabBar } from './components/AppShell'
 
 // SVG Icons as components — clean, consistent, scalable
@@ -144,16 +145,15 @@ export default function Home() {
     const employeeId = nameCookie ? decodeURIComponent(nameCookie.split('=')[1]).split('@')[0] : ''
     if (employeeId) {
       setUserName(employeeId)
-      // 從 employees 表查詢姓名+職稱
-      fetch(`/api/employees/lookup?employee_id=${encodeURIComponent(employeeId)}`)
-        .then(res => res.ok ? res.json() : null)
-        .then(data => {
-          if (data?.name) {
-            const display = data.title ? `${data.name} ${data.title}` : data.name
-            setUserName(display)
-          }
-        })
-        .catch(() => {})
+      // 從 portal_admins 查別名，再從 employees 查姓名+職稱
+      Promise.all([
+        fetch(`/api/employees/lookup?employee_id=${encodeURIComponent(employeeId)}`).then(r => r.ok ? r.json() : null).catch(() => null),
+        supabase.from('portal_admins').select('nickname, name, title').or(`employee_id.eq.${employeeId},email.ilike.${employeeId}@%`).maybeSingle().then(r => r.data),
+      ]).then(([emp, admin]) => {
+        const displayName = admin?.nickname || admin?.name || emp?.name || employeeId
+        const title = emp?.title || admin?.title || ''
+        setUserName(title ? `${displayName} ${title}` : displayName)
+      })
     }
 
     const admin = document.cookie.split(';').some(c => c.trim().startsWith('is_admin=true'))
