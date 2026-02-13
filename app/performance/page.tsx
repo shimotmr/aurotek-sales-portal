@@ -268,12 +268,12 @@ export default function PerformancePage() {
                           {p75Pct > 0 && <div className="h-full" style={{ width: `${p75Pct}%`, backgroundColor: '#F4D03F' }}/>}
                         </div>
                       </div>
-                      {m.forecast > 0 && (
+                      {(m.forecast > 0 || mf.total > 0 || !isActual) && (
                         <div className="flex flex-wrap gap-1.5 text-[10px] justify-center mt-2">
                           {m.actual > 0 && <span className="flex items-center gap-1 px-1.5 py-0.5 bg-emerald-50 text-emerald-700 rounded-full"><span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"/>已出貨 {fmt(m.actual)}</span>}
-                          {mf.prob25 > 0 && <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full" style={{backgroundColor:'#5DADE215', color:'#2980B9'}}><span className="w-1.5 h-1.5 rounded-full" style={{backgroundColor:'#5DADE2'}}/>25% {fmt(Math.round(mf.prob25))}</span>}
-                          {mf.prob50 > 0 && <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full" style={{backgroundColor:'#E67E2215', color:'#D35400'}}><span className="w-1.5 h-1.5 rounded-full" style={{backgroundColor:'#E67E22'}}/>50% {fmt(Math.round(mf.prob50))}</span>}
-                          {mf.prob75 > 0 && <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full" style={{backgroundColor:'#F4D03F15', color:'#B7950B'}}><span className="w-1.5 h-1.5 rounded-full" style={{backgroundColor:'#F4D03F'}}/>75% {fmt(Math.round(mf.prob75))}</span>}
+                          <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full" style={{backgroundColor:'#5DADE215', color:'#2980B9'}}><span className="w-1.5 h-1.5 rounded-full" style={{backgroundColor:'#5DADE2'}}/>25% {fmt(Math.round(mf.prob25))}</span>
+                          <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full" style={{backgroundColor:'#E67E2215', color:'#D35400'}}><span className="w-1.5 h-1.5 rounded-full" style={{backgroundColor:'#E67E22'}}/>50% {fmt(Math.round(mf.prob50))}</span>
+                          <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full" style={{backgroundColor:'#F4D03F15', color:'#B7950B'}}><span className="w-1.5 h-1.5 rounded-full" style={{backgroundColor:'#F4D03F'}}/>75% {fmt(Math.round(mf.prob75))}</span>
                         </div>
                       )}
                     </>
