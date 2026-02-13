@@ -27,6 +27,8 @@ const AGENT_COLORS: Record<string, string> = {
   researcher: '#8B5CF6',
   writer: '#EC4899',
   trader: '#EF4444',
+  coder: '#DC2626',
+  designer: '#D946EF',
 }
 
 // 模型顯示名稱
@@ -84,10 +86,12 @@ const AGENT_ICONS: Record<string, () => JSX.Element> = {
   researcher: IconChart,
   writer: IconPen,
   trader: IconChart,
+  coder: IconCode,
+  designer: () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>,
 }
 
 const AGENT_LETTERS: Record<string, string> = {
-  main: 'J', secretary: 'S', inspector: 'I', researcher: 'R', writer: 'W', trader: 'T',
+  main: 'J', secretary: 'S', inspector: 'I', researcher: 'R', writer: 'W', trader: 'T', coder: 'C', designer: 'D',
 }
 
 // Compact colored badge: single letter + color dot
@@ -417,7 +421,7 @@ export default function AgentsPage() {
           <p className="text-center text-xs text-slate-300 mt-2">每 30 秒自動刷新</p>
         </section>
 
-        {/* // Phase 3 啟用時恢復此區塊
+        {/* 任務佇列 agent_tasks */}
         <section>
           <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
             <IconRefresh /> 任務佇列（agent_tasks）
@@ -428,7 +432,7 @@ export default function AgentsPage() {
             ) : tasks.length === 0 ? (
               <div className="p-8 text-center text-slate-400">
                 <p className="text-lg mb-1">尚無任務紀錄</p>
-                <p className="text-xs">明天工作日 Cron 觸發後會開始記錄</p>
+                <p className="text-xs">跨 Agent 協作任務會顯示在這裡</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -469,7 +473,6 @@ export default function AgentsPage() {
             )}
           </div>
         </section>
-        */}
 
         {/* Architecture Note */}
         <section className="bg-white rounded-xl shadow-sm border border-slate-100 p-4">
