@@ -64,8 +64,8 @@ export default function PerformancePage() {
   const [selectedDealer, setSelectedDealer] = useState('')
 
   useEffect(() => {
-    Promise.all([fetch('/api/performance').then(r => r.json()), fetch('/data/cases.json').then(r => r.json())])
-      .then(([p, c]) => { setData(p); setCases(c.cases || []); setLoading(false) })
+    Promise.all([fetch('/api/performance').then(r => r.json()), fetch('/api/cases').then(r => r.json())])
+      .then(([p, c]) => { setData(p); setCases(c.cases || c || []); setLoading(false) })
       .catch(e => { setError(e.message); setLoading(false) })
   }, [])
 
