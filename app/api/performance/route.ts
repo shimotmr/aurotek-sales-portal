@@ -29,7 +29,7 @@ export async function GET() {
     for (let m = 1; m <= 12; m++) {
       const monthTarget = targets
         .filter(t => t.month === m)
-        .reduce((sum, t) => sum + (t.target_amount || 0), 0)
+        .reduce((sum, t) => sum + (Number(t.target_amount) || 0), 0)
 
       const monthCases = cases.filter(c => {
         const d = c.ship_date || c.order_date
@@ -109,7 +109,7 @@ export async function GET() {
     for (const t of targets) {
       const repName = t.rep_name || '未指定'
       if (!repMap.has(repName)) repMap.set(repName, { shipped: 0, forecast: 0, target: 0, count: 0 })
-      repMap.get(repName)!.target += (t.target_amount || 0)
+      repMap.get(repName)!.target += (Number(t.target_amount) || 0)
     }
     const repStats = Array.from(repMap.entries()).map(([rep, v]) => ({
       rep,
