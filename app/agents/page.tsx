@@ -315,41 +315,15 @@ export default function AgentsPage() {
           <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
             <IconClock /> 排程任務
           </h2>
-          <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-slate-50 border-b border-slate-100">
-                    <th className="text-left px-4 py-2 font-medium text-slate-500 w-32">時間</th>
-                    <th className="text-left px-4 py-2 font-medium text-slate-500">任務</th>
-                    <th className="text-left px-4 py-2 font-medium text-slate-500 w-28">負責 Agent</th>
-                    <th className="text-left px-4 py-2 font-medium text-slate-500 w-24">執行方式</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {CRON_JOBS.map((job, i) => (
-                    <tr key={i} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50">
-                      <td className="px-4 py-2 font-mono text-xs text-slate-500">{job.time}</td>
-                      <td className="px-4 py-2 text-slate-900">{job.name}</td>
-                      <td className="px-4 py-2">
-                        <AgentBadge agentId={job.agent} />
-                      </td>
-                      <td className="px-4 py-2">
-                        <span className={`inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded ${
-                          job.type === 'spawn' ? 'bg-emerald-50 text-emerald-700' :
-                          job.type === 'isolated' ? 'bg-sky-50 text-sky-700' :
-                          'bg-slate-50 text-slate-600'
-                        }`}>
-                          {job.type === 'spawn' && <IconFork />}
-                          {job.type === 'isolated' && <IconBox />}
-                          {job.type === 'main' && <IconChat />}
-                          {job.type}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-0.5">
+              {CRON_JOBS.map((job, i) => (
+                <div key={i} className="flex items-center gap-2 py-1 text-sm">
+                  <span className="font-mono text-xs text-slate-400 w-[5.5rem] shrink-0">{job.time}</span>
+                  <span className="text-slate-800 truncate flex-1">{job.name}</span>
+                  <AgentBadge agentId={job.agent} />
+                </div>
+              ))}
             </div>
           </div>
         </section>
