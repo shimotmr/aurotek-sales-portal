@@ -26,7 +26,7 @@ const AGENT_COLORS: Record<string, string> = {
   inspector: '#F59E0B',
   researcher: '#8B5CF6',
   writer: '#EC4899',
-  trader: '#EF4444',
+  analyst: '#EF4444',
   coder: '#DC2626',
   designer: '#D946EF',
 }
@@ -85,13 +85,13 @@ const AGENT_ICONS: Record<string, () => JSX.Element> = {
   inspector: IconSearch,
   researcher: IconChart,
   writer: IconPen,
-  trader: IconChart,
+  analyst: IconChart,
   coder: IconCode,
   designer: () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>,
 }
 
 const AGENT_LETTERS: Record<string, string> = {
-  main: 'J', secretary: 'S', inspector: 'I', researcher: 'R', writer: 'W', trader: 'T', coder: 'C', designer: 'D',
+  main: 'J', secretary: 'S', inspector: 'I', researcher: 'R', writer: 'W', analyst: 'T', coder: 'C', designer: 'D',
 }
 
 // Compact colored badge: single letter + color dot
@@ -481,7 +481,7 @@ export default function AgentsPage() {
           </h2>
           <div className="text-xs text-slate-500 space-y-1">
             <p><strong className="text-slate-700">Phase 1（已完成）</strong>：Jarvis + Secretary — 簽核/郵件/行事曆自動化</p>
-            <p><strong className="text-slate-700">Phase 2（已完成）</strong>：+ Inspector (QA) + Researcher (研究) + Writer (內容) + Trader (交易)</p>
+            <p><strong className="text-slate-700">Phase 2（已完成）</strong>：+ Inspector (QA) + Researcher (研究) + Writer (內容) + Analyst (市場分析)</p>
             <p><strong className="text-slate-700">Phase 3（規劃中）</strong>：跨 Agent 自動協作、Agent 自主排程</p>
             <p className="text-slate-400 mt-2">通訊方式：Cron → Jarvis (調度) → sessions_spawn → 各 Agent → Telegram 通知</p>
             <p className="text-slate-400">跨 Agent 協作透過 Supabase agent_tasks 任務佇列</p>
