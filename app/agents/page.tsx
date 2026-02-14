@@ -3,6 +3,11 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { supabase } from "@/lib/supabase"
+import {
+  Bot, ClipboardList, Search, TrendingUp, Microscope,
+  PenTool, Code2, Palette, Clock, RefreshCw, Package,
+  MessageSquare, Building, ArrowLeft, Lock, FileText, GitFork
+} from 'lucide-react'
 
 interface AgentTask {
   id: number
@@ -62,32 +67,15 @@ const RUNTIME_STATUS_CONFIG: Record<string, { label: string; dot: string; border
   inactive: { label: '離線',  dot: 'bg-red-400',     border: 'border-red-200' },
 }
 
-/* SVG Icons */
-const IconBot = () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="8.5" cy="16" r="1.5"/><circle cx="15.5" cy="16" r="1.5"/><path d="M12 2v4M8 7h8a2 2 0 012 2v2H6v-2a2 2 0 012-2z"/></svg>
-const IconClipboard = () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
-const IconChart = () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M3 3v18h18"/><path d="M7 16l4-4 4 4 5-5"/></svg>
-const IconSearch = () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
-const IconCode = () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg>
-const IconPen = () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M12 20h9M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-const IconClock = () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-const IconRefresh = () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
-const IconBox = () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><path d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12"/></svg>
-const IconChat = () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-const IconBuild = () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M2 20h20M5 20V10l7-5 7 5v10"/><rect x="9" y="14" width="6" height="6"/></svg>
-const IconArrowLeft = () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-const IconLock = () => <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-const IconDoc = () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
-const IconFork = () => <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M6 9v3a6 6 0 006 6h3"/></svg>
-
-const AGENT_ICONS: Record<string, () => JSX.Element> = {
-  main: IconBot,
-  secretary: IconClipboard,
-  inspector: IconSearch,
-  researcher: IconChart,
-  writer: IconPen,
-  analyst: IconChart,
-  coder: IconCode,
-  designer: () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>,
+const AGENT_ICONS: Record<string, any> = {
+  main: Bot,
+  secretary: ClipboardList,
+  inspector: Search,
+  researcher: Microscope,
+  writer: PenTool,
+  analyst: TrendingUp,
+  coder: Code2,
+  designer: Palette,
 }
 
 const AGENT_LETTERS: Record<string, string> = {
@@ -258,7 +246,7 @@ export default function AgentsPage() {
     return (
       <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 flex items-center justify-center">
         <div className="text-center">
-          <div className="text-slate-300 mb-3 flex justify-center"><IconLock /></div>
+          <div className="text-slate-300 mb-3 flex justify-center"><Lock size={20} /></div>
           <p className="text-slate-600 font-medium">需要超級管理員權限</p>
           <Link href="/" className="text-sm text-cyan-600 hover:underline mt-2 inline-block">返回首頁</Link>
         </div>
@@ -292,8 +280,8 @@ export default function AgentsPage() {
   const agentColor = (agentId: string) => AGENT_COLORS[agentId] || '#6B7280'
 
   const AgentIcon = ({ agentId, className }: { agentId: string; className?: string }) => {
-    const Ic = AGENT_ICONS[agentId] || IconBot
-    return <span className={className}><Ic /></span>
+    const Ic = AGENT_ICONS[agentId] || Bot
+    return <span className={className}><Ic size={16} /></span>
   }
 
   return (
@@ -302,7 +290,7 @@ export default function AgentsPage() {
       <div className="bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 md:top-0 z-10">
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center text-white">
-            <IconBot />
+            <Bot size={16} />
           </div>
           <h1 className="text-base font-bold text-slate-900">Agent 中控台</h1>
           <div className="ml-auto text-xs text-slate-400">{new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })}</div>
@@ -351,7 +339,7 @@ export default function AgentsPage() {
         {/* Cron Schedule */}
         <section>
           <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-            <IconClock /> 排程任務
+            <Clock size={16} /> 排程任務
           </h2>
           <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-3">
             {cronJobs.length === 0 ? (
@@ -378,7 +366,7 @@ export default function AgentsPage() {
         <section>
           <div className="flex justify-between items-center mb-3">
             <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-              <IconClipboard /> 任務執行紀錄
+              <ClipboardList size={16} /> 任務執行紀錄
             </h2>
             <div className="flex gap-1.5 items-center">
               {[{ l: '昨天', v: fmtDateStr(new Date(Date.now() - 86400000)) }, { l: '今天', v: fmtDateStr(new Date()) }].map(b => (
@@ -419,7 +407,7 @@ export default function AgentsPage() {
                         </div>
                         <span className="text-xs px-2 py-0.5 rounded-full font-medium shrink-0" style={{ background: s.bg, color: s.color }}>{s.label}</span>
                         {hasUrl ? (
-                          <button onClick={e => { e.stopPropagation(); setModalRun(run) }} className="text-slate-400 hover:text-slate-600 transition" title="查看報告"><IconDoc /></button>
+                          <button onClick={e => { e.stopPropagation(); setModalRun(run) }} className="text-slate-400 hover:text-slate-600 transition" title="查看報告"><FileText size={16} /></button>
                         ) : hasText ? (
                           <span className={`text-xs text-slate-400 transition-transform ${expanded ? 'rotate-180' : ''}`}>▼</span>
                         ) : null}
@@ -444,7 +432,7 @@ export default function AgentsPage() {
         {/* 任務佇列 agent_tasks */}
         <section>
           <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-            <IconRefresh /> 任務佇列（agent_tasks）
+            <RefreshCw size={16} /> 任務佇列（agent_tasks）
           </h2>
           <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
             {loading ? (
@@ -486,7 +474,7 @@ export default function AgentsPage() {
         {/* Architecture Note */}
         <section className="bg-white rounded-xl shadow-sm border border-slate-100 p-4">
           <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-            <IconBuild /> 架構說明
+            <Building size={16} /> 架構說明
           </h2>
           <div className="text-xs text-slate-500 space-y-1">
             <p><strong className="text-slate-700">Phase 1（已完成）</strong>：Travis + Secretary — 簽核/郵件/行事曆自動化</p>
