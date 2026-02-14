@@ -107,23 +107,50 @@ const AgentBadge = ({ agentId }: { agentId: string }) => {
   )
 }
 
-const CRON_JOBS = [
-  { time: '01:00', name: 'Pipeline 風險日報', agent: 'secretary', type: 'spawn' },
-  { time: '02:00', name: 'AI 動態研究', agent: 'researcher', type: 'spawn' },
-  { time: '02:30', name: 'OpenClaw 版本檢查', agent: 'inspector', type: 'spawn' },
-  { time: '03:00', name: 'Google Drive 備份', agent: 'inspector', type: 'spawn' },
-  { time: '03:30', name: 'qmd 記憶同步', agent: 'inspector', type: 'spawn' },
-  { time: '04:00', name: '硬碟巡檢', agent: 'inspector', type: 'spawn' },
-  { time: '06:00', name: 'MV 刷新', agent: 'inspector', type: 'spawn' },
-  { time: '07:00', name: '行事曆同步', agent: 'secretary', type: 'spawn' },
-  { time: '08:30', name: '郵件摘要', agent: 'secretary', type: 'spawn' },
-  { time: '09:00', name: '每日任務提醒', agent: 'main', type: 'main' },
-  { time: '09:00-18:00', name: '簽核檢查 (每30分)', agent: 'secretary', type: 'spawn' },
-  { time: '10:30', name: 'LINE 業績週報', agent: 'secretary', type: 'spawn' },
-  { time: '11:00/16:00', name: 'Funnel 同步', agent: 'secretary', type: 'spawn' },
-  { time: '12:00', name: '每日系統巡視', agent: 'inspector', type: 'spawn' },
-  { time: '18:00', name: '晚間任務回顧', agent: 'main', type: 'main' },
-]
+interface CronSchedule {
+  id: string
+  name: string
+  schedule_expr: string
+  schedule_tz: string
+  agent_id: string
+  enabled: boolean
+  last_status: string | null
+  last_run_at: string | null
+  next_run_at: string | null
+}
+
+// Parse cron expression to human-readable time
+function parseCronTime(expr: string): string {
+  const parts = expr.split(/\s+/)
+  if (parts.length < 5) return expr
+  const [min, hour, , , ] = parts
+
+  // Range like */30 in minute with hour range
+  if (min.includes('/') && hour.includes('-')) {
+    return `${hour} (每${min.split('/')[1]}分)`
+  }
+  if (min.includes('/') || hour === '*') return expr
+
+  const hours = hour.split(',')
+  const minute = min.padStart(2, '0')
+  return hours.map(h => `${h.padStart(2, '0')}:${minute}`).join('/')
+}
+
+function parseCronDow(expr: string): '每日' | '工作日' | '自訂' {
+  const dow = expr.split(/\s+/)[4]
+  if (!dow || dow === '*') return '每日'
+  if (dow === '1-5') return '工作日'
+  return '自訂'
+}
+
+// Sort key: first hour from cron expr
+function cronSortKey(expr: string): number {
+  const parts = expr.split(/\s+/)
+  if (parts.length < 2) return 9999
+  const hour = parseInt(parts[1].split(',')[0].split('-')[0].split('/')[0])
+  const min = parseInt(parts[0].split(',')[0].split('-')[0].split('/')[0])
+  return (isNaN(hour) ? 99 : hour) * 60 + (isNaN(min) ? 0 : min)
+}
 
 interface TaskRun {
   id: number
@@ -164,12 +191,22 @@ export default function AgentsPage() {
   const [runDate, setRunDate] = useState(fmtDateStr(new Date()))
   const [expandedRunId, setExpandedRunId] = useState<number | null>(null)
   const [modalRun, setModalRun] = useState<TaskRun | null>(null)
+  // Cron Schedules
+  const [cronJobs, setCronJobs] = useState<CronSchedule[]>([])
   // Auth
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null)
 
   const loadAgents = useCallback(async () => {
     const { data } = await supabase.from('agents_dashboard').select('*')
     if (data) setAgents(data)
+  }, [])
+
+  const loadCronSchedules = useCallback(async () => {
+    const { data } = await supabase.from('cron_schedules').select('*').eq('enabled', true)
+    if (data) {
+      const sorted = (data as CronSchedule[]).sort((a, b) => cronSortKey(a.schedule_expr) - cronSortKey(b.schedule_expr))
+      setCronJobs(sorted)
+    }
   }, [])
 
   useEffect(() => {
@@ -179,7 +216,8 @@ export default function AgentsPage() {
     if (admin) {
       fetchTasks()
       loadAgents()
-      const interval = setInterval(() => { fetchTasks(); loadAgents() }, 30000)
+      loadCronSchedules()
+      const interval = setInterval(() => { fetchTasks(); loadAgents(); loadCronSchedules() }, 30000)
       return () => clearInterval(interval)
     }
   }, [])
@@ -316,15 +354,23 @@ export default function AgentsPage() {
             <IconClock /> 排程任務
           </h2>
           <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-3">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-0.5">
-              {CRON_JOBS.map((job, i) => (
-                <div key={i} className="flex items-center gap-2 py-1 text-sm">
-                  <span className="font-mono text-xs text-slate-400 w-[5.5rem] shrink-0">{job.time}</span>
-                  <span className="text-slate-800 truncate flex-1">{job.name}</span>
-                  <AgentBadge agentId={job.agent} />
-                </div>
-              ))}
-            </div>
+            {cronJobs.length === 0 ? (
+              <div className="text-center text-slate-400 text-sm py-4">載入中...</div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-0.5">
+                {cronJobs.map(job => {
+                  const dow = parseCronDow(job.schedule_expr)
+                  return (
+                    <div key={job.id} className="flex items-center gap-2 py-1 text-sm">
+                      <span className="font-mono text-xs text-slate-400 w-[5.5rem] shrink-0">{parseCronTime(job.schedule_expr)}</span>
+                      <span className="text-slate-800 truncate flex-1">{job.name}</span>
+                      {dow === '工作日' && <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 shrink-0">工作日</span>}
+                      <AgentBadge agentId={job.agent_id} />
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
         </section>
 
