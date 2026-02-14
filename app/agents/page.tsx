@@ -435,40 +435,29 @@ export default function AgentsPage() {
                 <p className="text-xs">跨 Agent 協作任務會顯示在這裡</p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-slate-50 border-b border-slate-100">
-                      <th className="text-left px-4 py-2 font-medium text-slate-500">時間</th>
-                      <th className="text-left px-4 py-2 font-medium text-slate-500">類型</th>
-                      <th className="text-left px-4 py-2 font-medium text-slate-500">Agent</th>
-                      <th className="text-left px-4 py-2 font-medium text-slate-500">狀態</th>
-                      <th className="text-left px-4 py-2 font-medium text-slate-500">耗時</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {tasks.map(task => {
-                      const duration = task.completed_at && task.started_at
-                        ? Math.round((new Date(task.completed_at).getTime() - new Date(task.started_at).getTime()) / 1000)
-                        : null
-                      return (
-                        <tr key={task.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50">
-                          <td className="px-4 py-2 text-xs text-slate-500 whitespace-nowrap">
-                            {new Date(task.created_at).toLocaleString('zh-TW', { timeZone: 'Asia/Taipei', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
-                          </td>
-                          <td className="px-4 py-2 text-slate-900">{task.task_type}</td>
-                          <td className="px-4 py-2">
-                            <AgentBadge agentId={task.assigned_to} />
-                          </td>
-                          <td className="px-4 py-2">{statusBadge(task.status)}</td>
-                          <td className="px-4 py-2 text-xs text-slate-500">
-                            {duration !== null ? `${duration}s` : '—'}
-                          </td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
+              <div className="divide-y divide-slate-100">
+                {tasks.map(task => {
+                  const duration = task.completed_at && task.started_at
+                    ? Math.round((new Date(task.completed_at).getTime() - new Date(task.started_at).getTime()) / 1000)
+                    : null
+                  const desc = task.payload?.description || task.payload?.commit || null
+                  return (
+                    <div key={task.id} className="px-4 py-3 hover:bg-slate-50/50">
+                      <div className="flex items-center gap-2 mb-1">
+                        <AgentBadge agentId={task.assigned_to} />
+                        <span className="text-sm font-medium text-slate-900">{task.task_type}</span>
+                        <span className="ml-auto">{statusBadge(task.status)}</span>
+                      </div>
+                      {desc && (
+                        <p className="text-xs text-slate-500 mb-1 line-clamp-2">{desc}</p>
+                      )}
+                      <div className="flex items-center gap-3 text-[11px] text-slate-400">
+                        <span>{new Date(task.created_at).toLocaleString('zh-TW', { timeZone: 'Asia/Taipei', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
+                        {duration !== null && <span>{duration}s</span>}
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
             )}
           </div>
@@ -480,17 +469,24 @@ export default function AgentsPage() {
             <IconBuild /> 架構說明
           </h2>
           <div className="text-xs text-slate-500 space-y-1">
-            <p><strong className="text-slate-700">Phase 1（已完成）</strong>：Jarvis + Secretary — 簽核/郵件/行事曆自動化</p>
-            <p><strong className="text-slate-700">Phase 2（已完成）</strong>：+ Inspector (QA) + Researcher (研究) + Writer (內容) + Analyst (市場分析)</p>
-            <p><strong className="text-slate-700">Phase 3（規劃中）</strong>：跨 Agent 自動協作、Agent 自主排程</p>
-            <p className="text-slate-400 mt-2">通訊方式：Cron → Jarvis (調度) → sessions_spawn → 各 Agent → Telegram 通知</p>
-            <p className="text-slate-400">跨 Agent 協作透過 Supabase agent_tasks 任務佇列</p>
+            <p><strong className="text-slate-700">Phase 1（已完成）</strong>：Travis + Secretary — 簽核/郵件/行事曆自動化</p>
+            <p><strong className="text-slate-700">Phase 2（已完成）</strong>：+ Inspector + Researcher + Writer + Analyst + Coder + Designer（8 agents 全上線）</p>
+            <p><strong className="text-slate-700">Phase 3（進行中）</strong>：</p>
+            <div className="ml-4 space-y-0.5">
+              <p>✅ agent_tasks 任務佇列（DB 追蹤派工狀態）</p>
+              <p>✅ Designer→Coder→Inspector 開發流程</p>
+              <p>✅ Researcher→Writer 報告流程</p>
+              <p>🔄 Agent 間直接通訊（等 OpenClaw 支援）</p>
+              <p>🔄 Agent 自主排程</p>
+            </div>
+            <p className="text-slate-400 mt-2">通訊方式：Cron → Travis (調度) → sessions_spawn → 各 Agent → Telegram 通知</p>
+            <p className="text-slate-400">跨 Agent 協作透過 Supabase agent_tasks 任務佇列 + Travis Daily 留言討論</p>
           </div>
         </section>
 
         {/* Footer */}
         <footer className="text-center text-xs text-slate-400 mt-8 pb-6">
-          Aurotek Sales Portal · Powered by Jarvis
+          Aurotek Sales Portal · Powered by Travis
         </footer>
       </div>
 
