@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
+import { useState, useEffect, useRef } from 'react'
+
+import { supabase } from '@/lib/supabase'
 
 interface Transcript {
   id: string

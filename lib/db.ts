@@ -198,7 +198,7 @@ export async function deleteDealer(id: string): Promise<boolean> {
 
 // ===== Targets (目標設定) =====
 
-let targetsCache: Target[] = [];
+const targetsCache: Target[] = [];
 
 export async function getTargets(year?: number): Promise<Target[]> {
   if (PORTAL_SHEET_ID) {

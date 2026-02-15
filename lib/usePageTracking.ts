@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect } from 'react'
 import { usePathname } from 'next/navigation'
+import { useEffect } from 'react'
 
 // 頁面名稱對照
 const pageNames: Record<string, string> = {

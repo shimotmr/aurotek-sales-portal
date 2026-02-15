@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+
 import { supabase } from '@/lib/supabase'
 
 const ASSEMBLYAI_API_KEY = process.env.ASSEMBLYAI_API_KEY || ''

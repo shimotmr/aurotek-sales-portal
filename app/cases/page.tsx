@@ -1,8 +1,9 @@
 'use client'
 
-import { Suspense, useEffect, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
+import { Suspense, useEffect, useState } from 'react'
+
 import UserMenu from '../components/UserMenu'
 
 interface Case {

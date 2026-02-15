@@ -1,7 +1,8 @@
-import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { supabase } from '@/lib/supabase'
+import { NextResponse } from 'next/server'
+
 import { logActivity, LogActions } from '@/lib/logger'
+import { supabase } from '@/lib/supabase'
 
 async function getCurrentUser() {
   const cookieStore = await cookies()

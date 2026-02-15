@@ -1,7 +1,7 @@
 'use client'
 
-import Link from 'next/link'
 import { Smartphone, Search, ClipboardList } from 'lucide-react'
+import Link from 'next/link'
 
 const icons = {
   video: (

@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server'
+
 import { supabase } from '@/lib/supabase'
 
 const GEMINI_API_KEY = process.env.GOOGLE_AI_API_KEY || ''

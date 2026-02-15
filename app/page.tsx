@@ -1,10 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import UserMenu from './components/UserMenu'
-import { supabase } from '@/lib/supabase'
+import { useState, useEffect } from 'react'
+
 import { MobileTabBar } from './components/AppShell'
+import UserMenu from './components/UserMenu'
+
+import { supabase } from '@/lib/supabase'
+
 
 // SVG Icons as components — clean, consistent, scalable
 const icons = {

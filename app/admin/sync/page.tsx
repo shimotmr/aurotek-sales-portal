@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useRef } from 'react'
-import Link from 'next/link'
 import { BarChart3 } from 'lucide-react'
+import Link from 'next/link'
+import { useState, useRef } from 'react'
 
 export default function SyncPage() {
   const [uploading, setUploading] = useState(false)

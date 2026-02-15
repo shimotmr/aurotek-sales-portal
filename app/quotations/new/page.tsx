@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useState, useEffect, useCallback } from 'react'
+
+import { supabase } from '@/lib/supabase'
 
 interface Product {
   aurotek_pn: string

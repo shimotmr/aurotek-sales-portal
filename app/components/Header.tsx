@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+
 import UserMenu from './UserMenu'
 
 interface HeaderProps {

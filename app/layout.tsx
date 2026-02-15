@@ -1,7 +1,8 @@
 import './globals.css'
 import type { Metadata } from 'next'
-import { TrackingProvider } from './components/TrackingProvider'
+
 import LayoutWrapper from './components/LayoutWrapper'
+import { TrackingProvider } from './components/TrackingProvider'
 
 export const metadata: Metadata = {
   title: '和椿通路營業管理系統',

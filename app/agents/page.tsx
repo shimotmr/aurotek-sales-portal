@@ -1,13 +1,15 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import Link from 'next/link'
-import { supabase } from "@/lib/supabase"
 import {
   Bot, ClipboardList, Search, TrendingUp, Microscope,
   PenTool, Code2, Palette, Clock, RefreshCw, Package,
   MessageSquare, Building, ArrowLeft, Lock, FileText, GitFork
 } from 'lucide-react'
+import Link from 'next/link'
+import { useState, useEffect, useCallback } from 'react'
+
+import { supabase } from "@/lib/supabase"
+
 
 interface AgentTask {
   id: number

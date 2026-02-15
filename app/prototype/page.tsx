@@ -1,10 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { Home, ClipboardList, Package, User, FileText, Mic, Bot, BarChart3, Image, DollarSign, Zap } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useState, useEffect } from 'react'
+
 import { supabase } from '@/lib/supabase'
-import { Home, ClipboardList, Package, User, FileText, Mic, Bot, BarChart3, Image, DollarSign, Zap } from 'lucide-react'
+
 
 // Types
 interface CaseItem {

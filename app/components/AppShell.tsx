@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
+import { useState, useEffect, useRef } from 'react'
+
 import { logActionWithIP } from '@/lib/audit'
 
 // Navigation data
