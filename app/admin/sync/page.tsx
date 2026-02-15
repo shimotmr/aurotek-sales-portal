@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react'
 import Link from 'next/link'
+import { BarChart3 } from 'lucide-react'
 
 export default function SyncPage() {
   const [uploading, setUploading] = useState(false)
@@ -148,7 +149,7 @@ export default function SyncPage() {
 
         {/* 同步狀態 */}
         <div className="bg-white rounded-xl shadow-sm p-6">
-          <h2 className="text-lg font-bold mb-4">📊 同步狀態</h2>
+          <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><BarChart3 size={20} /> 同步狀態</h2>
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <div>

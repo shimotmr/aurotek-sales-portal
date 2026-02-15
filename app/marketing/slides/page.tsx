@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
+import { ClipboardList, Film } from 'lucide-react'
 
 interface Slide {
   id: string
@@ -111,14 +112,14 @@ export default function SlidesPage() {
           </div>
           <div className="flex gap-2">
             <a href="/marketing/videos" className="bg-purple-500 text-white px-3 py-1.5 rounded-lg hover:bg-purple-600 text-sm">
-              🎬 影片案例
+              <Film size={16} className="inline" /> 影片案例
             </a>
             {playlist.length > 0 && (
               <button 
                 onClick={() => setShowPlaylist(true)}
                 className="bg-blue-500 text-white px-3 py-1.5 rounded-lg hover:bg-blue-600 relative text-sm"
               >
-                📋 播放清單
+                <ClipboardList size={16} className="inline" /> 播放清單
                 <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
                   {playlist.length}
                 </span>
@@ -253,7 +254,7 @@ export default function SlidesPage() {
             onClick={e => e.stopPropagation()}
           >
             <div className="p-4 border-b">
-              <h3 className="text-lg font-bold">📋 播放清單</h3>
+              <h3 className="text-lg font-bold flex items-center gap-2"><ClipboardList size={20} /> 播放清單</h3>
             </div>
             <div className="p-4 max-h-64 overflow-y-auto">
               {playlist.map((slide, idx) => (

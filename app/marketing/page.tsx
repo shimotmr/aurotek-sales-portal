@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { Smartphone, Search, ClipboardList } from 'lucide-react'
 
 const icons = {
   video: (
@@ -93,7 +94,7 @@ export default function MarketingPage() {
           ))}
         </div>
 
-        <p className="text-center text-xs text-slate-400 mt-8">📱 支援手機瀏覽 · 🔍 關鍵字搜尋 · 📋 播放清單功能</p>
+        <p className="text-center text-xs text-slate-400 mt-8 flex items-center justify-center gap-1"><Smartphone size={14} /> 支援手機瀏覽 · <Search size={14} /> 關鍵字搜尋 · <ClipboardList size={14} /> 播放清單功能</p>
       </div>
     </div>
   )

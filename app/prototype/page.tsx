@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { Home, ClipboardList, Package, User, FileText, Mic, Bot, BarChart3, Image, DollarSign, Zap } from 'lucide-react'
 
 // Types
 interface CaseItem {
@@ -25,20 +26,20 @@ interface TargetData {
 
 // Tab Bar for mobile
 const TABS = [
-  { id: 'home', title: '首頁', href: '/prototype', icon: '🏠' },
-  { id: 'cases', title: '案件', href: '/cases', icon: '📋' },
-  { id: 'products', title: '資源', href: '/products', icon: '📦' },
-  { id: 'me', title: '我的', href: '/admin', icon: '👤' },
+  { id: 'home', title: '首頁', href: '/prototype', icon: <Home size={20} /> },
+  { id: 'cases', title: '案件', href: '/cases', icon: <ClipboardList size={20} /> },
+  { id: 'products', title: '資源', href: '/products', icon: <Package size={20} /> },
+  { id: 'me', title: '我的', href: '/admin', icon: <User size={20} /> },
 ]
 
 // Quick actions
 const QUICK_ACTIONS = [
-  { icon: '📝', label: '新報價', href: '/quotations' },
-  { icon: '📋', label: '新案件', href: '/cases' },
-  { icon: '🎙️', label: '逐字稿', href: '/transcripts' },
-  { icon: '🤖', label: 'AI 助手', href: '/agents' },
-  { icon: '📊', label: '業績', href: '/performance' },
-  { icon: '🖼️', label: '資源庫', href: '/marketing' },
+  { icon: <FileText size={20} />, label: '新報價', href: '/quotations' },
+  { icon: <ClipboardList size={20} />, label: '新案件', href: '/cases' },
+  { icon: <Mic size={20} />, label: '逐字稿', href: '/transcripts' },
+  { icon: <Bot size={20} />, label: 'AI 助手', href: '/agents' },
+  { icon: <BarChart3 size={20} />, label: '業績', href: '/performance' },
+  { icon: <Image size={20} />, label: '資源庫', href: '/marketing' },
 ]
 
 function formatAmount(num: number): string {
@@ -151,7 +152,7 @@ export default function PrototypePage() {
             <h1 className="text-xl font-bold">Aurotek Portal</h1>
           </div>
           <Link href="/admin" className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-            <span className="text-lg">👤</span>
+            <User size={20} />
           </Link>
         </div>
 
@@ -198,7 +199,7 @@ export default function PrototypePage() {
           {/* Pipeline Amount */}
           <div className="bg-white/80 backdrop-blur-lg rounded-2xl p-4 shadow-lg shadow-blue-500/5 border border-white/50">
             <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-sm">💰</div>
+              <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-sm"><DollarSign size={16} /></div>
               <span className="text-xs text-slate-500">Pipeline</span>
             </div>
             {loading ? (
@@ -247,7 +248,7 @@ export default function PrototypePage() {
           {/* Total Cases */}
           <div className="bg-white/80 backdrop-blur-lg rounded-2xl p-4 shadow-lg shadow-purple-500/5 border border-white/50">
             <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center text-sm">📊</div>
+              <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center text-sm"><BarChart3 size={16} /></div>
               <span className="text-xs text-slate-500">總案件</span>
             </div>
             {loading ? (
@@ -262,7 +263,7 @@ export default function PrototypePage() {
         {/* Quick Actions */}
         <div className="mt-6">
           <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-            <span>⚡</span> 快捷入口
+            <Zap size={16} /> 快捷入口
           </h2>
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
             {QUICK_ACTIONS.map(action => (
@@ -282,7 +283,7 @@ export default function PrototypePage() {
         <div className="mt-6 mb-24">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-2">
-              <span>📋</span> 待處理案件
+              <ClipboardList size={16} /> 待處理案件
             </h2>
             <Link href="/cases" className="text-xs text-blue-600 hover:text-blue-700 font-medium">
               查看全部 →

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
+import { ClipboardList } from 'lucide-react'
 
 interface Quotation {
   id: number
@@ -124,7 +125,7 @@ export default function QuotationsPage() {
           <div className="text-center py-12 text-gray-400">載入中...</div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-12">
-            <div className="text-4xl mb-3">📋</div>
+            <div className="text-4xl mb-3"><ClipboardList size={40} className="mx-auto text-gray-400" /></div>
             <p className="text-gray-500 mb-4">尚無報價單</p>
             <Link
               href="/quotations/new"
