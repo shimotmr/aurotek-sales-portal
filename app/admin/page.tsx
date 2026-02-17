@@ -4,103 +4,18 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 
+import { 
+  icons, 
+  ADMIN_MENU_ITEMS, 
+  ADMIN_GROUP_LABELS,
+  type AdminItem 
+} from '@/lib/menu-config'
+
 interface Stats {
   teamCount: number
   annualTarget: number
   dealerCount: number
   caseCount: number
-}
-
-// SVG Icons
-const icons = {
-  target: (
-    <svg viewBox="0 0 32 32" fill="none" className="w-6 h-6">
-      <circle cx="16" cy="16" r="12" stroke="currentColor" strokeWidth="2"/>
-      <circle cx="16" cy="16" r="7" stroke="currentColor" strokeWidth="2" opacity="0.6"/>
-      <circle cx="16" cy="16" r="2.5" fill="currentColor"/>
-    </svg>
-  ),
-  team: (
-    <svg viewBox="0 0 32 32" fill="none" className="w-6 h-6">
-      <circle cx="16" cy="11" r="4" stroke="currentColor" strokeWidth="2"/>
-      <path d="M8 26c0-4.4 3.6-8 8-8s8 3.6 8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-      <circle cx="25" cy="13" r="3" stroke="currentColor" strokeWidth="1.5" opacity="0.5"/>
-      <path d="M26 20c2 .8 3.5 2.8 3.5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.5"/>
-    </svg>
-  ),
-  dealer: (
-    <svg viewBox="0 0 32 32" fill="none" className="w-6 h-6">
-      <rect x="4" y="14" width="24" height="14" rx="2" stroke="currentColor" strokeWidth="2"/>
-      <path d="M4 18h24" stroke="currentColor" strokeWidth="1.5" opacity="0.4"/>
-      <path d="M10 6h12l4 8H6l4-8z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
-      <rect x="13" y="22" width="6" height="6" rx="1" stroke="currentColor" strokeWidth="1.5"/>
-    </svg>
-  ),
-  video: (
-    <svg viewBox="0 0 32 32" fill="none" className="w-6 h-6">
-      <rect x="3" y="7" width="20" height="18" rx="2" stroke="currentColor" strokeWidth="2"/>
-      <path d="M23 13l6-3v12l-6-3v-6z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
-      <circle cx="13" cy="16" r="3" stroke="currentColor" strokeWidth="1.5" opacity="0.5"/>
-    </svg>
-  ),
-  slides: (
-    <svg viewBox="0 0 32 32" fill="none" className="w-6 h-6">
-      <rect x="4" y="4" width="24" height="18" rx="2" stroke="currentColor" strokeWidth="2"/>
-      <path d="M16 22v6M10 28h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-      <path d="M10 10h12M10 14h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.5"/>
-    </svg>
-  ),
-  sync: (
-    <svg viewBox="0 0 32 32" fill="none" className="w-6 h-6">
-      <path d="M6 16a10 10 0 0117.3-6.8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-      <path d="M26 16a10 10 0 01-17.3 6.8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-      <path d="M22 6l2 4-4 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <path d="M10 26l-2-4 4-1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  ),
-  logs: (
-    <svg viewBox="0 0 32 32" fill="none" className="w-6 h-6">
-      <rect x="6" y="4" width="20" height="24" rx="2" stroke="currentColor" strokeWidth="2"/>
-      <path d="M11 10h10M11 15h10M11 20h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.6"/>
-      <circle cx="11" cy="10" r="1" fill="currentColor"/>
-      <circle cx="11" cy="15" r="1" fill="currentColor"/>
-      <circle cx="11" cy="20" r="1" fill="currentColor"/>
-    </svg>
-  ),
-  admin: (
-    <svg viewBox="0 0 32 32" fill="none" className="w-6 h-6">
-      <path d="M16 4l2 5h5l-4 3 1.5 5L16 14l-4.5 3L13 12 9 9h5l2-5z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
-      <circle cx="16" cy="24" r="4" stroke="currentColor" strokeWidth="2"/>
-      <path d="M16 20v-3" stroke="currentColor" strokeWidth="1.5"/>
-    </svg>
-  ),
-}
-
-interface AdminItem {
-  title: string
-  desc: string
-  href: string
-  icon: keyof typeof icons
-  color: string
-  group: 'core' | 'content' | 'system'
-  superOnly?: boolean
-}
-
-const ITEMS: AdminItem[] = [
-  { title: '目標管理', desc: '年度 · 月度 · 個人目標設定', href: '/admin/targets', icon: 'target', color: '#3B82F6', group: 'core' },
-  { title: '業務團隊', desc: '業務員資料 · 職責分配', href: '/admin/team', icon: 'team', color: '#10B981', group: 'core' },
-  { title: '經銷商管理', desc: '經銷商資料 · 聯絡人 · 區域', href: '/admin/dealers', icon: 'dealer', color: '#8B5CF6', group: 'core' },
-  { title: '影片管理', desc: '案例影片 · 分類 · 連結', href: '/admin/videos', icon: 'video', color: '#EF4444', group: 'content' },
-  { title: '簡報管理', desc: '簡報範本 · 分類 · 權限', href: '/admin/slides', icon: 'slides', color: '#F59E0B', group: 'content' },
-  { title: '資料同步', desc: 'Funnel 報表上傳 · 資料匯入', href: '/admin/sync', icon: 'sync', color: '#F97316', group: 'system' },
-  { title: '系統日誌', desc: '登入紀錄 · 操作紀錄 · 錯誤', href: '/admin/logs', icon: 'logs', color: '#06B6D4', group: 'system' },
-  { title: '管理員管理', desc: '新增 · 移除管理員帳號', href: '/admin/admins', icon: 'admin', color: '#EC4899', group: 'system', superOnly: true },
-]
-
-const GROUPS: Record<string, string> = {
-  core: '營業管理',
-  content: '內容管理',
-  system: '系統設定',
 }
 
 export default function AdminPage() {
@@ -185,12 +100,12 @@ export default function AdminPage() {
 
         {/* Menu Groups */}
         {(['core', 'content', 'system'] as const).map(group => {
-          const items = ITEMS.filter(i => i.group === group && (!i.superOnly || isSuperAdmin))
+          const items = ADMIN_MENU_ITEMS.filter(i => i.group === group && (!i.superOnly || isSuperAdmin))
           if (!items.length) return null
 
           return (
             <section key={group} className="mb-6">
-              <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">{GROUPS[group]}</h2>
+              <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">{ADMIN_GROUP_LABELS[group]}</h2>
               <div className="bg-white rounded-xl shadow-sm border border-slate-100 divide-y divide-slate-100 overflow-hidden">
                 {items.map(item => (
                   <Link key={item.href} href={item.href}
