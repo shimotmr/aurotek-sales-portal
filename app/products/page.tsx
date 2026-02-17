@@ -59,14 +59,14 @@ function TableSkeleton({ rows = 5 }: { rows?: number }) {
     <>
       {Array.from({ length: rows }).map((_, i) => (
         <tr key={i} className="animate-pulse">
-          <td className="border-b p-2"><div className="h-4 bg-gray-200 rounded w-20" /></td>
-          <td className="border-b p-2"><div className="h-4 bg-gray-200 rounded w-28" /></td>
-          <td className="border-b p-2 hidden lg:table-cell"><div className="h-4 bg-gray-200 rounded w-24" /></td>
-          <td className="border-b p-2 hidden md:table-cell"><div className="h-4 bg-gray-200 rounded w-12" /></td>
-          <td className="border-b p-2"><div className="h-4 bg-gray-200 rounded w-16 ml-auto" /></td>
-          <td className="border-b p-2"><div className="h-4 bg-gray-200 rounded w-16 ml-auto" /></td>
-          <td className="border-b p-2 hidden sm:table-cell"><div className="h-4 bg-gray-200 rounded w-8 ml-auto" /></td>
-          <td className="border-b p-2"><div className="h-4 bg-gray-200 rounded w-4 mx-auto" /></td>
+          <td className="border-b border-surface-3 p-2"><div className="h-4 bg-surface-2 rounded w-20" /></td>
+          <td className="border-b border-surface-3 p-2"><div className="h-4 bg-surface-2 rounded w-28" /></td>
+          <td className="border-b border-surface-3 p-2 hidden lg:table-cell"><div className="h-4 bg-surface-2 rounded w-24" /></td>
+          <td className="border-b border-surface-3 p-2 hidden md:table-cell"><div className="h-4 bg-surface-2 rounded w-12" /></td>
+          <td className="border-b border-surface-3 p-2"><div className="h-4 bg-surface-2 rounded w-16 ml-auto" /></td>
+          <td className="border-b border-surface-3 p-2"><div className="h-4 bg-surface-2 rounded w-16 ml-auto" /></td>
+          <td className="border-b border-surface-3 p-2 hidden sm:table-cell"><div className="h-4 bg-surface-2 rounded w-8 ml-auto" /></td>
+          <td className="border-b border-surface-3 p-2"><div className="h-4 bg-surface-2 rounded w-4 mx-auto" /></td>
         </tr>
       ))}
     </>
@@ -78,18 +78,18 @@ function CardSkeleton({ count = 5 }: { count?: number }) {
   return (
     <>
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="bg-white border rounded-lg px-3 py-2.5 animate-pulse">
+        <div key={i} className="bg-surface-1 border border-surface-3 rounded-card px-3 py-2.5 animate-pulse">
           <div className="flex items-center gap-2 mb-1">
-            <div className="h-3 bg-gray-200 rounded w-20" />
-            <div className="h-3 bg-gray-200 rounded w-10" />
+            <div className="h-3 bg-surface-2 rounded w-20" />
+            <div className="h-3 bg-surface-2 rounded w-10" />
           </div>
-          <div className="h-4 bg-gray-200 rounded w-3/4 mb-1.5" />
+          <div className="h-4 bg-surface-2 rounded w-3/4 mb-1.5" />
           <div className="flex justify-between items-center">
             <div className="flex gap-3">
-              <div className="h-4 bg-gray-200 rounded w-16" />
-              <div className="h-4 bg-gray-200 rounded w-20" />
+              <div className="h-4 bg-surface-2 rounded w-16" />
+              <div className="h-4 bg-surface-2 rounded w-20" />
             </div>
-            <div className="h-5 bg-gray-200 rounded w-12" />
+            <div className="h-5 bg-surface-2 rounded w-12" />
           </div>
         </div>
       ))}
@@ -164,15 +164,15 @@ function DetailTabs({ product, formatPrice }: { product: ProductDetail; formatPr
   return (
     <>
       {/* Tabs */}
-      <div className="flex border-b mb-4 -mx-4 px-4">
+      <div className="flex border-b border-surface-3 mb-4 -mx-4 px-4">
         {tabs.map(tab => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
             className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
               activeTab === tab.key
-                ? 'border-[#E60012] text-[#E60012]'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? 'border-primary-500 text-primary-500'
+                : 'border-transparent text-text-tertiary hover:text-text-secondary'
             }`}
           >
             {tab.label}
@@ -185,8 +185,8 @@ function DetailTabs({ product, formatPrice }: { product: ProductDetail; formatPr
         <tbody>
           {renderContent().map(([label, value]) => (
             <tr key={label as string}>
-              <th className="w-[40%] bg-gray-50 border-b p-2.5 text-left font-medium text-gray-700 text-sm">{label}</th>
-              <td className="border-b p-2.5 text-sm text-gray-900">{value !== null && value !== undefined && value !== '' ? value : '-'}</td>
+              <th className="w-[40%] bg-surface-2 border-b border-surface-3 p-2.5 text-left font-medium text-text-primary text-sm">{label}</th>
+              <td className="border-b border-surface-3 p-2.5 text-sm text-text-primary">{value !== null && value !== undefined && value !== '' ? value : '-'}</td>
             </tr>
           ))}
         </tbody>
@@ -349,15 +349,15 @@ export default function ProductsPage() {
   const activeFilterCount = (materialTypeFilter ? 1 : 0) + productTypeFilters.length + tagFilters.length
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-surface-0 transition-colors duration-200">
       {/* Page Header - hidden when drawer is open on mobile */}
-      <header className={`bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 md:top-0 z-20 ${drawerOpen ? 'hidden sm:block' : ''}`}>
+      <header className={`bg-surface-1/80 backdrop-blur-sm border-b border-surface-3 sticky top-0 md:top-0 z-20 transition-colors duration-200 ${drawerOpen ? 'hidden sm:block' : ''}`}>
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-white">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-secondary-500 to-secondary-600 flex items-center justify-center text-white shadow-lg">
               <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z" clipRule="evenodd"/></svg>
             </div>
-            <span className="font-bold text-slate-800 text-sm sm:text-base">產品目錄</span>
+            <span className="font-bold text-text-primary text-sm sm:text-base">產品目錄</span>
           </div>
         </div>
       </header>
@@ -371,13 +371,12 @@ export default function ProductsPage() {
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1) }}
               placeholder="搜尋料號、品名..."
-              className="flex-1 p-3 text-sm bg-white rounded-xl border focus:ring-2 focus:ring-opacity-20 outline-none"
-              style={{ borderColor: '#e5e7eb' }}
+              className="flex-1 p-3 text-sm bg-surface-1 border border-surface-3 rounded-card focus:ring-2 focus:ring-primary-400/20 focus:border-primary-400 outline-none transition-all"
             />
             <button 
               onClick={() => setShowFilters(!showFilters)}
-              className={`px-4 py-3 rounded-xl border font-medium text-sm transition-colors ${
-                activeFilterCount > 0 ? 'bg-red-50 border-red-200 text-red-600' : 'bg-white'
+              className={`px-4 py-3 rounded-card border font-medium text-sm transition-colors ${
+                activeFilterCount > 0 ? 'bg-primary-50 border-primary-200 text-primary-600' : 'bg-surface-1 border-surface-3'
               }`}
             >
               篩選{activeFilterCount > 0 && ` (${activeFilterCount})`}
@@ -391,12 +390,12 @@ export default function ProductsPage() {
         <div className="px-3 sm:px-4 mt-3 mb-2">
           <button 
             onClick={() => setShowFilters(!showFilters)}
-            className="inline-flex items-center gap-2 px-3 py-2 border rounded-lg font-medium text-xs transition-colors bg-white hover:bg-gray-50"
+            className="inline-flex items-center gap-2 px-3 py-2 border border-surface-3 rounded-button font-medium text-xs transition-colors bg-surface-1 hover:bg-surface-hover"
           >
             <span>☰</span> 
             <span>展開/收起篩選</span>
             {activeFilterCount > 0 && (
-              <span className="bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 ml-1">
+              <span className="bg-primary-500 text-white text-xs rounded-full px-1.5 py-0.5 ml-1">
                 {activeFilterCount}
               </span>
             )}
@@ -411,24 +410,24 @@ export default function ProductsPage() {
         
         {/* Filters Sidebar / Mobile Sheet */}
         {showFilters && (
-          <aside className={`space-y-3 ${isMobile ? 'bg-white rounded-xl p-4 border shadow-sm' : 'md:max-h-[calc(100vh-140px)] md:overflow-y-auto'}`}>
+          <aside className={`space-y-3 ${isMobile ? 'bg-surface-1 rounded-card p-4 border border-surface-3 shadow-card' : 'md:max-h-[calc(100vh-140px)] md:overflow-y-auto'}`}>
             {/* Keyword (Desktop only) */}
             {!isMobile && (
-              <div className="bg-white border rounded-xl p-3 shadow-sm">
-                <div className="font-bold mb-2 text-sm text-gray-800">關鍵字</div>
+              <div className="bg-surface-1 border border-surface-3 rounded-card p-3 shadow-card">
+                <div className="font-bold mb-2 text-sm text-text-primary">關鍵字</div>
                 <input
                   type="search"
                   value={search}
                   onChange={(e) => { setSearch(e.target.value); setPage(1) }}
                   placeholder="和椿料號 / 普渡料號 / 品名 / 規格..."
-                  className="w-full p-3 text-sm bg-gray-50 rounded-lg border focus:bg-white outline-none transition-all"
+                  className="w-full p-3 text-sm bg-surface-0 border border-surface-3 rounded-button text-text-primary focus:bg-surface-0 focus:border-primary-400 outline-none transition-all"
                 />
               </div>
             )}
 
             {/* Material Type */}
-            <div className={isMobile ? '' : 'bg-white border rounded-xl p-3 shadow-sm'}>
-              <div className="font-bold mb-2 text-sm text-gray-800">物料類型（單選）</div>
+            <div className={isMobile ? '' : 'bg-surface-1 border border-surface-3 rounded-card p-3 shadow-card'}>
+              <div className="font-bold mb-2 text-sm text-text-primary">物料類型（單選）</div>
               <div className="flex flex-wrap gap-2">
                 {materialTypes.map(type => (
                   <button
@@ -439,8 +438,8 @@ export default function ProductsPage() {
                     }}
                     className={`px-3 py-2 rounded-full border text-xs font-medium transition-all ${
                       materialTypeFilter === type.code 
-                        ? 'text-white bg-[#E60012] border-[#E60012]' 
-                        : 'bg-gray-50 text-gray-700 hover:border-[#E60012]'
+                        ? 'text-white bg-primary-500 border-primary-500' 
+                        : 'bg-surface-2 text-text-secondary hover:border-primary-400'
                     }`}
                   >
                     {type.name}
@@ -450,8 +449,8 @@ export default function ProductsPage() {
             </div>
 
             {/* Product Type - 分組顯示 */}
-            <div className={isMobile ? '' : 'bg-white border rounded-xl p-3 shadow-sm'}>
-              <div className="font-bold mb-2 text-sm text-gray-800">產品類型（多選）</div>
+            <div className={isMobile ? '' : 'bg-surface-1 border border-surface-3 rounded-card p-3 shadow-card'}>
+              <div className="font-bold mb-2 text-sm text-text-primary">產品類型（多選）</div>
               <div className="space-y-2">
                 {(() => {
                   // 定義分組規則
@@ -486,7 +485,7 @@ export default function ProductsPage() {
                         if (!types || types.length === 0) return null
                         return (
                           <div key={prefix} className="flex items-start gap-2">
-                            <span className="text-xs text-gray-500 w-12 pt-2 shrink-0">{prefix}</span>
+                            <span className="text-xs text-text-tertiary w-12 pt-2 shrink-0">{prefix}</span>
                             <div className="flex flex-wrap gap-1.5">
                               {types.map(type => {
                                 // 顯示簡化名稱（去掉前綴）
@@ -500,8 +499,8 @@ export default function ProductsPage() {
                                     onClick={() => toggleProductType(type)}
                                     className={`px-2 py-1 rounded border text-xs font-medium transition-all ${
                                       productTypeFilters.includes(type)
-                                        ? 'text-white bg-[#E60012] border-[#E60012]' 
-                                        : 'bg-gray-50 text-gray-600 hover:border-[#E60012]'
+                                        ? 'text-white bg-primary-500 border-primary-500' 
+                                        : 'bg-surface-2 text-text-secondary hover:border-primary-400'
                                     }`}
                                   >
                                     {displayName}
@@ -514,7 +513,7 @@ export default function ProductsPage() {
                       })}
                       {ungrouped.length > 0 && (
                         <div className="flex items-start gap-2">
-                          <span className="text-xs text-gray-500 w-12 pt-2 shrink-0">其他</span>
+                          <span className="text-xs text-text-tertiary w-12 pt-2 shrink-0">其他</span>
                           <div className="flex flex-wrap gap-1.5">
                             {ungrouped.map(type => (
                               <button
@@ -522,8 +521,8 @@ export default function ProductsPage() {
                                 onClick={() => toggleProductType(type)}
                                 className={`px-2 py-1 rounded border text-xs font-medium transition-all ${
                                   productTypeFilters.includes(type)
-                                    ? 'text-white bg-[#E60012] border-[#E60012]' 
-                                    : 'bg-gray-50 text-gray-600 hover:border-[#E60012]'
+                                    ? 'text-white bg-primary-500 border-primary-500' 
+                                    : 'bg-surface-2 text-text-secondary hover:border-primary-400'
                                 }`}
                               >
                                 {type}
@@ -539,8 +538,8 @@ export default function ProductsPage() {
             </div>
 
             {/* Product Tags */}
-            <div className={isMobile ? '' : 'bg-white border rounded-xl p-3 shadow-sm'}>
-              <div className="font-bold mb-2 text-sm text-gray-800">產品標籤（多選）</div>
+            <div className={isMobile ? '' : 'bg-surface-1 border border-surface-3 rounded-card p-3 shadow-card'}>
+              <div className="font-bold mb-2 text-sm text-text-primary">產品標籤（多選）</div>
               <div className="flex flex-wrap gap-2">
                 {tagOptions.map(tag => (
                   <button
@@ -548,8 +547,8 @@ export default function ProductsPage() {
                     onClick={() => toggleTag(tag)}
                     className={`px-3 py-2 rounded-full border text-xs font-medium transition-all ${
                       tagFilters.includes(tag)
-                        ? 'text-white bg-[#E60012] border-[#E60012]' 
-                        : 'bg-gray-50 text-gray-700 hover:border-[#E60012]'
+                        ? 'text-white bg-primary-500 border-primary-500' 
+                        : 'bg-surface-2 text-text-secondary hover:border-primary-400'
                     }`}
                   >
                     {tag}
@@ -559,15 +558,15 @@ export default function ProductsPage() {
             </div>
 
             {/* Actions */}
-            <div className={isMobile ? 'flex gap-2 pt-2' : 'bg-white border rounded-xl p-3 shadow-sm'}>
+            <div className={isMobile ? 'flex gap-2 pt-2' : 'bg-surface-1 border border-surface-3 rounded-card p-3 shadow-card'}>
               {!isMobile && (
                 <>
-                  <div className="font-bold mb-2 text-sm text-gray-800">顯示設定</div>
-                  <label className="block text-xs text-gray-500 mb-1">每頁筆數</label>
+                  <div className="font-bold mb-2 text-sm text-text-primary">顯示設定</div>
+                  <label className="block text-xs text-text-tertiary mb-1">每頁筆數</label>
                   <select
                     value={pageSize}
                     onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1) }}
-                    className="w-full p-2 text-sm border rounded-lg bg-white outline-none mb-3"
+                    className="w-full p-2 text-sm border border-surface-3 rounded-button bg-surface-0 text-text-primary outline-none"
                   >
                     <option value={25}>25</option>
                     <option value={50}>50</option>
@@ -577,15 +576,14 @@ export default function ProductsPage() {
               )}
               <button
                 onClick={clearFilters}
-                className={`${isMobile ? 'flex-1' : 'w-full'} px-3 py-2 border rounded-lg hover:bg-gray-50 transition-colors text-sm`}
+                className={`${isMobile ? 'flex-1' : 'w-full'} px-3 py-2 border border-surface-3 rounded-button hover:bg-surface-hover transition-colors text-sm text-text-secondary`}
               >
                 清除條件
               </button>
               {isMobile && (
                 <button
                   onClick={() => setShowFilters(false)}
-                  className="flex-1 px-3 py-2 text-white rounded-lg text-sm font-medium"
-                  style={{ backgroundColor: '#E60012' }}
+                  className="flex-1 px-3 py-2 text-white rounded-button text-sm font-medium bg-primary-500 hover:bg-primary-600 transition-colors"
                 >
                   套用
                 </button>
@@ -598,20 +596,20 @@ export default function ProductsPage() {
         <section className="min-w-0 flex flex-col">
           {/* Result Count & Pagination */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-2 gap-2">
-            <span className="text-gray-700 font-medium text-sm">共 {total} 筆</span>
+            <span className="text-text-primary font-medium text-sm">共 {total} 筆</span>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-3 py-1.5 border rounded-lg hover:bg-gray-50 transition-colors text-xs disabled:opacity-50 bg-white"
+                className="px-3 py-1.5 border border-surface-3 rounded-button hover:bg-surface-hover transition-colors text-xs disabled:opacity-50 bg-surface-1 text-text-secondary"
               >
                 ‹ 上一頁
               </button>
-              <span className="text-gray-500 text-xs px-2">{page} / {totalPages}</span>
+              <span className="text-text-tertiary text-xs px-2">{page} / {totalPages}</span>
               <button
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages}
-                className="px-3 py-1.5 border rounded-lg hover:bg-gray-50 transition-colors text-xs disabled:opacity-50 bg-white"
+                className="px-3 py-1.5 border border-surface-3 rounded-button hover:bg-surface-hover transition-colors text-xs disabled:opacity-50 bg-surface-1 text-text-secondary"
               >
                 下一頁 ›
               </button>
@@ -624,29 +622,29 @@ export default function ProductsPage() {
               {loading ? (
                 <CardSkeleton count={pageSize > 10 ? 10 : pageSize} />
               ) : products.length === 0 ? (
-                <div className="bg-white rounded-xl p-8 text-center text-gray-500">找不到產品</div>
+                <div className="bg-surface-1 border border-surface-3 rounded-card p-8 text-center text-text-tertiary">找不到產品</div>
               ) : (
                 products.map((product) => (
                   <div 
                     key={product.id} 
-                    className="bg-white border rounded-lg px-3 py-2.5 shadow-sm active:bg-gray-50 transition-colors"
+                    className="bg-surface-1 border border-surface-3 rounded-card px-3 py-2.5 shadow-card active:bg-surface-hover transition-colors"
                   >
                     {/* 第一行：料號 + 類型 + 庫存 + ...詳細 */}
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="font-mono text-xs text-gray-500">{product.aurotek_pn}</span>
+                      <span className="font-mono text-xs text-text-tertiary">{product.aurotek_pn}</span>
                       {product.material_type_name && (
-                        <span className="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded">
+                        <span className="text-[10px] px-1.5 py-0.5 bg-surface-2 text-text-secondary rounded">
                           {product.material_type_name}
                         </span>
                       )}
                       {product.total_qty > 0 && (
-                        <span className="text-[10px] px-1.5 py-0.5 bg-green-50 text-green-600 rounded">
+                        <span className="text-[10px] px-1.5 py-0.5 bg-secondary-50 text-secondary-600 rounded">
                           庫存{product.total_qty}
                         </span>
                       )}
                       <button
                         onClick={() => openDrawer(product.id)}
-                        className="ml-auto text-gray-400 hover:text-gray-600 px-1.5 py-0.5 text-sm"
+                        className="ml-auto text-text-tertiary hover:text-text-primary px-1.5 py-0.5 text-sm"
                         title="詳細"
                       >
                         ...
@@ -661,31 +659,30 @@ export default function ProductsPage() {
                         if (match) {
                           return (
                             <>
-                              <span className="font-medium text-gray-900 text-sm">{match[1]}</span>
-                              <span className="text-xs text-gray-400">{match[2]}</span>
+                              <span className="font-medium text-text-primary text-sm">{match[1]}</span>
+                              <span className="text-xs text-text-tertiary">{match[2]}</span>
                             </>
                           )
                         }
-                        return <span className="font-medium text-gray-900 text-sm">{spec}</span>
+                        return <span className="font-medium text-text-primary text-sm">{spec}</span>
                       })()}
                     </div>
                     
                     {/* 第三行：牌價 + 經銷價 + 加入報價 */}
                     <div className="flex items-center justify-between">
                       <div className="flex items-baseline gap-3">
-                        <span className="text-sm font-semibold text-[#E60012]">
+                        <span className="text-sm font-semibold text-primary-500">
                           {product.list_price ? `$${formatPrice(product.list_price)}` : '-'}
                         </span>
                         {product.dealer_price && (
-                          <span className="text-xs text-gray-500">
-                            經銷<span className="text-gray-700 font-medium">${formatPrice(product.dealer_price)}</span>
+                          <span className="text-xs text-text-tertiary">
+                            經銷<span className="text-text-secondary font-medium">${formatPrice(product.dealer_price)}</span>
                           </span>
                         )}
                       </div>
                       <Link
                         href={`/quotations/new?product=${product.id}`}
-                        className="text-xs px-2 py-1 rounded text-white font-medium"
-                        style={{ backgroundColor: '#E60012' }}
+                        className="text-xs px-2 py-1 rounded-button text-white font-medium bg-primary-500 hover:bg-primary-600 transition-colors"
                         title="加入報價單"
                       >
                         +報價
@@ -697,18 +694,18 @@ export default function ProductsPage() {
             </div>
           ) : (
             /* 桌面版表格 */
-            <div className="flex-1 overflow-auto border rounded-xl bg-white shadow-sm">
+            <div className="flex-1 overflow-auto border border-surface-3 rounded-card bg-surface-1 shadow-card">
               <table className="w-full border-collapse">
                 <thead className="sticky top-0 z-10">
-                  <tr className="bg-gray-50">
-                    <th className="border-b p-2 text-left font-bold text-gray-700 text-xs whitespace-nowrap">料號</th>
-                    <th className="border-b p-2 text-left font-bold text-gray-700 text-xs whitespace-nowrap">規格</th>
-                    <th className="border-b p-2 text-left font-bold text-gray-700 text-xs whitespace-nowrap hidden lg:table-cell">品名</th>
-                    <th className="border-b p-2 text-left font-bold text-gray-700 text-xs whitespace-nowrap hidden md:table-cell">類型</th>
-                    <th className="border-b p-2 text-right font-bold text-gray-700 text-xs whitespace-nowrap">牌價</th>
-                    <th className="border-b p-2 text-right font-bold text-gray-700 text-xs whitespace-nowrap">經銷價</th>
-                    <th className="border-b p-2 text-right font-bold text-gray-700 text-xs whitespace-nowrap hidden sm:table-cell">庫存</th>
-                    <th className="border-b p-2 text-center font-bold text-gray-700 text-xs whitespace-nowrap w-12">...</th>
+                  <tr className="bg-surface-2">
+                    <th className="border-b border-surface-3 p-2 text-left font-bold text-text-primary text-xs whitespace-nowrap">料號</th>
+                    <th className="border-b border-surface-3 p-2 text-left font-bold text-text-primary text-xs whitespace-nowrap">規格</th>
+                    <th className="border-b border-surface-3 p-2 text-left font-bold text-text-primary text-xs whitespace-nowrap hidden lg:table-cell">品名</th>
+                    <th className="border-b border-surface-3 p-2 text-left font-bold text-text-primary text-xs whitespace-nowrap hidden md:table-cell">類型</th>
+                    <th className="border-b border-surface-3 p-2 text-right font-bold text-text-primary text-xs whitespace-nowrap">牌價</th>
+                    <th className="border-b border-surface-3 p-2 text-right font-bold text-text-primary text-xs whitespace-nowrap">經銷價</th>
+                    <th className="border-b border-surface-3 p-2 text-right font-bold text-text-primary text-xs whitespace-nowrap hidden sm:table-cell">庫存</th>
+                    <th className="border-b border-surface-3 p-2 text-center font-bold text-text-primary text-xs whitespace-nowrap w-12">...</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -716,46 +713,46 @@ export default function ProductsPage() {
                     <TableSkeleton rows={pageSize > 15 ? 15 : pageSize} />
                   ) : products.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="p-8 text-center text-gray-500">找不到產品</td>
+                      <td colSpan={8} className="p-8 text-center text-text-tertiary">找不到產品</td>
                     </tr>
                   ) : (
                     products.map((product) => (
-                      <tr key={product.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="border-b p-2 text-xs font-mono text-gray-600 whitespace-nowrap">{product.aurotek_pn}</td>
-                        <td className="border-b p-2 max-w-[200px] truncate" title={product.spec || ''}>
+                      <tr key={product.id} className="hover:bg-surface-hover transition-colors">
+                        <td className="border-b border-surface-3 p-2 text-xs font-mono text-text-tertiary whitespace-nowrap">{product.aurotek_pn}</td>
+                        <td className="border-b border-surface-3 p-2 max-w-[200px] truncate" title={product.spec || ''}>
                           {(() => {
                             const spec = product.spec || '-'
                             const match = spec.match(/^([^-（(]+)([-（(].*)$/)
                             if (match) {
                               return (
                                 <>
-                                  <span className="text-sm text-gray-800">{match[1]}</span>
-                                  <span className="text-xs text-gray-400">{match[2]}</span>
+                                  <span className="text-sm text-text-primary">{match[1]}</span>
+                                  <span className="text-xs text-text-tertiary">{match[2]}</span>
                                 </>
                               )
                             }
-                            return <span className="text-sm text-gray-800">{spec}</span>
+                            return <span className="text-sm text-text-primary">{spec}</span>
                           })()}
                         </td>
-                        <td className="border-b p-2 text-xs text-gray-500 max-w-[150px] truncate hidden lg:table-cell">{product.name.split('/')[0].trim()}</td>
-                        <td className="border-b p-2 text-xs text-gray-500 whitespace-nowrap hidden md:table-cell">{product.material_type_name || '-'}</td>
-                        <td className="border-b p-2 text-sm text-right whitespace-nowrap font-medium text-[#E60012]">
+                        <td className="border-b border-surface-3 p-2 text-xs text-text-tertiary max-w-[150px] truncate hidden lg:table-cell">{product.name.split('/')[0].trim()}</td>
+                        <td className="border-b border-surface-3 p-2 text-xs text-text-tertiary whitespace-nowrap hidden md:table-cell">{product.material_type_name || '-'}</td>
+                        <td className="border-b border-surface-3 p-2 text-sm text-right whitespace-nowrap font-medium text-primary-500">
                           {formatPrice(product.list_price)}
                         </td>
-                        <td className="border-b p-2 text-sm text-right whitespace-nowrap text-gray-700">
+                        <td className="border-b border-surface-3 p-2 text-sm text-right whitespace-nowrap text-text-secondary">
                           {formatPrice(product.dealer_price)}
                         </td>
-                        <td className="border-b p-2 text-sm text-right whitespace-nowrap hidden sm:table-cell">
+                        <td className="border-b border-surface-3 p-2 text-sm text-right whitespace-nowrap hidden sm:table-cell">
                           {product.total_qty > 0 ? (
-                            <span className="text-green-600 font-medium">{product.total_qty}</span>
+                            <span className="text-secondary-600 font-medium">{product.total_qty}</span>
                           ) : (
-                            <span className="text-gray-300">-</span>
+                            <span className="text-text-disabled">-</span>
                           )}
                         </td>
-                        <td className="border-b p-2 text-center whitespace-nowrap">
+                        <td className="border-b border-surface-3 p-2 text-center whitespace-nowrap">
                           <button
                             onClick={() => openDrawer(product.id)}
-                            className="text-gray-400 hover:text-gray-600 px-1"
+                            className="text-text-tertiary hover:text-text-primary px-1"
                             title="詳細"
                           >
                             ...
@@ -775,15 +772,15 @@ export default function ProductsPage() {
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-4 py-2 border rounded-lg text-sm disabled:opacity-50 bg-white"
+                className="px-4 py-2 border border-surface-3 rounded-button text-sm disabled:opacity-50 bg-surface-1 text-text-secondary"
               >
                 ‹ 上一頁
               </button>
-              <span className="text-gray-600 text-sm">{page} / {totalPages}</span>
+              <span className="text-text-secondary text-sm">{page} / {totalPages}</span>
               <button
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages}
-                className="px-4 py-2 border rounded-lg text-sm disabled:opacity-50 bg-white"
+                className="px-4 py-2 border border-surface-3 rounded-button text-sm disabled:opacity-50 bg-surface-1 text-text-secondary"
               >
                 下一頁 ›
               </button>
@@ -796,29 +793,29 @@ export default function ProductsPage() {
       {drawerOpen && (
         <div className="fixed inset-0 z-50">
           <div className="absolute inset-0 bg-black/30 transition-opacity" onClick={closeDrawer} />
-          <div className={`absolute top-0 right-0 h-full w-full sm:w-[480px] max-w-full bg-white flex flex-col shadow-2xl transform transition-transform duration-300 ${drawerOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+          <div className={`absolute top-0 right-0 h-full w-full sm:w-[480px] max-w-full bg-surface-0 flex flex-col shadow-2xl transform transition-transform duration-300 ${drawerOpen ? 'translate-x-0' : 'translate-x-full'}`}>
             {/* Header - sticky so it's always visible */}
-            <div className="flex items-center justify-between px-4 py-3 border-b bg-white sticky top-0 z-10">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-surface-3 bg-surface-1 sticky top-0 z-10">
               <button 
                 onClick={closeDrawer}
-                className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-text-secondary hover:bg-surface-hover rounded-button transition-colors"
               >
                 <span>←</span>
                 <span>返回目錄</span>
               </button>
-              <div className="font-bold text-sm text-gray-500">產品明細</div>
+              <div className="font-bold text-sm text-text-tertiary">產品明細</div>
             </div>
             
             {/* Content */}
             <div className="p-4 overflow-auto flex-1">
               {loadingDetail ? (
                 <div className="space-y-3 animate-pulse">
-                  <div className="h-6 bg-gray-200 rounded w-1/2" />
-                  <div className="h-4 bg-gray-200 rounded w-3/4" />
-                  <div className="h-32 bg-gray-200 rounded" />
+                  <div className="h-6 bg-surface-2 rounded w-1/2" />
+                  <div className="h-4 bg-surface-2 rounded w-3/4" />
+                  <div className="h-32 bg-surface-2 rounded" />
                   <div className="space-y-2">
                     {Array.from({ length: 8 }).map((_, i) => (
-                      <div key={i} className="h-8 bg-gray-200 rounded" />
+                      <div key={i} className="h-8 bg-surface-2 rounded" />
                     ))}
                   </div>
                 </div>
@@ -826,7 +823,7 @@ export default function ProductsPage() {
                 <>
                   {/* 產品圖片 */}
                   {selectedProduct.image_url && (
-                    <div className="mb-4 rounded-lg overflow-hidden border bg-gray-50 flex items-center justify-center" style={{ maxHeight: '200px' }}>
+                    <div className="mb-4 rounded-lg overflow-hidden border border-surface-3 bg-surface-2 flex items-center justify-center" style={{ maxHeight: '200px' }}>
                       <img 
                         src={`https://eznawjbgzmcnkxcisrjj.supabase.co/storage/v1/object/public/product-images/${encodeURIComponent(selectedProduct.image_url)}`}
                         alt={selectedProduct.name}
@@ -839,8 +836,8 @@ export default function ProductsPage() {
                   
                   {/* 標題區 */}
                   <div className="mb-4">
-                    <div className="font-mono text-sm text-gray-500 mb-1">{selectedProduct.aurotek_pn}</div>
-                    <h2 className="text-lg font-bold text-gray-900">
+                    <div className="font-mono text-sm text-text-tertiary mb-1">{selectedProduct.aurotek_pn}</div>
+                    <h2 className="text-lg font-bold text-text-primary">
                       {(() => {
                         const text = selectedProduct.spec || selectedProduct.name
                         const match = text.match(/^([^(（]+)([(（].+[)）])$/)
@@ -848,7 +845,7 @@ export default function ProductsPage() {
                           return (
                             <>
                               {match[1].trim()}
-                              <span className="text-sm font-normal text-gray-400 ml-1">{match[2]}</span>
+                              <span className="text-sm font-normal text-text-tertiary ml-1">{match[2]}</span>
                             </>
                           )
                         }
@@ -856,7 +853,7 @@ export default function ProductsPage() {
                       })()}
                     </h2>
                     {selectedProduct.list_price && (
-                      <div className="text-xl font-bold text-[#E60012] mt-1">
+                      <div className="text-xl font-bold text-primary-500 mt-1">
                         NT$ {formatPrice(selectedProduct.list_price)}
                       </div>
                     )}
@@ -870,11 +867,10 @@ export default function ProductsPage() {
 
             {/* Footer Actions */}
             {selectedProduct && (
-              <div className="p-4 border-t bg-gray-50">
+              <div className="p-4 border-t border-surface-3 bg-surface-1">
                 <Link
                   href={`/quotations/new?product=${selectedProduct.id}`}
-                  className="block w-full px-4 py-3 text-white rounded-lg text-center font-medium"
-                  style={{ backgroundColor: '#E60012' }}
+                  className="block w-full px-4 py-3 text-white rounded-button text-center font-medium bg-primary-500 hover:bg-primary-600 transition-colors"
                 >
                   加入報價單
                 </Link>
