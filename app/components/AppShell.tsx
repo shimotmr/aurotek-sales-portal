@@ -65,9 +65,14 @@ const icons = {
       <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd"/>
     </svg>
   ),
-  more: (
-    <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
-      <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z"/>
+  hamburger: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-6 h-6">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+    </svg>
+  ),
+  close: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-6 h-6">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
     </svg>
   ),
   logout: (
@@ -78,6 +83,12 @@ const icons = {
 }
 
 const NAV_GROUPS: NavGroup[] = [
+  {
+    label: '快速功能',
+    items: [
+      { id: 'home', title: '首頁', href: '/', icon: icons.home },
+    ]
+  },
   {
     label: '營業核心',
     items: [
@@ -102,15 +113,6 @@ const NAV_GROUPS: NavGroup[] = [
   }
 ]
 
-// Mobile bottom tabs (most used)
-const MOBILE_TABS: NavItem[] = [
-  { id: 'home', title: '首頁', href: '/', icon: icons.home },
-  { id: 'performance', title: '業績', href: '/performance', icon: icons.performance },
-  { id: 'products', title: '產品', href: '/products', icon: icons.products },
-  { id: 'quotations', title: '報價', href: '/quotations', icon: icons.quotations },
-  { id: 'more', title: '更多', href: '#more', icon: icons.more },
-]
-
 interface AppShellProps {
   children: React.ReactNode
 }
@@ -120,7 +122,7 @@ export default function AppShell({ children }: AppShellProps) {
   const router = useRouter()
   const [userName, setUserName] = useState('')
   const [isAdmin, setIsAdmin] = useState(false)
-  const [moreOpen, setMoreOpen] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const lastLoggedPath = useRef('')
 
@@ -141,6 +143,11 @@ export default function AppShell({ children }: AppShellProps) {
     }
   }, [pathname, isAdmin])
 
+  // Close mobile menu when route changes
+  useEffect(() => {
+    setMobileMenuOpen(false)
+  }, [pathname])
+
   const isActive = (href: string) => {
     if (href === '/') return pathname === '/'
     return pathname.startsWith(href)
@@ -157,42 +164,75 @@ export default function AppShell({ children }: AppShellProps) {
     items.filter(item => !item.adminOnly || isAdmin)
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--surface-0)' }}>
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-60 flex-col bg-slate-900 z-40">
+      <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-70 flex-col z-40" 
+             style={{ 
+               background: 'linear-gradient(180deg, var(--surface-1) 0%, var(--surface-0) 100%)',
+               borderRight: '1px solid var(--surface-3)',
+               backdropFilter: 'blur(10px)'
+             }}>
         {/* Logo */}
-        <div className="h-14 flex items-center px-4 border-b border-slate-800">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-              <svg viewBox="0 0 20 20" fill="white" className="w-4.5 h-4.5">
+        <div className="h-16 flex items-center px-5" style={{ borderBottom: '1px solid var(--surface-3)' }}>
+          <Link href="/" className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-lg">
+              <svg viewBox="0 0 20 20" fill="white" className="w-5 h-5">
                 <path d="M10 2L2 7l8 5 8-5-8-5zM2 13l8 5 8-5M2 10l8 5 8-5"/>
               </svg>
             </div>
-            <span className="text-white font-bold text-sm">Aurotek Portal</span>
+            <div>
+              <div className="font-bold text-base" style={{ color: 'var(--text-primary)' }}>Aurotek Portal</div>
+              <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>銷售管理系統</div>
+            </div>
           </Link>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto py-4">
+        <nav className="flex-1 overflow-y-auto py-4 px-4">
           {NAV_GROUPS.map(group => {
             const items = filterItems(group.items)
             if (items.length === 0) return null
             return (
-              <div key={group.label} className="mb-4">
-                <div className="px-4 mb-2 text-xs uppercase tracking-wider text-slate-500 font-medium">
+              <div key={group.label} className="mb-6">
+                <div className="px-4 mb-3 text-xs uppercase tracking-wider font-semibold"
+                     style={{ color: 'var(--text-tertiary)' }}>
                   {group.label}
                 </div>
                 {items.map(item => (
                   <Link
                     key={item.id}
                     href={item.href}
-                    className={`flex items-center gap-3 px-4 py-2.5 mx-2 rounded-lg transition-colors ${
+                    className={`flex items-center gap-3 px-4 py-3 mb-1 rounded-xl transition-all duration-200 ${
                       isActive(item.href)
-                        ? 'bg-slate-800 text-white border-l-2 border-blue-500 -ml-0.5 pl-[14px]'
-                        : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                        ? 'active-nav-item shadow-lg'
+                        : 'nav-item'
                     }`}
+                    style={{
+                      ...(isActive(item.href) 
+                        ? {
+                            background: 'linear-gradient(135deg, var(--primary-500), var(--primary-600))',
+                            color: 'white',
+                            boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)'
+                          }
+                        : {
+                            color: 'var(--text-secondary)'
+                          }
+                      )
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isActive(item.href)) {
+                        e.currentTarget.style.backgroundColor = 'var(--surface-hover)'
+                        e.currentTarget.style.color = 'var(--text-primary)'
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActive(item.href)) {
+                        e.currentTarget.style.backgroundColor = 'transparent'
+                        e.currentTarget.style.color = 'var(--text-secondary)'
+                      }
+                    }}
                   >
-                    <span className={isActive(item.href) ? 'text-blue-400' : 'text-slate-400'}>
+                    <span className={isActive(item.href) ? 'text-white' : ''}>
                       {item.icon}
                     </span>
                     <span className="text-sm font-medium">{item.title}</span>
@@ -203,16 +243,21 @@ export default function AppShell({ children }: AppShellProps) {
           })}
         </nav>
 
-        {/* User / Logout */}
-        <div className="border-t border-slate-800 p-4">
+        {/* User Info & Controls */}
+        <div className="p-4" style={{ borderTop: '1px solid var(--surface-3)' }}>
           {userName && (
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-white text-sm font-medium">
+            <div className="flex items-center gap-3 mb-4 p-3 rounded-xl" 
+                 style={{ backgroundColor: 'var(--surface-2)' }}>
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-sm font-bold shadow-md">
                 {userName.charAt(0).toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-sm text-white font-medium truncate">{userName}</div>
-                <div className="text-xs text-slate-500">{isAdmin ? '管理員' : '使用者'}</div>
+                <div className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>
+                  {userName}
+                </div>
+                <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                  {isAdmin ? '管理員' : '使用者'}
+                </div>
               </div>
             </div>
           )}
@@ -221,7 +266,16 @@ export default function AppShell({ children }: AppShellProps) {
           </div>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors text-sm"
+            className="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl transition-all duration-200 text-sm font-medium"
+            style={{ color: 'var(--text-secondary)' }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--surface-hover)'
+              e.currentTarget.style.color = 'var(--text-primary)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent'
+              e.currentTarget.style.color = 'var(--text-secondary)'
+            }}
           >
             {icons.logout}
             <span>登出</span>
@@ -230,229 +284,193 @@ export default function AppShell({ children }: AppShellProps) {
       </aside>
 
       {/* Mobile Header */}
-      <header className="md:hidden fixed top-0 left-0 right-0 h-14 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-4 z-40">
+      <header className="md:hidden fixed top-0 left-0 right-0 h-14 flex items-center justify-between px-4 z-50"
+              style={{ 
+                backgroundColor: 'var(--surface-0)', 
+                borderBottom: '1px solid var(--surface-3)',
+                backdropFilter: 'blur(10px)'
+              }}>
+        {/* Left side - Hamburger Menu */}
+        <button
+          onClick={() => setMobileMenuOpen(true)}
+          className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200"
+          style={{ backgroundColor: 'var(--surface-1)', border: '1px solid var(--surface-3)' }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = 'var(--surface-hover)'
+            e.currentTarget.style.transform = 'scale(1.05)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'var(--surface-1)'
+            e.currentTarget.style.transform = 'scale(1)'
+          }}
+        >
+          {icons.hamburger}
+        </button>
+
+        {/* Center - Logo & Title */}
         <Link href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-            <svg viewBox="0 0 20 20" fill="white" className="w-4.5 h-4.5">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-md">
+            <svg viewBox="0 0 20 20" fill="white" className="w-4 h-4">
               <path d="M10 2L2 7l8 5 8-5-8-5zM2 13l8 5 8-5M2 10l8 5 8-5"/>
             </svg>
           </div>
-          <span className="font-bold text-slate-800 dark:text-white text-sm">Aurotek Portal</span>
+          <span className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>
+            Aurotek Portal
+          </span>
         </Link>
+
+        {/* Right side - Theme Toggle & User */}
         <div className="flex items-center gap-2">
           <ThemeToggle />
           {userName && (
-            <>
-              <span className="text-xs text-slate-500 dark:text-slate-400">{userName}</span>
-              <button
-                onClick={handleLogout}
-                className="text-slate-400 hover:text-slate-600 dark:text-slate-400 dark:hover:text-slate-300 p-1"
-              >
-                {icons.logout}
-              </button>
-            </>
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold shadow-md">
+              {userName.charAt(0).toUpperCase()}
+            </div>
           )}
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="md:ml-60 pt-14 md:pt-0 pb-20 md:pb-0 min-h-screen">
+      <main className="md:ml-70 pt-14 md:pt-0 min-h-screen" style={{ backgroundColor: 'var(--surface-0)' }}>
         {children}
       </main>
 
-      {/* Mobile Bottom Tab Bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 z-40 pb-[env(safe-area-inset-bottom)]">
-        <div className="flex items-center justify-around h-15">
-          {MOBILE_TABS.map(tab => {
-            if (tab.id === 'more') {
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setMoreOpen(true)}
-                  className={`flex flex-col items-center justify-center py-2 px-3 min-w-[60px] ${
-                    moreOpen ? 'text-blue-600' : 'text-slate-400'
-                  }`}
-                >
-                  {tab.icon}
-                  <span className="text-[10px] mt-1 font-medium">{tab.title}</span>
-                </button>
-              )
-            }
-            return (
-              <Link
-                key={tab.id}
-                href={tab.href}
-                className={`flex flex-col items-center justify-center py-2 px-3 min-w-[60px] ${
-                  isActive(tab.href) ? 'text-blue-600' : 'text-slate-400'
-                }`}
-              >
-                {tab.icon}
-                <span className="text-[10px] mt-1 font-medium">{tab.title}</span>
-              </Link>
-            )
-          })}
-        </div>
-      </nav>
-
-      {/* More Overlay (Mobile) */}
-      {moreOpen && (
+      {/* Mobile Slide-in Drawer */}
+      {mobileMenuOpen && (
         <div className="md:hidden fixed inset-0 z-50">
+          {/* Backdrop */}
           <div 
-            className="absolute inset-0 bg-black/50" 
-            onClick={() => setMoreOpen(false)}
+            className="absolute inset-0 bg-black/50 transition-opacity duration-300"
+            onClick={() => setMobileMenuOpen(false)}
           />
-          <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl pb-[env(safe-area-inset-bottom)] max-h-[70vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-4 border-b">
-              <h3 className="font-bold text-slate-800">所有功能</h3>
-              <button 
-                onClick={() => setMoreOpen(false)}
-                className="text-slate-400 hover:text-slate-600 text-2xl leading-none"
+          
+          {/* Drawer */}
+          <div className="absolute top-0 left-0 bottom-0 w-80 max-w-[85vw] flex flex-col transition-transform duration-300"
+               style={{ 
+                 backgroundColor: 'var(--surface-0)',
+                 borderRight: '1px solid var(--surface-3)'
+               }}>
+            
+            {/* Drawer Header */}
+            <div className="flex items-center justify-between p-4 h-14" 
+                 style={{ borderBottom: '1px solid var(--surface-3)' }}>
+              <Link href="/" className="flex items-center gap-3" onClick={() => setMobileMenuOpen(false)}>
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-md">
+                  <svg viewBox="0 0 20 20" fill="white" className="w-4 h-4">
+                    <path d="M10 2L2 7l8 5 8-5-8-5zM2 13l8 5 8-5M2 10l8 5 8-5"/>
+                  </svg>
+                </div>
+                <div>
+                  <div className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>
+                    Aurotek Portal
+                  </div>
+                  <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                    銷售管理系統
+                  </div>
+                </div>
+              </Link>
+              
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+                style={{ 
+                  backgroundColor: 'var(--surface-2)', 
+                  color: 'var(--text-secondary)' 
+                }}
               >
-                ×
+                {icons.close}
               </button>
             </div>
-            <div className="p-4 space-y-4">
+
+            {/* Navigation Menu */}
+            <nav className="flex-1 overflow-y-auto p-4">
               {NAV_GROUPS.map(group => {
                 const items = filterItems(group.items)
                 if (items.length === 0) return null
                 return (
-                  <div key={group.label}>
-                    <div className="text-xs uppercase tracking-wider text-slate-500 font-medium mb-2">
+                  <div key={group.label} className="mb-6">
+                    <div className="px-3 mb-3 text-xs uppercase tracking-wider font-semibold"
+                         style={{ color: 'var(--text-tertiary)' }}>
                       {group.label}
                     </div>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="space-y-1">
                       {items.map(item => (
                         <Link
                           key={item.id}
                           href={item.href}
-                          onClick={() => setMoreOpen(false)}
-                          className={`flex flex-col items-center p-3 rounded-xl ${
-                            isActive(item.href) 
-                              ? 'bg-blue-50 text-blue-600' 
-                              : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+                          onClick={() => setMobileMenuOpen(false)}
+                          className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 ${
+                            isActive(item.href) ? 'mobile-nav-active' : 'mobile-nav-item'
                           }`}
+                          style={{
+                            ...(isActive(item.href) 
+                              ? {
+                                  backgroundColor: 'var(--primary-50)',
+                                  color: 'var(--primary-600)',
+                                  borderLeft: '3px solid var(--primary-500)',
+                                  marginLeft: '0px',
+                                  paddingLeft: '9px'
+                                }
+                              : {
+                                  color: 'var(--text-secondary)'
+                                }
+                            )
+                          }}
                         >
-                          {item.icon}
-                          <span className="text-xs mt-1.5 font-medium text-center">{item.title}</span>
+                          <span className={`${isActive(item.href) ? 'text-current' : ''}`}>
+                            {item.icon}
+                          </span>
+                          <span className="text-sm font-medium">{item.title}</span>
                         </Link>
                       ))}
                     </div>
                   </div>
                 )
               })}
+            </nav>
+
+            {/* User Info & Logout */}
+            <div className="p-4" style={{ borderTop: '1px solid var(--surface-3)' }}>
+              {userName && (
+                <div className="flex items-center gap-3 mb-4 p-3 rounded-xl" 
+                     style={{ backgroundColor: 'var(--surface-2)' }}>
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-sm font-bold shadow-md">
+                    {userName.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>
+                      {userName}
+                    </div>
+                    <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                      {isAdmin ? '管理員' : '使用者'}
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl transition-all duration-200 text-sm font-medium"
+                style={{ 
+                  color: 'var(--text-secondary)',
+                  backgroundColor: 'transparent'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'var(--surface-hover)'
+                  e.currentTarget.style.color = 'var(--text-primary)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent'
+                  e.currentTarget.style.color = 'var(--text-secondary)'
+                }}
+              >
+                {icons.logout}
+                <span>登出</span>
+              </button>
             </div>
           </div>
         </div>
       )}
     </div>
-  )
-}
-
-// Export a separate MobileTabBar for the homepage
-export function MobileTabBar() {
-  const pathname = usePathname()
-  const [moreOpen, setMoreOpen] = useState(false)
-  const [isAdmin, setIsAdmin] = useState(false)
-
-  useEffect(() => {
-    const admin = document.cookie.split(';').some(c => c.trim().startsWith('is_admin=true'))
-    setIsAdmin(admin)
-  }, [])
-
-  const isActive = (href: string) => {
-    if (href === '/') return pathname === '/'
-    return pathname.startsWith(href)
-  }
-
-  const filterItems = (items: NavItem[]) => 
-    items.filter(item => !item.adminOnly || isAdmin)
-
-  return (
-    <>
-      {/* Mobile Bottom Tab Bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-40 pb-[env(safe-area-inset-bottom)]">
-        <div className="flex items-center justify-around h-15">
-          {MOBILE_TABS.map(tab => {
-            if (tab.id === 'more') {
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setMoreOpen(true)}
-                  className={`flex flex-col items-center justify-center py-2 px-3 min-w-[60px] ${
-                    moreOpen ? 'text-blue-600' : 'text-slate-400'
-                  }`}
-                >
-                  {tab.icon}
-                  <span className="text-[10px] mt-1 font-medium">{tab.title}</span>
-                </button>
-              )
-            }
-            return (
-              <Link
-                key={tab.id}
-                href={tab.href}
-                className={`flex flex-col items-center justify-center py-2 px-3 min-w-[60px] ${
-                  isActive(tab.href) ? 'text-blue-600' : 'text-slate-400'
-                }`}
-              >
-                {tab.icon}
-                <span className="text-[10px] mt-1 font-medium">{tab.title}</span>
-              </Link>
-            )
-          })}
-        </div>
-      </nav>
-
-      {/* More Overlay (Mobile) */}
-      {moreOpen && (
-        <div className="md:hidden fixed inset-0 z-50">
-          <div 
-            className="absolute inset-0 bg-black/50" 
-            onClick={() => setMoreOpen(false)}
-          />
-          <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl pb-[env(safe-area-inset-bottom)] max-h-[70vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-4 border-b">
-              <h3 className="font-bold text-slate-800">所有功能</h3>
-              <button 
-                onClick={() => setMoreOpen(false)}
-                className="text-slate-400 hover:text-slate-600 text-2xl leading-none"
-              >
-                ×
-              </button>
-            </div>
-            <div className="p-4 space-y-4">
-              {NAV_GROUPS.map(group => {
-                const items = filterItems(group.items)
-                if (items.length === 0) return null
-                return (
-                  <div key={group.label}>
-                    <div className="text-xs uppercase tracking-wider text-slate-500 font-medium mb-2">
-                      {group.label}
-                    </div>
-                    <div className="grid grid-cols-3 gap-2">
-                      {items.map(item => (
-                        <Link
-                          key={item.id}
-                          href={item.href}
-                          onClick={() => setMoreOpen(false)}
-                          className={`flex flex-col items-center p-3 rounded-xl ${
-                            isActive(item.href) 
-                              ? 'bg-blue-50 text-blue-600' 
-                              : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
-                          }`}
-                        >
-                          {item.icon}
-                          <span className="text-xs mt-1.5 font-medium text-center">{item.title}</span>
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        </div>
-      )}
-    </>
   )
 }

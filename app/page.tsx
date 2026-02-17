@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 
-import { MobileTabBar } from './components/AppShell'
 import UserMenu from './components/UserMenu'
 
 import { 
@@ -15,10 +14,33 @@ import {
 } from '@/lib/menu-config'
 import { supabase } from '@/lib/supabase'
 
+// Gradient card color mapping per spec
+const cardGradients: Record<string, { light: string; dark?: string }> = {
+  performance: { light: 'linear-gradient(135deg, #ff6b6b, #ee5a24)' },
+  products: { light: 'linear-gradient(135deg, #4ecdc4, #44bd32)' },
+  quotations: { light: 'linear-gradient(135deg, #45b7d1, #3742fa)' },
+  transcripts: { light: 'linear-gradient(135deg, #9c88ff, #7209b7)' },
+  marketing: { light: 'linear-gradient(135deg, #feca57, #ff9ff3)' },
+  knowledge: { light: 'linear-gradient(135deg, #a855f7, #ec4899)' },
+  samples: { light: 'linear-gradient(135deg, #f59e0b, #eab308)' },
+  agents: { light: 'linear-gradient(135deg, #06b6d4, #0ea5e9)' },
+  admin: { light: 'linear-gradient(135deg, #64748b, #475569)', dark: 'linear-gradient(135deg, #475569, #334155)' },
+}
+
 export default function Home() {
   const [greeting, setGreeting] = useState('')
   const [userName, setUserName] = useState('')
   const [isAdmin, setIsAdmin] = useState(false)
+  const [theme, setTheme] = useState<'light' | 'dark'>('light')
+
+  useEffect(() => {
+    // Get theme from localStorage or system preference
+    const stored = localStorage.getItem('theme') as 'light' | 'dark' | null
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    const initial = stored || (prefersDark ? 'dark' : 'light')
+    setTheme(initial)
+    document.documentElement.setAttribute('data-theme', initial)
+  }, [])
 
   useEffect(() => {
     const hour = new Date().getHours()
@@ -31,7 +53,6 @@ export default function Home() {
     const employeeId = nameCookie ? decodeURIComponent(nameCookie.split('=')[1]).split('@')[0] : ''
     if (employeeId) {
       setUserName(employeeId)
-      // 從 portal_admins 查別名，再從 employees 查姓名+職稱
       Promise.all([
         fetch(`/api/employees/lookup?employee_id=${encodeURIComponent(employeeId)}`).then(r => r.ok ? r.json() : null).catch(() => null),
         supabase.from('portal_admins').select('nickname, name, title').or(`employee_id.eq.${employeeId},email.ilike.${employeeId}@%`).maybeSingle().then(r => r.data),
@@ -52,93 +73,109 @@ export default function Home() {
     return true
   })
 
+  // Get gradient style for a card
+  const getCardGradient = (id: string) => {
+    const gradient = cardGradients[id]
+    if (!gradient) return 'linear-gradient(135deg, #64748b, #475569)'
+    if (theme === 'dark' && gradient.dark) return gradient.dark
+    return gradient.light
+  }
+
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
+    <main className="home-layout">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-              <svg viewBox="0 0 20 20" fill="white" className="w-4.5 h-4.5">
+      <header className="home-header">
+        <div className="header-content">
+          <div className="logo-section">
+            <div className="logo-icon">
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
                 <path d="M10 2L2 7l8 5 8-5-8-5zM2 13l8 5 8-5M2 10l8 5 8-5"/>
               </svg>
             </div>
-            <span className="font-bold text-slate-800 text-sm sm:text-base">和椿通路營業系統</span>
+            <span className="logo-text">和椿通路營業系統</span>
           </div>
           <UserMenu />
         </div>
       </header>
 
-      <div className="max-w-5xl mx-auto px-4 py-6 sm:py-10">
-        {/* Greeting */}
-        <div className="mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
-            {greeting}{userName ? `，${userName}` : ''} 👋
-          </h1>
-          <p className="text-slate-500 mt-1 text-sm sm:text-base">需要什麼幫助？選擇下方功能開始</p>
-        </div>
+      {/* Greeting Section */}
+      <section className="greeting-section">
+        <h1 className="greeting-title">
+          {greeting}{userName ? <span className="greeting-name">，{userName}</span> : ''} 👋
+        </h1>
+        <p className="greeting-subtitle">需要什麼幫助？選擇下方功能開始</p>
+      </section>
 
-        {/* Grouped Modules */}
-        {groups.map(group => {
-          const items = visibleItems.filter(i => i.group === group)
-          if (items.length === 0) return null
-          const { label, desc } = PORTAL_GROUP_LABELS[group]
+      {/* Grouped Modules */}
+      {groups.map(group => {
+        const items = visibleItems.filter(i => i.group === group)
+        if (items.length === 0) return null
+        const { label, desc } = PORTAL_GROUP_LABELS[group]
 
-          return (
-            <section key={group} className="mb-8">
-              <div className="flex items-baseline gap-3 mb-3">
-                <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wider">{label}</h2>
-                <span className="text-xs text-slate-400 hidden sm:inline">{desc}</span>
-              </div>
-              <div className={`grid gap-3 sm:gap-4 ${
-                group === 'system' ? 'grid-cols-2 sm:grid-cols-2' : 'grid-cols-2 sm:grid-cols-3'
-              }`}>
-                {items.map(item => {
-                  const badge = PORTAL_STATUS_BADGE[item.status]
-                  const isSoon = item.status === 'soon'
+        return (
+          <section key={group} className="module-section">
+            <div className="section-header">
+              <h2 className="section-title">{label}</h2>
+              <span className="section-desc">{desc}</span>
+            </div>
+            
+            <div className={`feature-grid ${group === 'system' ? 'grid-cols-2' : ''}`}>
+              {items.map(item => {
+                const badge = PORTAL_STATUS_BADGE[item.status]
+                const isSoon = item.status === 'soon'
+                const gradientStyle = { background: getCardGradient(item.id) }
 
-                  return (
-                    <Link
-                      key={item.id}
-                      href={isSoon ? '#' : item.href}
-                      className={`group relative block rounded-2xl bg-gradient-to-br ${item.gradient} p-4 sm:p-5 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 ${
-                        isSoon ? 'opacity-60 cursor-not-allowed' : ''
-                      }`}
-                      onClick={isSoon ? (e) => e.preventDefault() : undefined}
-                    >
-                      {/* Status badge */}
-                      {badge.label && (
-                        <span className={`absolute top-3 right-3 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${badge.cls}`}>
-                          {badge.label}
-                        </span>
-                      )}
+                return (
+                  <Link
+                    key={item.id}
+                    href={isSoon ? '#' : item.href}
+                    className={`feature-card ${isSoon ? 'card-disabled' : ''}`}
+                    style={gradientStyle}
+                    onClick={isSoon ? (e) => e.preventDefault() : undefined}
+                  >
+                    {/* Gradient overlay */}
+                    <div className="card-overlay" />
 
-                      {/* Icon */}
-                      <div className="mb-3 w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center backdrop-blur-sm">
-                        <div className="[&_svg]:w-7 [&_svg]:h-7 [&_line]:stroke-white [&_rect]:stroke-white [&_circle]:stroke-white [&_path]:stroke-white [&_circle[fill]]:fill-white/80 [&_rect[fill]]:fill-white/60">
+                    {/* Status badge */}
+                    {badge.label && (
+                      <span className={`status-badge ${badge.cls}`}>
+                        {badge.label}
+                      </span>
+                    )}
+
+                    {/* Icon */}
+                    <div className="card-icon">
+                      <div className="icon-container">
+                        <span className="[&>*]:w-6 [&>*]:h-6 [&>*]:text-white">
                           {icons[item.icon]}
-                        </div>
+                        </span>
                       </div>
+                    </div>
 
-                      {/* Text */}
-                      <h3 className="text-white font-bold text-base sm:text-lg leading-tight">{item.title}</h3>
-                      <p className={`${item.textColor} text-xs sm:text-sm mt-1 leading-snug opacity-90`}>{item.desc}</p>
-                    </Link>
-                  )
-                })}
-              </div>
-            </section>
-          )
-        })}
+                    {/* Text */}
+                    <div className="card-content">
+                      <h3 className="card-title">{item.title}</h3>
+                      <p className="card-desc">{item.desc}</p>
+                    </div>
 
-        {/* Footer */}
-        <footer className="text-center text-xs text-slate-400 mt-8 pb-20 md:pb-6">
-          Aurotek Sales Portal · Powered by Jarvis 🤖
-        </footer>
-      </div>
+                    {/* Arrow indicator */}
+                    <div className="card-arrow">
+                      <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+          </section>
+        )
+      })}
 
-      {/* Mobile Tab Bar */}
-      <MobileTabBar />
+      {/* Footer */}
+      <footer className="home-footer">
+        Aurotek Sales Portal · Powered by Jarvis 🤖
+      </footer>
     </main>
   )
 }
