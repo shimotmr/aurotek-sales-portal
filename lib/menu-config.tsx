@@ -85,6 +85,15 @@ export const icons = {
       <path d="M14 9l12 6" stroke="#FBBF24" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="3 2"/>
     </svg>
   ),
+  knowledge: (
+    <svg viewBox="0 0 40 40" fill="none" className="w-10 h-10">
+      <rect x="8" y="6" width="24" height="28" rx="2" stroke="#9333EA" strokeWidth="2"/>
+      <path d="M14 14h12M14 18h12M14 22h8" stroke="#A855F7" strokeWidth="1.5" strokeLinecap="round"/>
+      <circle cx="20" cy="28" r="3" stroke="#9333EA" strokeWidth="2"/>
+      <path d="M18.5 26.5l3 3" stroke="#9333EA" strokeWidth="1.5" strokeLinecap="round"/>
+      <rect x="12" y="2" width="16" height="8" rx="1" stroke="#C084FC" strokeWidth="1.5" opacity="0.7"/>
+    </svg>
+  ),
 
   // Admin 後台圖示（較小尺寸）
   target: (
@@ -148,6 +157,32 @@ export const icons = {
       <path d="M16 20v-3" stroke="currentColor" strokeWidth="1.5"/>
     </svg>
   ),
+
+  // Marketing 數位資源庫圖示（中尺寸）
+  videoLarge: (
+    <svg viewBox="0 0 32 32" fill="none" className="w-7 h-7">
+      <rect x="3" y="7" width="20" height="18" rx="2" stroke="currentColor" strokeWidth="2"/>
+      <path d="M23 13l6-3v12l-6-3v-6z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+      <circle cx="13" cy="16" r="3" stroke="currentColor" strokeWidth="1.5" opacity="0.5"/>
+    </svg>
+  ),
+  slidesLarge: (
+    <svg viewBox="0 0 32 32" fill="none" className="w-7 h-7">
+      <rect x="4" y="4" width="24" height="18" rx="2" stroke="currentColor" strokeWidth="2"/>
+      <path d="M16 22v6M10 28h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+      <path d="M10 10h12M10 14h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.5"/>
+    </svg>
+  ),
+  robot: (
+    <svg viewBox="0 0 32 32" fill="none" className="w-7 h-7">
+      <rect x="8" y="10" width="16" height="14" rx="3" stroke="currentColor" strokeWidth="2"/>
+      <circle cx="14" cy="17" r="2" fill="currentColor" opacity="0.6"/>
+      <circle cx="20" cy="17" r="2" fill="currentColor" opacity="0.6"/>
+      <path d="M16 6v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+      <circle cx="16" cy="5" r="1.5" fill="currentColor"/>
+      <path d="M5 16h3M24 16h3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" opacity="0.4"/>
+    </svg>
+  ),
 }
 
 // Portal 首頁選單項目類型定義
@@ -172,6 +207,7 @@ export const PORTAL_MENU_ITEMS: MenuItem[] = [
   // 效率工具
   { id: 'transcripts', title: '會議逐字稿', desc: 'AI 語音轉文字 · 講者辨識 · 智慧校正', href: '/transcripts', icon: 'transcript', gradient: 'from-indigo-500 to-indigo-600', textColor: 'text-indigo-100', status: 'live', group: 'tools' },
   { id: 'marketing', title: '數位資源庫', desc: '產品影片 · 簡報範本 · 技術文件', href: '/marketing', icon: 'marketing', gradient: 'from-violet-500 to-violet-600', textColor: 'text-violet-100', status: 'live', group: 'tools' },
+  { id: 'knowledge', title: '知識庫', desc: '產品知識 · 銷售技巧 · 常見問題', href: '/knowledge', icon: 'knowledge', gradient: 'from-purple-500 to-purple-600', textColor: 'text-purple-100', status: 'beta', group: 'tools' },
   { id: 'samples', title: '樣品借用', desc: '借出歸還追蹤 · 庫位管理', href: '/samples', icon: 'samples', gradient: 'from-amber-500 to-amber-600', textColor: 'text-amber-100', status: 'soon', group: 'tools' },
   // 系統管理
   { id: 'agents', title: 'Agent 中控台', desc: '多 Agent 狀態 · 任務監控 · 執行紀錄', href: '/agents', icon: 'agent', gradient: 'from-cyan-500 to-cyan-600', textColor: 'text-cyan-100', status: 'live', group: 'system' },
@@ -221,3 +257,41 @@ export const ADMIN_GROUP_LABELS: Record<string, string> = {
   content: '內容管理',
   system: '系統設定',
 }
+
+// Marketing 數位資源庫選單項目類型定義
+export interface MarketingItem {
+  title: string
+  desc: string
+  sub: string
+  href: string
+  icon: keyof typeof icons
+  color: string
+}
+
+// Marketing 數位資源庫選單配置
+export const MARKETING_MENU_ITEMS: MarketingItem[] = [
+  {
+    title: '影片案例',
+    desc: '產品演示 · 客戶案例 · 官方宣傳',
+    sub: 'YouTube 影片 · 分類瀏覽 · 關鍵字搜尋',
+    href: '/marketing/videos',
+    icon: 'videoLarge',
+    color: '#EF4444',
+  },
+  {
+    title: '簡報案例',
+    desc: '產品簡報 · 方案提案 · 技術文件',
+    sub: 'Google Slides · 播放清單 · 依序播放',
+    href: '/marketing/slides',
+    icon: 'slidesLarge',
+    color: '#F59E0B',
+  },
+  {
+    title: 'Walker 天工文檔',
+    desc: 'Walker 機器人技術文檔 · SDK',
+    sub: 'UBTECH · 用戶手冊 · SDK 文檔',
+    href: '/marketing/walker-docs',
+    icon: 'robot',
+    color: '#8B5CF6',
+  },
+]
