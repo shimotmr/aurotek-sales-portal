@@ -82,28 +82,28 @@ export default function Home() {
   }
 
   return (
-    <main className="home-layout">
+    <main className="min-h-screen p-4 md:p-6 lg:p-8" style={{ backgroundColor: 'var(--surface-0)' }}>
       {/* Header */}
-      <header className="home-header">
-        <div className="header-content">
-          <div className="logo-section">
-            <div className="logo-icon">
-              <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+      <header className="mb-6 md:mb-8">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-lg">
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 md:w-6 md:h-6 text-white">
                 <path d="M10 2L2 7l8 5 8-5-8-5zM2 13l8 5 8-5M2 10l8 5 8-5"/>
               </svg>
             </div>
-            <span className="logo-text">和椿通路營業系統</span>
+            <span className="font-bold text-lg md:text-xl" style={{ color: 'var(--text-primary)' }}>和椿通路營業系統</span>
           </div>
           <UserMenu />
         </div>
       </header>
 
       {/* Greeting Section */}
-      <section className="greeting-section">
-        <h1 className="greeting-title">
-          {greeting}{userName ? <span className="greeting-name">，{userName}</span> : ''} 👋
+      <section className="mb-6 md:mb-8">
+        <h1 className="text-2xl md:text-3xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
+          {greeting}{userName ? <span className="font-normal" style={{ color: 'var(--primary-500)' }}>，{userName}</span> : ''} 👋
         </h1>
-        <p className="greeting-subtitle">需要什麼幫助？選擇下方功能開始</p>
+        <p className="text-sm md:text-base" style={{ color: 'var(--text-secondary)' }}>需要什麼幫助？選擇下方功能開始</p>
       </section>
 
       {/* Grouped Modules */}
@@ -113,13 +113,13 @@ export default function Home() {
         const { label, desc } = PORTAL_GROUP_LABELS[group]
 
         return (
-          <section key={group} className="module-section">
-            <div className="section-header">
-              <h2 className="section-title">{label}</h2>
-              <span className="section-desc">{desc}</span>
+          <section key={group} className="mb-6 md:mb-8">
+            <div className="mb-4">
+              <h2 className="text-lg md:text-xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>{label}</h2>
+              <span className="text-xs md:text-sm" style={{ color: 'var(--text-tertiary)' }}>{desc}</span>
             </div>
             
-            <div className={`feature-grid ${group === 'system' ? 'grid-cols-2' : ''}`}>
+            <div className={`grid gap-3 md:gap-4 ${group === 'system' ? 'grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'}`}>
               {items.map(item => {
                 const badge = PORTAL_STATUS_BADGE[item.status]
                 const isSoon = item.status === 'soon'
@@ -129,23 +129,23 @@ export default function Home() {
                   <Link
                     key={item.id}
                     href={isSoon ? '#' : item.href}
-                    className={`feature-card ${isSoon ? 'card-disabled' : ''}`}
+                    className={`relative overflow-hidden rounded-2xl p-4 md:p-5 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl group ${isSoon ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
                     style={gradientStyle}
                     onClick={isSoon ? (e) => e.preventDefault() : undefined}
                   >
                     {/* Gradient overlay */}
-                    <div className="card-overlay" />
+                    <div className="absolute inset-0 bg-white/10 pointer-events-none" />
 
                     {/* Status badge */}
                     {badge.label && (
-                      <span className={`status-badge ${badge.cls}`}>
+                      <span className={`absolute top-3 right-3 text-[10px] px-2 py-0.5 rounded-full font-medium ${badge.cls}`}>
                         {badge.label}
                       </span>
                     )}
 
                     {/* Icon */}
-                    <div className="card-icon">
-                      <div className="icon-container">
+                    <div className="mb-3">
+                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-sm">
                         <span className="[&>*]:w-6 [&>*]:h-6 [&>*]:text-white">
                           {icons[item.icon]}
                         </span>
@@ -153,14 +153,14 @@ export default function Home() {
                     </div>
 
                     {/* Text */}
-                    <div className="card-content">
-                      <h3 className="card-title">{item.title}</h3>
-                      <p className="card-desc">{item.desc}</p>
+                    <div className="text-white">
+                      <h3 className="font-bold text-base md:text-lg mb-1">{item.title}</h3>
+                      <p className="text-xs md:text-sm text-white/80 line-clamp-2">{item.desc}</p>
                     </div>
 
                     {/* Arrow indicator */}
-                    <div className="card-arrow">
-                      <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+                    <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-white">
                         <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                       </svg>
                     </div>
@@ -173,7 +173,7 @@ export default function Home() {
       })}
 
       {/* Footer */}
-      <footer className="home-footer">
+      <footer className="text-center py-6 text-xs md:text-sm" style={{ color: 'var(--text-tertiary)' }}>
         Aurotek Sales Portal · Powered by Jarvis 🤖
       </footer>
     </main>
