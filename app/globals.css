@@ -302,3 +302,176 @@ body {
   outline: none;
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
 }
+
+/* ================================
+   業績管理頁面樣式
+   ================================ */
+.performance-layout {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.performance-main {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Page Header */
+.page-header {
+  margin-bottom: 8px;
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+}
+
+.header-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+/* Stats Row */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+@media (max-width: 768px) {
+  .stats-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Card Stats - 帶有漸層邊框的統計卡片 */
+.card-stats {
+  background: var(--surface-1);
+  border-radius: 16px;
+  padding: 20px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.card-stats::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  padding: 2px;
+  background: linear-gradient(135deg, var(--primary-400), var(--secondary-400));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: subtract;
+  mask-composite: subtract;
+}
+
+.card-stats:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Chart Section */
+.chart-section {
+  background: var(--surface-1);
+  border-radius: 16px;
+  padding: 24px;
+  border: 1px solid var(--surface-3);
+  min-height: 200px;
+}
+
+.section-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Month Card */
+.month-card {
+  transition: all 0.2s ease;
+}
+
+.month-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Alert Card */
+.alert-card {
+  transition: all 0.2s ease;
+}
+
+.alert-item:hover {
+  background-color: var(--primary-50) !important;
+}
+
+/* Filter Buttons */
+.filter-btn {
+  padding: 6px 12px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.filter-btn:hover {
+  opacity: 0.9;
+  transform: scale(1.02);
+}
+
+.filter-select {
+  padding: 6px 12px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+}
+
+/* Rep Item */
+.rep-item:last-child {
+  border-bottom: none !important;
+  padding-bottom: 0 !important;
+}
+
+/* Dealer Item */
+.dealer-item:hover {
+  background-color: var(--surface-hover);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .performance-layout {
+    padding: 16px;
+  }
+  
+  .chart-section {
+    padding: 16px;
+    border-radius: 12px;
+  }
+  
+  .stats-row {
+    gap: 12px;
+  }
+  
+  .card-stats {
+    padding: 16px;
+    border-radius: 12px;
+  }
+}

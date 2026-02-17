@@ -4,8 +4,6 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useMemo } from 'react'
 
-import UserMenu from '../components/UserMenu'
-
 // ─── Types ───
 interface MonthStat {
   month: number; actual: number; forecast: number; target: number; gap: number; rate: number; type: 'actual' | 'forecast'
@@ -29,9 +27,9 @@ const ALERT_RULES: AlertRule[] = [
 const ACTIVE_REPS = ['喬紹恆']
 const VALID_DEALERS = ['阜爾運通', '禾煜科技', '智領未來', '禾達工業', '季河資訊', '鋥承', '鴻匠', '傑融科技', '谷得智能', '瑞興']
 const FUNNEL_STAGES = [
-  { label: '25', minProb: 0, maxProb: 25, color: '#5DADE2' },
-  { label: '50', minProb: 26, maxProb: 50, color: '#E67E22' },
-  { label: '75', minProb: 51, maxProb: 75, color: '#F4D03F' },
+  { label: '25', minProb: 0, maxProb: 25, color: 'var(--accent-blue-500)' },
+  { label: '50', minProb: 26, maxProb: 50, color: 'var(--accent-orange-500)' },
+  { label: '75', minProb: 51, maxProb: 75, color: 'var(--accent-yellow-500)' },
 ]
 const monthNames = ['', '1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
 
@@ -51,8 +49,8 @@ const icons = {
 
 // ─── Helpers ───
 function fmt(n: number) { return n.toLocaleString('zh-TW') }
-function statusColor(r: number) { return r >= 100 ? '#059669' : r >= 80 ? '#D97706' : '#DC2626' }
-function statusBg(r: number) { return r >= 100 ? '#ECFDF5' : r >= 80 ? '#FFFBEB' : '#FEF2F2' }
+function statusColor(r: number) { return r >= 100 ? 'var(--status-success)' : r >= 80 ? 'var(--status-warning)' : 'var(--status-error)' }
+function statusBg(r: number) { return r >= 100 ? 'var(--secondary-50)' : r >= 80 ? 'var(--accent-yellow-500)' : 'var(--primary-50)' }
 
 export default function PerformancePage() {
   const router = useRouter()
@@ -118,47 +116,82 @@ export default function PerformancePage() {
   }, [cases])
 
   if (loading) return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 flex items-center justify-center">
-      <div className="text-center"><div className="animate-spin rounded-full h-10 w-10 border-2 border-blue-500 border-t-transparent mx-auto"/><p className="mt-3 text-sm text-slate-500">載入中...</p></div>
+    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--surface-0)' }}>
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-10 w-10 border-2 mx-auto" style={{ borderColor: 'var(--primary-500)', borderTopColor: 'transparent' }}/>
+        <p className="mt-3 text-sm" style={{ color: 'var(--text-secondary)' }}>載入中...</p>
+      </div>
     </div>
   )
   if (error || !data) return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 flex items-center justify-center">
-      <div className="text-center"><p className="text-red-500 text-sm">載入失敗：{error || '未知錯誤'}</p><Link href="/" className="text-sm text-blue-500 hover:underline mt-2 inline-block">返回首頁</Link></div>
+    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--surface-0)' }}>
+      <div className="text-center">
+        <p style={{ color: 'var(--status-error)' }}>載入失敗：{error || '未知錯誤'}</p>
+        <Link href="/" className="text-sm hover:underline mt-2 inline-block" style={{ color: 'var(--primary-500)' }}>返回首頁</Link>
+      </div>
     </div>
   )
 
   const currentMonth = data.currentMonth || new Date().getMonth() + 1
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
+    <div className="performance-layout" style={{ backgroundColor: 'var(--surface-0)', minHeight: '100vh' }}>
       {/* Page Header */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 md:top-0 z-10">
-        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
+      <header className="page-header" style={{
+        backgroundColor: 'var(--surface-1)',
+        borderBottom: '1px solid var(--surface-3)',
+        backdropFilter: 'blur(10px)',
+        position: 'sticky',
+        top: 0,
+        zIndex: 10
+      }}>
+        <div className="header-inner">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white">{icons.chart}</div>
-            <span className="font-bold text-slate-800 text-sm sm:text-base">業績管理</span>
+            <div className="header-icon" style={{
+              background: 'linear-gradient(135deg, var(--primary-500), var(--primary-600))',
+              borderRadius: '10px'
+            }}>
+              {icons.chart}
+            </div>
+            <span className="font-bold" style={{ color: 'var(--text-primary)', fontSize: '1rem' }}>業績管理</span>
           </div>
-          <span className="text-xs text-slate-400 hidden sm:inline">更新 {new Date(data.updatedAt).toLocaleString('zh-TW')}</span>
+          <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>更新 {new Date(data.updatedAt).toLocaleString('zh-TW')}</span>
         </div>
       </header>
 
-      <div className="max-w-5xl mx-auto px-4 py-6">
-        <p className="text-xs text-slate-400 mb-4">過去月份顯示實際業績（已出貨），當月及未來顯示預測</p>
+      <main className="performance-main">
+        <p className="text-xs mb-4" style={{ color: 'var(--text-tertiary)' }}>過去月份顯示實際業績（已出貨），當月及未來顯示預測</p>
 
         {/* Alerts */}
         {alerts.length > 0 && (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
-            <div className="flex items-center gap-2 mb-3 text-red-700 font-semibold text-sm">
-              <span className="text-red-500">{icons.warning}</span>
+          <div className="alert-card" style={{
+            backgroundColor: 'var(--primary-50)',
+            border: '1px solid var(--primary-200)',
+            borderRadius: '16px',
+            padding: '16px',
+            marginBottom: '24px'
+          }}>
+            <div className="flex items-center gap-2 mb-3 font-semibold text-sm" style={{ color: 'var(--primary-700)' }}>
+              <span style={{ color: 'var(--primary-500)' }}>{icons.warning}</span>
               需要處理 ({alerts.reduce((s, a) => s + a.count, 0)} 件)
             </div>
             <div className="space-y-2">
               {alerts.map(a => (
-                <a key={a.id} href={a.filterUrl(a.cases)} className="block p-3 bg-white border border-red-100 rounded-lg hover:bg-red-50/50 transition">
+                <a key={a.id} href={a.filterUrl(a.cases)} className="block p-3 alert-item" style={{
+                  backgroundColor: 'var(--surface-0)',
+                  border: '1px solid var(--primary-100)',
+                  borderRadius: '12px',
+                  transition: 'all 0.2s ease'
+                }}>
                   <div className="flex items-center justify-between">
-                    <div><div className="text-sm font-medium text-red-700">{a.name}</div><div className="text-xs text-slate-500">{a.description}</div></div>
-                    <div className="text-right"><div className="text-lg font-bold text-red-600">{a.count}</div><div className="text-xs text-slate-400">{fmt(Math.round(a.amount))}K</div></div>
+                    <div>
+                      <div className="text-sm font-medium" style={{ color: 'var(--primary-700)' }}>{a.name}</div>
+                      <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>{a.description}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-lg font-bold" style={{ color: 'var(--primary-600)' }}>{a.count}</div>
+                      <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>{fmt(Math.round(a.amount))}K</div>
+                    </div>
                   </div>
                 </a>
               ))}
@@ -166,37 +199,59 @@ export default function PerformancePage() {
           </div>
         )}
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-          <div className="rounded-xl p-4 shadow-sm border border-slate-100" style={{ background: statusBg(data.summary.ytd.rate) }}>
-            <div className="flex items-center gap-1.5 text-xs text-slate-500 mb-1"><span className="text-slate-400">{icons.target}</span>YTD 達成率</div>
+        {/* Summary Cards - 使用新的 card-stats 樣式 */}
+        <div className="stats-row">
+          <div className="card-stats" style={{ background: statusBg(data.summary.ytd.rate) }}>
+            <div className="flex items-center gap-1.5 text-xs mb-1" style={{ color: 'var(--text-secondary)' }}>
+              <span style={{ color: 'var(--text-tertiary)' }}>{icons.target}</span>YTD 達成率
+            </div>
             <div className="text-3xl font-bold" style={{ color: statusColor(data.summary.ytd.rate) }}>{data.summary.ytd.rate}%</div>
-            <div className="text-xs text-slate-500 mt-1">已出貨 {fmt(data.summary.ytd.shipped)}K / 目標 {fmt(data.summary.ytd.target)}K</div>
+            <div className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>已出貨 {fmt(data.summary.ytd.shipped)}K / 目標 {fmt(data.summary.ytd.target)}K</div>
           </div>
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100">
-            <div className="flex items-center gap-1.5 text-xs text-slate-500 mb-1"><span className="text-blue-400">{icons.shipped}</span>{monthNames[currentMonth]}</div>
-            <div className="text-2xl font-bold text-blue-600">{fmt(data.summary.thisMonth.actual)}K</div>
-            <div className="text-sm text-violet-500">+預測 {fmt(data.summary.thisMonth.forecast)}K</div>
-            <div className="text-xs text-slate-400 mt-1">目標 {fmt(data.summary.thisMonth.target)}K</div>
+          
+          <div className="card-stats">
+            <div className="flex items-center gap-1.5 text-xs mb-1" style={{ color: 'var(--text-secondary)' }}>
+              <span style={{ color: 'var(--accent-blue-500)' }}>{icons.shipped}</span>{monthNames[currentMonth]}
+            </div>
+            <div className="text-2xl font-bold" style={{ color: 'var(--accent-blue-500)' }}>{fmt(data.summary.thisMonth.actual)}K</div>
+            <div className="text-sm" style={{ color: 'var(--accent-purple-500)' }}>+預測 {fmt(data.summary.thisMonth.forecast)}K</div>
+            <div className="text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>目標 {fmt(data.summary.thisMonth.target)}K</div>
           </div>
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100">
-            <div className="flex items-center gap-1.5 text-xs text-slate-500 mb-1"><span className="text-orange-400">{icons.cases}</span>進行中案件</div>
-            <div className="text-3xl font-bold text-orange-500">{fmt(data.summary.activeCases)}</div>
-            <div className="text-xs text-slate-400 mt-1">進行中 + 待出貨</div>
+          
+          <div className="card-stats">
+            <div className="flex items-center gap-1.5 text-xs mb-1" style={{ color: 'var(--text-secondary)' }}>
+              <span style={{ color: 'var(--accent-orange-500)' }}>{icons.cases}</span>進行中案件
+            </div>
+            <div className="text-3xl font-bold" style={{ color: 'var(--accent-orange-500)' }}>{fmt(data.summary.activeCases)}</div>
+            <div className="text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>進行中 + 待出貨</div>
           </div>
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100">
-            <div className="flex items-center gap-1.5 text-xs text-slate-500 mb-1"><span className="text-slate-400">{icons.grid}</span>總案件數</div>
-            <div className="text-3xl font-bold text-slate-600">{fmt(data.summary.totalCases)}</div>
-            <div className="text-xs text-slate-400 mt-1">含已出貨、失敗</div>
+          
+          <div className="card-stats">
+            <div className="flex items-center gap-1.5 text-xs mb-1" style={{ color: 'var(--text-secondary)' }}>
+              <span style={{ color: 'var(--text-tertiary)' }}>{icons.grid}</span>總案件數
+            </div>
+            <div className="text-3xl font-bold" style={{ color: 'var(--text-secondary)' }}>{fmt(data.summary.totalCases)}</div>
+            <div className="text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>含已出貨、失敗</div>
           </div>
         </div>
 
         {/* Monthly Trend */}
-        <section className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 sm:p-6 mb-6">
-          <h2 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2"><span className="text-blue-500">{icons.chart}</span>月度業績趨勢</h2>
+        <section className="chart-section">
+          <h2 className="section-title">
+            <span style={{ color: 'var(--accent-blue-500)' }}>{icons.chart}</span>
+            月度業績趨勢
+          </h2>
           <div className="hidden sm:flex flex-wrap gap-3 text-xs mb-4">
-            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 bg-emerald-500 rounded-sm"/><span className="text-slate-500">已出貨</span></span>
-            {FUNNEL_STAGES.map(s => <span key={s.label} className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm" style={{backgroundColor: s.color}}/><span className="text-slate-500">{s.label}%</span></span>)}
+            <span className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: 'var(--secondary-500)' }}/>
+              <span style={{ color: 'var(--text-secondary)' }}>已出貨</span>
+            </span>
+            {FUNNEL_STAGES.map(s => (
+              <span key={s.label} className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: s.color }}/>
+                <span style={{ color: 'var(--text-secondary)' }}>{s.label}%</span>
+              </span>
+            ))}
           </div>
           <div className="space-y-3">
             {data.monthlyStats.map(m => {
@@ -213,18 +268,26 @@ export default function PerformancePage() {
               const hasStale = isActual && m.forecast > 0
 
               return (
-                <div key={m.month} className={`p-4 rounded-xl border ${
-                  hasStale ? 'border-orange-300 bg-orange-50/50' :
-                  m.month === currentMonth ? 'border-blue-300 bg-blue-50/30' :
-                  'border-slate-200 bg-white'
-                }`}>
+                <div key={m.month} className="month-card" style={{
+                  padding: '16px',
+                  borderRadius: '16px',
+                  border: `1px solid ${hasStale ? 'var(--accent-orange-300)' : m.month === currentMonth ? 'var(--accent-blue-300)' : 'var(--surface-3)'}`,
+                  backgroundColor: hasStale ? 'var(--accent-orange-50)' : m.month === currentMonth ? 'var(--accent-blue-50)' : 'var(--surface-1)'
+                }}>
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <span className="text-lg font-bold text-slate-800">{monthNames[m.month]}</span>
-                      {m.month === currentMonth && <span className="text-[10px] bg-blue-500 text-white px-1.5 py-0.5 rounded-full font-medium">當月</span>}
+                      <span className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>{monthNames[m.month]}</span>
+                      {m.month === currentMonth && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium" style={{ backgroundColor: 'var(--primary-500)', color: 'white' }}>當月</span>
+                      )}
                       <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
-                        m.month === currentMonth ? 'bg-blue-100 text-blue-600' : isActual ? 'bg-slate-100 text-slate-500' : 'bg-violet-100 text-violet-600'
-                      }`}>{m.month === currentMonth ? '實際+預測' : isActual ? '實際' : '預測'}</span>
+                        m.month === currentMonth ? '' : isActual ? '' : ''
+                      }`} style={{
+                        backgroundColor: m.month === currentMonth ? 'var(--accent-blue-100)' : isActual ? 'var(--surface-2)' : 'var(--accent-purple-100)',
+                        color: m.month === currentMonth ? 'var(--accent-blue-600)' : isActual ? 'var(--text-secondary)' : 'var(--accent-purple-600)'
+                      }}>
+                        {m.month === currentMonth ? '實際+預測' : isActual ? '實際' : '預測'}
+                      </span>
                     </div>
                     <span className="text-xl font-bold" style={{ color: statusColor(rate) }}>{rate}%</span>
                   </div>
@@ -232,49 +295,76 @@ export default function PerformancePage() {
                   {isActual && m.month !== currentMonth ? (
                     <>
                       <div className="grid grid-cols-2 gap-2 mb-3">
-                        <div className="text-center p-2.5 bg-slate-50 rounded-lg">
-                          <div className="text-[10px] text-slate-400 mb-0.5">目標</div>
-                          <div className="text-lg font-bold text-slate-700">{fmt(m.target)}K</div>
+                        <div className="text-center p-2.5 rounded-lg" style={{ backgroundColor: 'var(--surface-2)' }}>
+                          <div className="text-[10px] mb-0.5" style={{ color: 'var(--text-tertiary)' }}>目標</div>
+                          <div className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>{fmt(m.target)}K</div>
                         </div>
-                        <div className={`text-center p-2.5 rounded-lg ${m.actual >= m.target ? 'bg-emerald-50' : 'bg-red-50'}`}>
-                          <div className="text-[10px] text-slate-400 mb-0.5">已出貨</div>
-                          <div className={`text-lg font-bold ${m.actual >= m.target ? 'text-emerald-600' : 'text-red-500'}`}>{fmt(m.actual)}K</div>
+                        <div className="text-center p-2.5 rounded-lg" style={{ backgroundColor: m.actual >= m.target ? 'var(--secondary-50)' : 'var(--primary-50)' }}>
+                          <div className="text-[10px] mb-0.5" style={{ color: 'var(--text-tertiary)' }}>已出貨</div>
+                          <div className="text-lg font-bold" style={{ color: m.actual >= m.target ? 'var(--secondary-600)' : 'var(--primary-500)' }}>{fmt(m.actual)}K</div>
                         </div>
                       </div>
-                      <div className={`text-center text-xs font-medium p-1.5 rounded-lg ${m.actual >= m.target ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'}`}>
+                      <div className="text-center text-xs font-medium p-1.5 rounded-lg" style={{
+                        backgroundColor: m.actual >= m.target ? 'var(--secondary-50)' : 'var(--primary-50)',
+                        color: m.actual >= m.target ? 'var(--secondary-600)' : 'var(--primary-500)'
+                      }}>
                         差距 {m.actual >= m.target ? '+' : ''}{fmt(m.actual - m.target)}K
                       </div>
-                      <div className="relative h-3 bg-slate-200 rounded-full overflow-hidden mt-3">
-                        <div className="absolute right-0 top-0 h-full w-px bg-slate-400 z-10"/>
-                        <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${Math.min(actualPct, 100)}%` }}/>
+                      <div className="relative h-3 rounded-full overflow-hidden mt-3" style={{ backgroundColor: 'var(--surface-2)' }}>
+                        <div className="absolute right-0 top-0 h-full w-px z-10" style={{ backgroundColor: 'var(--text-tertiary)' }}/>
+                        <div className="h-full rounded-full" style={{ width: `${Math.min(actualPct, 100)}%`, backgroundColor: 'var(--secondary-500)' }}/>
                       </div>
-                      {hasStale && <div className="mt-2 text-[10px] text-orange-600 text-center">有過期預測案件，請查看頂部警告</div>}
+                      {hasStale && <div className="mt-2 text-[10px] text-center" style={{ color: 'var(--accent-orange-600)' }}>有過期預測案件，請查看頂部警告</div>}
                     </>
                   ) : (
                     <>
                       <div className="grid grid-cols-3 gap-2 mb-3">
-                        <div className="text-center p-2 bg-slate-50 rounded-lg"><div className="text-[10px] text-slate-400 mb-0.5">目標</div><div className="text-base font-bold text-slate-700">{fmt(m.target)}K</div></div>
-                        <div className="text-center p-2 bg-emerald-50 rounded-lg"><div className="text-[10px] text-slate-400 mb-0.5">已出貨</div><div className="text-base font-bold text-emerald-600">{m.actual > 0 ? `${fmt(m.actual)}K` : '-'}</div></div>
-                        <div className="text-center p-2 bg-violet-50 rounded-lg"><div className="text-[10px] text-slate-400 mb-0.5">預測</div><div className="text-base font-bold text-violet-600">{m.forecast > 0 ? `${fmt(Math.round(m.forecast))}K` : '-'}</div></div>
+                        <div className="text-center p-2 rounded-lg" style={{ backgroundColor: 'var(--surface-2)' }}>
+                          <div className="text-[10px] mb-0.5" style={{ color: 'var(--text-tertiary)' }}>目標</div>
+                          <div className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>{fmt(m.target)}K</div>
+                        </div>
+                        <div className="text-center p-2 rounded-lg" style={{ backgroundColor: 'var(--secondary-50)' }}>
+                          <div className="text-[10px] mb-0.5" style={{ color: 'var(--text-tertiary)' }}>已出貨</div>
+                          <div className="text-base font-bold" style={{ color: 'var(--secondary-600)' }}>{m.actual > 0 ? `${fmt(m.actual)}K` : '-'}</div>
+                        </div>
+                        <div className="text-center p-2 rounded-lg" style={{ backgroundColor: 'var(--accent-purple-50)' }}>
+                          <div className="text-[10px] mb-0.5" style={{ color: 'var(--text-tertiary)' }}>預測</div>
+                          <div className="text-base font-bold" style={{ color: 'var(--accent-purple-500)' }}>{m.forecast > 0 ? `${fmt(Math.round(m.forecast))}K` : '-'}</div>
+                        </div>
                       </div>
-                      <div className={`flex items-center justify-center gap-2 text-xs font-medium p-1.5 rounded-lg ${isOver ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'}`}>
-                        <span>合計 {fmt(Math.round(totalPerf))}K</span><span className="text-slate-300">|</span><span>{isOver ? '+' : ''}{fmt(Math.round(gap))}K</span>
+                      <div className="flex items-center justify-center gap-2 text-xs font-medium p-1.5 rounded-lg" style={{
+                        backgroundColor: isOver ? 'var(--secondary-50)' : 'var(--primary-50)',
+                        color: isOver ? 'var(--secondary-600)' : 'var(--primary-500)'
+                      }}>
+                        <span>合計 {fmt(Math.round(totalPerf))}K</span>
+                        <span style={{ color: 'var(--text-disabled)' }}>|</span>
+                        <span>{isOver ? '+' : ''}{fmt(Math.round(gap))}K</span>
                       </div>
-                      <div className="relative h-3 bg-slate-200 rounded-full overflow-hidden mt-3">
-                        <div className="absolute right-0 top-0 h-full w-px bg-slate-400 z-10"/>
+                      <div className="relative h-3 rounded-full overflow-hidden mt-3" style={{ backgroundColor: 'var(--surface-2)' }}>
+                        <div className="absolute right-0 top-0 h-full w-px z-10" style={{ backgroundColor: 'var(--text-tertiary)' }}/>
                         <div className="h-full flex">
-                          {actualPct > 0 && <div className="h-full bg-emerald-500" style={{ width: `${Math.min(actualPct, 100)}%` }}/>}
-                          {p25Pct > 0 && <div className="h-full" style={{ width: `${p25Pct}%`, backgroundColor: '#5DADE2' }}/>}
-                          {p50Pct > 0 && <div className="h-full" style={{ width: `${p50Pct}%`, backgroundColor: '#E67E22' }}/>}
-                          {p75Pct > 0 && <div className="h-full" style={{ width: `${p75Pct}%`, backgroundColor: '#F4D03F' }}/>}
+                          {actualPct > 0 && <div className="h-full" style={{ width: `${Math.min(actualPct, 100)}%`, backgroundColor: 'var(--secondary-500)' }}/>}
+                          {p25Pct > 0 && <div className="h-full" style={{ width: `${p25Pct}%`, backgroundColor: 'var(--accent-blue-500)' }}/>}
+                          {p50Pct > 0 && <div className="h-full" style={{ width: `${p50Pct}%`, backgroundColor: 'var(--accent-orange-500)' }}/>}
+                          {p75Pct > 0 && <div className="h-full" style={{ width: `${p75Pct}%`, backgroundColor: 'var(--accent-yellow-500)' }}/>}
                         </div>
                       </div>
                       {(m.forecast > 0 || mf.total > 0 || !isActual) && (
                         <div className="flex flex-wrap gap-1.5 text-[10px] justify-center mt-2">
-                          {m.actual > 0 && <span className="flex items-center gap-1 px-1.5 py-0.5 bg-emerald-50 text-emerald-700 rounded-full"><span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"/>已出貨 {fmt(m.actual)}</span>}
-                          <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full" style={{backgroundColor:'#5DADE215', color:'#2980B9'}}><span className="w-1.5 h-1.5 rounded-full" style={{backgroundColor:'#5DADE2'}}/>25% {fmt(Math.round(mf.prob25))}</span>
-                          <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full" style={{backgroundColor:'#E67E2215', color:'#D35400'}}><span className="w-1.5 h-1.5 rounded-full" style={{backgroundColor:'#E67E22'}}/>50% {fmt(Math.round(mf.prob50))}</span>
-                          <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full" style={{backgroundColor:'#F4D03F15', color:'#B7950B'}}><span className="w-1.5 h-1.5 rounded-full" style={{backgroundColor:'#F4D03F'}}/>75% {fmt(Math.round(mf.prob75))}</span>
+                          {m.actual > 0 && (
+                            <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full" style={{ backgroundColor: 'var(--secondary-50)', color: 'var(--secondary-700)' }}>
+                              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: 'var(--secondary-500)' }}/>已出貨 {fmt(m.actual)}
+                            </span>
+                          )}
+                          <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(14, 165, 233, 0.15)', color: 'var(--accent-blue-500)' }}>
+                            <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: 'var(--accent-blue-500)' }}/>25% {fmt(Math.round(mf.prob25))}
+                          </span>
+                          <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(255, 107, 53, 0.15)', color: 'var(--accent-orange-500)' }}>
+                            <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: 'var(--accent-orange-500)' }}/>50% {fmt(Math.round(mf.prob50))}
+                          </span>
+                          <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(234, 179, 8, 0.15)', color: 'var(--accent-yellow-600)' }}>
+                            <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: 'var(--accent-yellow-500)' }}/>75% {fmt(Math.round(mf.prob75))}
+                          </span>
                         </div>
                       )}
                     </>
@@ -286,18 +376,30 @@ export default function PerformancePage() {
         </section>
 
         {/* Funnel */}
-        <section className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 sm:p-6 mb-6">
+        <section className="chart-section">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
-            <h2 className="text-sm font-semibold text-slate-700 flex items-center gap-2"><span className="text-orange-500">{icons.funnel}</span>Funnel 分析（進行中）</h2>
+            <h2 className="section-title">
+              <span style={{ color: 'var(--accent-orange-500)' }}>{icons.funnel}</span>
+              Funnel 分析（進行中）
+            </h2>
             <div className="flex flex-wrap gap-1.5">
               <button onClick={() => { setFunnelFilter('all'); setSelectedRep(''); setSelectedDealer('') }}
-                className={`px-2.5 py-1 rounded-full text-xs font-medium transition ${funnelFilter === 'all' ? 'bg-blue-500 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>全部</button>
+                className="filter-btn" style={{
+                  backgroundColor: funnelFilter === 'all' ? 'var(--primary-500)' : 'var(--surface-2)',
+                  color: funnelFilter === 'all' ? 'white' : 'var(--text-secondary)'
+                }}>全部</button>
               {ACTIVE_REPS.map(rep => (
                 <button key={rep} onClick={() => { setFunnelFilter('rep'); setSelectedRep(rep); setSelectedDealer('') }}
-                  className={`px-2.5 py-1 rounded-full text-xs font-medium transition ${funnelFilter === 'rep' && selectedRep === rep ? 'bg-violet-500 text-white' : 'bg-violet-50 text-violet-600 hover:bg-violet-100'}`}>{rep}</button>
+                  className="filter-btn" style={{
+                    backgroundColor: funnelFilter === 'rep' && selectedRep === rep ? 'var(--accent-purple-500)' : 'var(--accent-purple-50)',
+                    color: funnelFilter === 'rep' && selectedRep === rep ? 'white' : 'var(--accent-purple-600)'
+                  }}>{rep}</button>
               ))}
               <select value={funnelFilter === 'dealer' ? selectedDealer : ''} onChange={e => { if (e.target.value) { setFunnelFilter('dealer'); setSelectedDealer(e.target.value); setSelectedRep('') } }}
-                className={`px-2.5 py-1 rounded-full text-xs font-medium border-0 cursor-pointer transition ${funnelFilter === 'dealer' ? 'bg-emerald-500 text-white' : 'bg-emerald-50 text-emerald-600'}`}>
+                className="filter-select" style={{
+                  backgroundColor: funnelFilter === 'dealer' ? 'var(--secondary-500)' : 'var(--secondary-50)',
+                  color: funnelFilter === 'dealer' ? 'white' : 'var(--secondary-600)'
+                }}>
                 <option value="">經銷商</option>
                 {VALID_DEALERS.map(d => <option key={d} value={d}>{d}</option>)}
               </select>
@@ -315,7 +417,7 @@ export default function PerformancePage() {
                       <polygon points={`${cx-tw/2},${ty} ${cx+tw/2},${ty} ${cx+bw/2},${by} ${cx-bw/2},${by}`} fill={stage.color}
                         className="cursor-pointer transition-opacity hover:opacity-80" onClick={() => handleFunnelClick(stage)}/>
                       <text x={500} y={ty + lh/2 - 6} fill={stage.color} fontSize="18" fontWeight="bold">{stage.label}%</text>
-                      <text x={500} y={ty + lh/2 + 16} fill="#64748B" fontSize="15">{fmt(Math.round(stage.amount))}</text>
+                      <text x={500} y={ty + lh/2 + 16} fill="var(--text-secondary)" fontSize="15">{fmt(Math.round(stage.amount))}</text>
                     </g>
                   )
                 })}
@@ -323,57 +425,67 @@ export default function PerformancePage() {
             </div>
             <div className="grid grid-cols-3 gap-2 lg:grid-cols-1 lg:gap-3">
               {funnelData.map(s => (
-                <div key={s.label} className="p-3 rounded-xl text-center cursor-pointer hover:shadow-md transition border border-slate-100"
-                  style={{ backgroundColor: `${s.color}10` }} onClick={() => handleFunnelClick(s)}>
+                <div key={s.label} className="p-3 rounded-xl text-center cursor-pointer transition border"
+                  style={{ backgroundColor: `${s.color}15`, borderColor: 'var(--surface-3)' }} onClick={() => handleFunnelClick(s)}>
                   <div className="text-xl font-bold" style={{ color: s.color }}>{s.count}</div>
-                  <div className="text-[10px] text-slate-500">{s.label}% 案件</div>
-                  <div className="text-xs font-medium text-slate-700">{fmt(Math.round(s.amount))}K</div>
+                  <div className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>{s.label}% 案件</div>
+                  <div className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>{fmt(Math.round(s.amount))}K</div>
                 </div>
               ))}
             </div>
           </div>
-          <p className="text-center text-[10px] text-slate-400 mt-4">漏斗寬度依金額比例變化，點擊區塊查看案件明細</p>
+          <p className="text-center text-[10px] mt-4" style={{ color: 'var(--text-tertiary)' }}>漏斗寬度依金額比例變化，點擊區塊查看案件明細</p>
         </section>
 
         {/* Rep + Dealer */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-          <section className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 sm:p-6">
-            <h2 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2"><span className="text-violet-500">{icons.person}</span>業務績效（依已出貨）</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <section className="chart-section">
+            <h2 className="section-title">
+              <span style={{ color: 'var(--accent-purple-500)' }}>{icons.person}</span>
+              業務績效（依已出貨）
+            </h2>
             <div className="space-y-4">
               {data.repStats.map(rep => (
-                <div key={rep.rep} className="border-b border-slate-100 pb-4 last:border-0">
+                <div key={rep.rep} className="rep-item" style={{ borderBottom: '1px solid var(--surface-3)', paddingBottom: '16px' }}>
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium text-slate-800">{rep.rep}</span>
+                    <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{rep.rep}</span>
                     <span className="text-sm font-bold" style={{ color: statusColor(rep.rate) }}>{rep.rate}%</span>
                   </div>
-                  <div className="w-full bg-slate-200 rounded-full h-2.5 mb-2 overflow-hidden">
-                    <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${Math.min(rep.rate, 100)}%` }}/>
+                  <div className="w-full rounded-full h-2.5 mb-2 overflow-hidden" style={{ backgroundColor: 'var(--surface-2)' }}>
+                    <div className="h-full rounded-full" style={{ width: `${Math.min(rep.rate, 100)}%`, backgroundColor: 'var(--secondary-500)' }}/>
                   </div>
-                  <div className="flex justify-between text-xs text-slate-500">
-                    <span className="text-emerald-600">已出貨 {fmt(rep.totalShipped)}K</span>
-                    <span className="text-violet-600">預測 {fmt(rep.totalForecast)}K</span>
+                  <div className="flex justify-between text-xs" style={{ color: 'var(--text-secondary)' }}>
+                    <span style={{ color: 'var(--secondary-600)' }}>已出貨 {fmt(rep.totalShipped)}K</span>
+                    <span style={{ color: 'var(--accent-purple-500)' }}>預測 {fmt(rep.totalForecast)}K</span>
                     <span>目標 {fmt(rep.totalTarget)}K</span>
                   </div>
-                  <div className="text-[10px] text-slate-400 mt-1">案件數 {rep.caseCount}</div>
+                  <div className="text-[10px] mt-1" style={{ color: 'var(--text-tertiary)' }}>案件數 {rep.caseCount}</div>
                 </div>
               ))}
             </div>
           </section>
 
-          <section className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 sm:p-6">
-            <h2 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2"><span className="text-emerald-500">{icons.building}</span>經銷商排名（依已出貨）</h2>
+          <section className="chart-section">
+            <h2 className="section-title">
+              <span style={{ color: 'var(--secondary-500)' }}>{icons.building}</span>
+              經銷商排名（依已出貨）
+            </h2>
             <div className="space-y-1">
               {data.dealerStats.map((d, i) => (
                 <a key={d.dealer} href={`/cases?stage=已出貨&dealer=${encodeURIComponent(d.dealer)}`}
-                  className="flex items-center gap-3 py-2.5 px-2 -mx-2 rounded-lg hover:bg-slate-50 transition group">
+                  className="dealer-item flex items-center gap-3 py-2.5 px-2 -mx-2 rounded-lg transition group" style={{ color: 'var(--text-primary)' }}>
                   <span className={`w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 ${
-                    i === 0 ? 'bg-amber-500' : i === 1 ? 'bg-slate-400' : i === 2 ? 'bg-amber-700' : 'bg-slate-300'
-                  }`}>{i + 1}</span>
+                    i === 0 ? '' : i === 1 ? '' : i === 2 ? '' : ''
+                  }`} style={{ backgroundColor: i === 0 ? 'var(--accent-yellow-500)' : i === 1 ? 'var(--text-tertiary)' : i === 2 ? 'var(--accent-yellow-700)' : 'var(--surface-300)' }}>
+                    {i + 1}
+                  </span>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-slate-800 truncate">{d.dealer}</div>
-                    <div className="text-xs text-slate-500"><span className="text-emerald-600 font-semibold">{fmt(d.shipped)}K</span> · {d.caseCount} 件</div>
+                    <div className="text-sm font-medium truncate">{d.dealer}</div>
+                    <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                      <span style={{ color: 'var(--secondary-600)', fontWeight: 600 }}>{fmt(d.shipped)}K</span> · {d.caseCount} 件
+                    </div>
                   </div>
-                  <span className="text-slate-300 group-hover:text-slate-500 transition">{icons.arrow}</span>
+                  <span style={{ color: 'var(--text-disabled)' }} className="group-hover:text-primary transition">{icons.arrow}</span>
                 </a>
               ))}
             </div>
@@ -381,31 +493,39 @@ export default function PerformancePage() {
         </div>
 
         {/* Stage Distribution */}
-        <section className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 sm:p-6 mb-6">
-          <h2 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2"><span className="text-slate-400">{icons.grid}</span>案件階段分布</h2>
+        <section className="chart-section">
+          <h2 className="section-title">
+            <span style={{ color: 'var(--text-tertiary)' }}>{icons.grid}</span>
+            案件階段分布
+          </h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {data.stageStats.map(s => {
-              const cfg: Record<string, { bg: string; border: string; text: string }> = {
-                '進行中': { bg: 'bg-orange-50', border: 'border-orange-200 hover:border-orange-300', text: 'text-orange-600' },
-                '待出貨': { bg: 'bg-amber-50', border: 'border-amber-200 hover:border-amber-300', text: 'text-amber-600' },
-                '已出貨': { bg: 'bg-emerald-50', border: 'border-emerald-200 hover:border-emerald-300', text: 'text-emerald-600' },
-                '失敗': { bg: 'bg-slate-50', border: 'border-slate-200 hover:border-slate-300', text: 'text-slate-500' },
+              const configs: Record<string, { bg: string; border: string; text: string }> = {
+                '進行中': { bg: 'var(--accent-orange-50)', border: 'var(--accent-orange-200)', text: 'var(--accent-orange-600)' },
+                '待出貨': { bg: 'var(--accent-yellow-50)', border: 'var(--accent-yellow-200)', text: 'var(--accent-yellow-600)' },
+                '已出貨': { bg: 'var(--secondary-50)', border: 'var(--secondary-200)', text: 'var(--secondary-600)' },
+                '失敗': { bg: 'var(--surface-2)', border: 'var(--surface-300)', text: 'var(--text-secondary)' },
               }
-              const c = cfg[s.stage] || cfg['失敗']
+              const c = configs[s.stage] || configs['失敗']
               return (
                 <a key={s.stage} href={`/cases?stage=${encodeURIComponent(s.stage)}`}
-                  className={`block p-4 rounded-xl border transition-all hover:shadow-sm ${c.bg} ${c.border}`}>
-                  <div className="text-xs font-medium text-slate-600">{s.stage}</div>
-                  <div className={`text-2xl font-bold mt-1 ${c.text}`}>{s.count}</div>
-                  <div className="text-xs text-slate-400">{fmt(s.amount)}K</div>
+                  className="block p-4 rounded-xl border transition-all hover:shadow-sm" style={{
+                    backgroundColor: c.bg,
+                    borderColor: c.border
+                  }}>
+                  <div className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>{s.stage}</div>
+                  <div className="text-2xl font-bold mt-1" style={{ color: c.text }}>{s.count}</div>
+                  <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>{fmt(s.amount)}K</div>
                 </a>
               )
             })}
           </div>
         </section>
 
-        <footer className="text-center text-xs text-slate-400 mt-8 pb-6">Aurotek Sales Portal · Powered by Jarvis</footer>
-      </div>
+        <footer className="text-center text-xs mt-8 pb-6" style={{ color: 'var(--text-tertiary)' }}>
+          Aurotek Sales Portal · Powered by Jarvis
+        </footer>
+      </main>
     </div>
   )
 }
