@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
 
+import ThemeToggle from './ThemeToggle'
+
 import { logActionWithIP } from '@/lib/audit'
 
 // Navigation data
@@ -155,7 +157,7 @@ export default function AppShell({ children }: AppShellProps) {
     items.filter(item => !item.adminOnly || isAdmin)
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-60 flex-col bg-slate-900 z-40">
         {/* Logo */}
@@ -214,6 +216,9 @@ export default function AppShell({ children }: AppShellProps) {
               </div>
             </div>
           )}
+          <div className="flex items-center gap-2 mb-3">
+            <ThemeToggle />
+          </div>
           <button
             onClick={handleLogout}
             className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors text-sm"
@@ -225,26 +230,29 @@ export default function AppShell({ children }: AppShellProps) {
       </aside>
 
       {/* Mobile Header */}
-      <header className="md:hidden fixed top-0 left-0 right-0 h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 z-40">
+      <header className="md:hidden fixed top-0 left-0 right-0 h-14 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-4 z-40">
         <Link href="/" className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
             <svg viewBox="0 0 20 20" fill="white" className="w-4.5 h-4.5">
               <path d="M10 2L2 7l8 5 8-5-8-5zM2 13l8 5 8-5M2 10l8 5 8-5"/>
             </svg>
           </div>
-          <span className="font-bold text-slate-800 text-sm">Aurotek Portal</span>
+          <span className="font-bold text-slate-800 dark:text-white text-sm">Aurotek Portal</span>
         </Link>
-        {userName && (
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-slate-500">{userName}</span>
-            <button
-              onClick={handleLogout}
-              className="text-slate-400 hover:text-slate-600 p-1"
-            >
-              {icons.logout}
-            </button>
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          {userName && (
+            <>
+              <span className="text-xs text-slate-500 dark:text-slate-400">{userName}</span>
+              <button
+                onClick={handleLogout}
+                className="text-slate-400 hover:text-slate-600 dark:text-slate-400 dark:hover:text-slate-300 p-1"
+              >
+                {icons.logout}
+              </button>
+            </>
+          )}
+        </div>
       </header>
 
       {/* Main Content */}
@@ -253,7 +261,7 @@ export default function AppShell({ children }: AppShellProps) {
       </main>
 
       {/* Mobile Bottom Tab Bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-40 pb-[env(safe-area-inset-bottom)]">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 z-40 pb-[env(safe-area-inset-bottom)]">
         <div className="flex items-center justify-around h-15">
           {MOBILE_TABS.map(tab => {
             if (tab.id === 'more') {

@@ -2,6 +2,7 @@ import './globals.css'
 import type { Metadata } from 'next'
 
 import LayoutWrapper from './components/LayoutWrapper'
+import ThemeProvider from './components/ThemeProvider'
 import { TrackingProvider } from './components/TrackingProvider'
 
 export const metadata: Metadata = {
@@ -17,11 +18,13 @@ export default function RootLayout({
   return (
     <html lang="zh-TW">
       <body>
-        <TrackingProvider>
-          <LayoutWrapper>
-            {children}
-          </LayoutWrapper>
-        </TrackingProvider>
+        <ThemeProvider>
+          <TrackingProvider>
+            <LayoutWrapper>
+              {children}
+            </LayoutWrapper>
+          </TrackingProvider>
+        </ThemeProvider>
       </body>
     </html>
   )
