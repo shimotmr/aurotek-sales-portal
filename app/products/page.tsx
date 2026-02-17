@@ -78,7 +78,7 @@ function CardSkeleton({ count = 5 }: { count?: number }) {
   return (
     <>
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="bg-surface-1 border border-surface-3 rounded-card px-3 py-2.5 animate-pulse">
+        <div key={i} className="bg-surface-1 border border-surface-3 rounded-2xl px-3 py-2.5 animate-pulse">
           <div className="flex items-center gap-2 mb-1">
             <div className="h-3 bg-surface-2 rounded w-20" />
             <div className="h-3 bg-surface-2 rounded w-10" />
@@ -371,11 +371,11 @@ export default function ProductsPage() {
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1) }}
               placeholder="搜尋料號、品名..."
-              className="flex-1 p-3 text-sm bg-surface-1 border border-surface-3 rounded-card focus:ring-2 focus:ring-primary-400/20 focus:border-primary-400 outline-none transition-all"
+              className="flex-1 p-3 text-sm bg-surface-1 border border-surface-3 rounded-2xl focus:ring-2 focus:ring-primary-400/20 focus:border-primary-400 outline-none transition-all"
             />
             <button 
               onClick={() => setShowFilters(!showFilters)}
-              className={`px-4 py-3 rounded-card border font-medium text-sm transition-colors ${
+              className={`px-4 py-3 rounded-2xl border font-medium text-sm transition-colors ${
                 activeFilterCount > 0 ? 'bg-primary-50 border-primary-200 text-primary-600' : 'bg-surface-1 border-surface-3'
               }`}
             >
@@ -390,7 +390,7 @@ export default function ProductsPage() {
         <div className="px-3 sm:px-4 mt-3 mb-2">
           <button 
             onClick={() => setShowFilters(!showFilters)}
-            className="inline-flex items-center gap-2 px-3 py-2 border border-surface-3 rounded-button font-medium text-xs transition-colors bg-surface-1 hover:bg-surface-hover"
+            className="inline-flex items-center gap-2 px-3 py-2 border border-surface-3 rounded-lg font-medium text-xs transition-colors bg-surface-1 hover:bg-surface-hover"
           >
             <span>☰</span> 
             <span>展開/收起篩選</span>
@@ -410,23 +410,23 @@ export default function ProductsPage() {
         
         {/* Filters Sidebar / Mobile Sheet */}
         {showFilters && (
-          <aside className={`space-y-3 ${isMobile ? 'bg-surface-1 rounded-card p-4 border border-surface-3 shadow-card' : 'md:max-h-[calc(100vh-140px)] md:overflow-y-auto'}`}>
+          <aside className={`space-y-3 ${isMobile ? 'bg-surface-1 rounded-2xl p-4 border border-surface-3 shadow-lg' : 'md:max-h-[calc(100vh-140px)] md:overflow-y-auto'}`}>
             {/* Keyword (Desktop only) */}
             {!isMobile && (
-              <div className="bg-surface-1 border border-surface-3 rounded-card p-3 shadow-card">
+              <div className="bg-surface-1 border border-surface-3 rounded-2xl p-3 shadow-lg">
                 <div className="font-bold mb-2 text-sm text-text-primary">關鍵字</div>
                 <input
                   type="search"
                   value={search}
                   onChange={(e) => { setSearch(e.target.value); setPage(1) }}
                   placeholder="和椿料號 / 普渡料號 / 品名 / 規格..."
-                  className="w-full p-3 text-sm bg-surface-0 border border-surface-3 rounded-button text-text-primary focus:bg-surface-0 focus:border-primary-400 outline-none transition-all"
+                  className="w-full p-3 text-sm bg-surface-0 border border-surface-3 rounded-lg text-text-primary focus:bg-surface-0 focus:border-primary-400 outline-none transition-all"
                 />
               </div>
             )}
 
             {/* Material Type */}
-            <div className={isMobile ? '' : 'bg-surface-1 border border-surface-3 rounded-card p-3 shadow-card'}>
+            <div className={isMobile ? '' : 'bg-surface-1 border border-surface-3 rounded-2xl p-3 shadow-lg'}>
               <div className="font-bold mb-2 text-sm text-text-primary">物料類型（單選）</div>
               <div className="flex flex-wrap gap-2">
                 {materialTypes.map(type => (
@@ -449,7 +449,7 @@ export default function ProductsPage() {
             </div>
 
             {/* Product Type - 分組顯示 */}
-            <div className={isMobile ? '' : 'bg-surface-1 border border-surface-3 rounded-card p-3 shadow-card'}>
+            <div className={isMobile ? '' : 'bg-surface-1 border border-surface-3 rounded-2xl p-3 shadow-lg'}>
               <div className="font-bold mb-2 text-sm text-text-primary">產品類型（多選）</div>
               <div className="space-y-2">
                 {(() => {
@@ -538,7 +538,7 @@ export default function ProductsPage() {
             </div>
 
             {/* Product Tags */}
-            <div className={isMobile ? '' : 'bg-surface-1 border border-surface-3 rounded-card p-3 shadow-card'}>
+            <div className={isMobile ? '' : 'bg-surface-1 border border-surface-3 rounded-2xl p-3 shadow-lg'}>
               <div className="font-bold mb-2 text-sm text-text-primary">產品標籤（多選）</div>
               <div className="flex flex-wrap gap-2">
                 {tagOptions.map(tag => (
@@ -558,7 +558,7 @@ export default function ProductsPage() {
             </div>
 
             {/* Actions */}
-            <div className={isMobile ? 'flex gap-2 pt-2' : 'bg-surface-1 border border-surface-3 rounded-card p-3 shadow-card'}>
+            <div className={isMobile ? 'flex gap-2 pt-2' : 'bg-surface-1 border border-surface-3 rounded-2xl p-3 shadow-lg'}>
               {!isMobile && (
                 <>
                   <div className="font-bold mb-2 text-sm text-text-primary">顯示設定</div>
@@ -566,7 +566,7 @@ export default function ProductsPage() {
                   <select
                     value={pageSize}
                     onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1) }}
-                    className="w-full p-2 text-sm border border-surface-3 rounded-button bg-surface-0 text-text-primary outline-none"
+                    className="w-full p-2 text-sm border border-surface-3 rounded-lg bg-surface-0 text-text-primary outline-none"
                   >
                     <option value={25}>25</option>
                     <option value={50}>50</option>
@@ -576,14 +576,14 @@ export default function ProductsPage() {
               )}
               <button
                 onClick={clearFilters}
-                className={`${isMobile ? 'flex-1' : 'w-full'} px-3 py-2 border border-surface-3 rounded-button hover:bg-surface-hover transition-colors text-sm text-text-secondary`}
+                className={`${isMobile ? 'flex-1' : 'w-full'} px-3 py-2 border border-surface-3 rounded-lg hover:bg-surface-hover transition-colors text-sm text-text-secondary`}
               >
                 清除條件
               </button>
               {isMobile && (
                 <button
                   onClick={() => setShowFilters(false)}
-                  className="flex-1 px-3 py-2 text-white rounded-button text-sm font-medium bg-primary-500 hover:bg-primary-600 transition-colors"
+                  className="flex-1 px-3 py-2 text-white rounded-lg text-sm font-medium bg-primary-500 hover:bg-primary-600 transition-colors"
                 >
                   套用
                 </button>
@@ -601,7 +601,7 @@ export default function ProductsPage() {
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-3 py-1.5 border border-surface-3 rounded-button hover:bg-surface-hover transition-colors text-xs disabled:opacity-50 bg-surface-1 text-text-secondary"
+                className="px-3 py-1.5 border border-surface-3 rounded-lg hover:bg-surface-hover transition-colors text-xs disabled:opacity-50 bg-surface-1 text-text-secondary"
               >
                 ‹ 上一頁
               </button>
@@ -609,7 +609,7 @@ export default function ProductsPage() {
               <button
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages}
-                className="px-3 py-1.5 border border-surface-3 rounded-button hover:bg-surface-hover transition-colors text-xs disabled:opacity-50 bg-surface-1 text-text-secondary"
+                className="px-3 py-1.5 border border-surface-3 rounded-lg hover:bg-surface-hover transition-colors text-xs disabled:opacity-50 bg-surface-1 text-text-secondary"
               >
                 下一頁 ›
               </button>
@@ -622,12 +622,12 @@ export default function ProductsPage() {
               {loading ? (
                 <CardSkeleton count={pageSize > 10 ? 10 : pageSize} />
               ) : products.length === 0 ? (
-                <div className="bg-surface-1 border border-surface-3 rounded-card p-8 text-center text-text-tertiary">找不到產品</div>
+                <div className="bg-surface-1 border border-surface-3 rounded-2xl p-8 text-center text-text-tertiary">找不到產品</div>
               ) : (
                 products.map((product) => (
                   <div 
                     key={product.id} 
-                    className="bg-surface-1 border border-surface-3 rounded-card px-3 py-2.5 shadow-card active:bg-surface-hover transition-colors"
+                    className="bg-surface-1 border border-surface-3 rounded-2xl px-3 py-2.5 shadow-lg active:bg-surface-hover transition-colors"
                   >
                     {/* 第一行：料號 + 類型 + 庫存 + ...詳細 */}
                     <div className="flex items-center gap-2 mb-1">
@@ -682,7 +682,7 @@ export default function ProductsPage() {
                       </div>
                       <Link
                         href={`/quotations/new?product=${product.id}`}
-                        className="text-xs px-2 py-1 rounded-button text-white font-medium bg-primary-500 hover:bg-primary-600 transition-colors"
+                        className="text-xs px-2 py-1 rounded-lg text-white font-medium bg-primary-500 hover:bg-primary-600 transition-colors"
                         title="加入報價單"
                       >
                         +報價
@@ -694,7 +694,7 @@ export default function ProductsPage() {
             </div>
           ) : (
             /* 桌面版表格 */
-            <div className="flex-1 overflow-auto border border-surface-3 rounded-card bg-surface-1 shadow-card">
+            <div className="flex-1 overflow-auto border border-surface-3 rounded-2xl bg-surface-1 shadow-lg">
               <table className="w-full border-collapse">
                 <thead className="sticky top-0 z-10">
                   <tr className="bg-surface-2">
@@ -772,7 +772,7 @@ export default function ProductsPage() {
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-4 py-2 border border-surface-3 rounded-button text-sm disabled:opacity-50 bg-surface-1 text-text-secondary"
+                className="px-4 py-2 border border-surface-3 rounded-lg text-sm disabled:opacity-50 bg-surface-1 text-text-secondary"
               >
                 ‹ 上一頁
               </button>
@@ -780,7 +780,7 @@ export default function ProductsPage() {
               <button
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages}
-                className="px-4 py-2 border border-surface-3 rounded-button text-sm disabled:opacity-50 bg-surface-1 text-text-secondary"
+                className="px-4 py-2 border border-surface-3 rounded-lg text-sm disabled:opacity-50 bg-surface-1 text-text-secondary"
               >
                 下一頁 ›
               </button>
@@ -798,7 +798,7 @@ export default function ProductsPage() {
             <div className="flex items-center justify-between px-4 py-3 border-b border-surface-3 bg-surface-1 sticky top-0 z-10">
               <button 
                 onClick={closeDrawer}
-                className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-text-secondary hover:bg-surface-hover rounded-button transition-colors"
+                className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-text-secondary hover:bg-surface-hover rounded-lg transition-colors"
               >
                 <span>←</span>
                 <span>返回目錄</span>
@@ -870,7 +870,7 @@ export default function ProductsPage() {
               <div className="p-4 border-t border-surface-3 bg-surface-1">
                 <Link
                   href={`/quotations/new?product=${selectedProduct.id}`}
-                  className="block w-full px-4 py-3 text-white rounded-button text-center font-medium bg-primary-500 hover:bg-primary-600 transition-colors"
+                  className="block w-full px-4 py-3 text-white rounded-lg text-center font-medium bg-primary-500 hover:bg-primary-600 transition-colors"
                 >
                   加入報價單
                 </Link>

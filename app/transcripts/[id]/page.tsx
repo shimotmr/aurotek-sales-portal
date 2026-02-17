@@ -345,14 +345,14 @@ export default function TranscriptDetailPage() {
     const parts = text.split(new RegExp(`(${searchText})`, 'gi'))
     return parts.map((part, i) => 
       part.toLowerCase() === searchText.toLowerCase() 
-        ? `<mark style="background:#FEF08A">${part}</mark>`
+        ? `<mark class="bg-yellow-200">${part}</mark>`
         : part
     ).join('')
   }
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#f5f5f5', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#9CA3AF' }}>
+      <div className="min-h-screen bg-surface-1 flex justify-center items-center text-text-tertiary">
         載入中...
       </div>
     )
@@ -360,7 +360,7 @@ export default function TranscriptDetailPage() {
 
   if (!transcript) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#f5f5f5', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#DC2626' }}>
+      <div className="min-h-screen bg-surface-1 flex justify-center items-center text-red-600">
         找不到逐字稿
       </div>
     )
@@ -370,47 +370,30 @@ export default function TranscriptDetailPage() {
   const headerHeight = isMobile ? (audioUrl ? '140px' : '60px') : (audioUrl ? '120px' : '60px')
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f5f5f5', paddingTop: headerHeight, paddingBottom: isMobile ? '70px' : '80px' }}>
+    <div className="min-h-screen bg-surface-1 pt-[var(--header-height)] pb-[calc(70px+env(safe-area-inset-bottom))] md:pb-20" style={{ '--header-height': headerHeight } as React.CSSProperties}>
       {/* Header + Audio Player - 固定頂部 */}
-      <div style={{ 
-        backgroundColor: 'white', 
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)', 
-        borderBottom: '1px solid #e5e7eb', 
-        position: 'fixed', 
-        top: 0, 
-        left: 0,
-        right: 0,
-        zIndex: 30 
-      }}>
-        <div style={{ maxWidth: '1024px', margin: '0 auto', padding: isMobile ? '12px 12px' : '12px 16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '12px', marginBottom: audioUrl ? (isMobile ? '12px' : '10px') : 0 }}>
-            <Link href="/transcripts" style={{ color: '#9CA3AF', flexShrink: 0 }}>
-              <svg style={{ width: isMobile ? '18px' : '20px', height: isMobile ? '18px' : '20px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="fixed top-0 left-0 right-0 z-30 bg-surface-0 border-b border-surface-3 shadow-sm">
+        <div className="max-w-5xl mx-auto px-3 md:px-4 py-3">
+          <div className={`flex items-center gap-2 md:gap-3 ${audioUrl ? (isMobile ? 'mb-3' : 'mb-[10px]') : ''}`}>
+            <Link href="/transcripts" className="text-text-tertiary shrink-0">
+              <svg className={`w-[18px] h-[18px] md:w-5 md:h-5`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </Link>
-            <h1 style={{ fontSize: isMobile ? '15px' : '18px', fontWeight: 'bold', color: '#111827', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <h1 className="flex-1 text-sm md:text-lg font-bold text-text-primary truncate">
               {transcript.title || `逐字稿 ${transcript.id.slice(0, 8)}`}
             </h1>
             <span
-              style={{ 
-                padding: isMobile ? '4px 10px' : '4px 12px',
-                borderRadius: '9999px', 
-                fontSize: isMobile ? '11px' : '12px',
-                fontWeight: '500', 
-                backgroundColor: st.bg, 
-                color: st.color,
-                flexShrink: 0,
-                whiteSpace: 'nowrap'
-              }}
+              className={`px-2.5 md:px-3 py-1 rounded-full text-xs md:text-sm font-medium shrink-0 whitespace-nowrap`}
+              style={{ backgroundColor: st.bg, color: st.color }}
             >
               {st.label}
             </span>
           </div>
 
-          {/* 手機版：大播放器控制 */}
+          {/* Audio Player */}
           {audioUrl && (
-            <div style={{ backgroundColor: '#F9FAFB', borderRadius: '8px', padding: isMobile ? '12px' : '10px' }}>
+            <div className="bg-surface-1 rounded-lg p-2.5 md:p-2.5">
               {isMobile ? (
                 <div>
                   {/* 隱藏的 audio 元素 */}
@@ -420,32 +403,20 @@ export default function TranscriptDetailPage() {
                     onTimeUpdate={handleTimeUpdate}
                     onPlay={() => setIsPlaying(true)}
                     onPause={() => setIsPlaying(false)}
-                    style={{ display: 'none' }}
+                    className="hidden"
                   />
                   
                   {/* 自訂播放器 UI */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div className="flex items-center gap-3">
                     <button
                       onClick={handlePlayPause}
-                      style={{ 
-                        width: '52px',
-                        height: '52px',
-                        borderRadius: '50%',
-                        backgroundColor: '#2563EB',
-                        color: 'white',
-                        border: 'none',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '24px',
-                        cursor: 'pointer',
-                        flexShrink: 0
-                      }}
+                      className="w-13 h-13 md:w-12 md:h-12 rounded-full bg-blue-600 text-white flex items-center justify-center text-xl shrink-0"
+                      style={{ width: '52px', height: '52px' }}
                     >
                       {isPlaying ? '⏸' : '▶'}
                     </button>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '14px', color: '#6B7280', marginBottom: '6px' }}>
+                    <div className="flex-1">
+                      <div className="text-sm text-text-secondary mb-1.5">
                         {formatTime(currentTime)} / {formatTime((transcript.duration_seconds || 0) * 1000)}
                       </div>
                       <input
@@ -460,19 +431,8 @@ export default function TranscriptDetailPage() {
                             audioRef.current.currentTime = time / 1000
                           }
                         }}
-                        onChange={e => {
-                          const time = parseInt(e.target.value)
-                          setCurrentTime(time)
-                          if (audioRef.current) {
-                            audioRef.current.currentTime = time / 1000
-                          }
-                        }}
+                        className="w-full h-1.5 rounded-full outline-none"
                         style={{ 
-                          width: '100%',
-                          height: '6px',
-                          borderRadius: '3px',
-                          outline: 'none',
-                          appearance: 'none',
                           background: `linear-gradient(to right, #2563EB 0%, #2563EB ${(currentTime / ((transcript.duration_seconds || 1) * 1000)) * 100}%, #E5E7EB ${(currentTime / ((transcript.duration_seconds || 1) * 1000)) * 100}%, #E5E7EB 100%)`
                         }}
                       />
@@ -487,7 +447,7 @@ export default function TranscriptDetailPage() {
                   onTimeUpdate={handleTimeUpdate}
                   onPlay={() => setIsPlaying(true)}
                   onPause={() => setIsPlaying(false)}
-                  style={{ width: '100%', height: '40px' }}
+                  className="w-full h-10"
                 />
               )}
             </div>
@@ -495,123 +455,83 @@ export default function TranscriptDetailPage() {
         </div>
       </div>
 
-      <div style={{ maxWidth: '1024px', margin: '0 auto', padding: isMobile ? '12px' : '16px' }}>
+      <div className="max-w-5xl mx-auto px-3 md:px-4 py-3 md:py-4">
         {/* Info Card */}
-        <div style={{ backgroundColor: 'white', borderRadius: isMobile ? '16px' : '12px', border: '1px solid #f3f4f6', padding: isMobile ? '20px' : '16px', marginBottom: isMobile ? '16px' : '16px' }}>
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: isMobile ? '16px' : '16px',
-            fontSize: isMobile ? '15px' : '14px'
-          }}>
+        <div className="bg-surface-0 border border-surface-3 rounded-2xl p-4 md:p-4 mb-4">
+          <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-3'} gap-4 text-sm md:text-sm`}>
             <div>
-              <div style={{ color: '#6B7280', fontSize: isMobile ? '13px' : '12px', marginBottom: '6px' }}>會議日期</div>
-              <div style={{ color: '#111827', fontWeight: '500' }}>{formatDate(transcript.meeting_date)}</div>
+              <div className="text-text-secondary text-xs md:text-xs mb-1.5">會議日期</div>
+              <div className="text-text-primary font-medium">{formatDate(transcript.meeting_date)}</div>
             </div>
             <div>
-              <div style={{ color: '#6B7280', fontSize: isMobile ? '13px' : '12px', marginBottom: '6px' }}>時長</div>
-              <div style={{ color: '#111827', fontWeight: '500' }}>
+              <div className="text-text-secondary text-xs md:text-xs mb-1.5">時長</div>
+              <div className="text-text-primary font-medium">
                 {transcript.duration_seconds ? formatTime(transcript.duration_seconds * 1000) : '--:--'}
               </div>
             </div>
             <div>
-              <div style={{ color: '#6B7280', fontSize: isMobile ? '13px' : '12px', marginBottom: '6px' }}>建立時間</div>
-              <div style={{ color: '#111827', fontWeight: '500' }}>{formatDate(transcript.created_at)}</div>
+              <div className="text-text-secondary text-xs md:text-xs mb-1.5">建立時間</div>
+              <div className="text-text-primary font-medium">{formatDate(transcript.created_at)}</div>
             </div>
           </div>
 
-          {/* Speaker List — inline below info */}
-          <div style={{ marginTop: '16px', borderTop: '1px solid #F3F4F6', paddingTop: '16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-              <div style={{ color: '#6B7280', fontSize: isMobile ? '13px' : '12px' }}>與會人員</div>
+          {/* Speaker List */}
+          <div className="mt-4 border-t border-surface-3 pt-4">
+            <div className="flex items-center justify-between mb-2.5">
+              <div className="text-text-secondary text-xs md:text-xs">與會人員</div>
               <button
                 onClick={addSpeaker}
-                style={{
-                  background: 'none',
-                  border: '1px solid #D1D5DB',
-                  borderRadius: '6px',
-                  padding: isMobile ? '6px 12px' : '4px 10px',
-                  fontSize: isMobile ? '13px' : '12px',
-                  color: '#6B7280',
-                  cursor: 'pointer',
-                  minHeight: '32px'
-                }}
+                className="bg-none border border-surface-3 rounded-md px-2.5 py-1.5 text-xs text-text-secondary cursor-pointer min-h-8"
               >
                 + 新增
               </button>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div className="flex flex-col gap-2">
               {Object.keys(transcript?.speakers || {}).map(label => (
-                  <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ 
-                      fontSize: isMobile ? '13px' : '12px', 
-                      color: '#9CA3AF', 
-                      width: '80px',
-                      flexShrink: 0
-                    }}>
+                  <div key={label} className="flex items-center gap-2.5">
+                    <span className="text-xs text-text-tertiary w-20 shrink-0">
                       {label}
                     </span>
                     <input
                       type="text"
                       defaultValue={transcript.speakers?.[label] || label}
                       onBlur={e => updateSpeakerName(label, e.target.value)}
-                      style={{ 
-                        border: '1px solid #E5E7EB',
-                        borderRadius: '6px',
-                        backgroundColor: 'white',
-                        padding: isMobile ? '8px 12px' : '6px 10px',
-                        fontSize: isMobile ? '15px' : '14px',
-                        color: '#111827', 
-                        fontWeight: '500', 
-                        flex: 1,
-                        minHeight: '40px'
-                      }}
+                      className="flex-1 border border-surface-3 rounded-md bg-surface-0 px-3 py-2 text-sm text-text-primary font-medium min-h-10"
                     />
                   </div>
-                ))}
-              </div>
+              ))}
             </div>
+          </div>
         </div>
 
         {/* Status Messages */}
         {transcript.status === 'processing' && (
-          <div style={{ backgroundColor: '#DBEAFE', border: '1px solid #93C5FD', borderRadius: isMobile ? '16px' : '12px', padding: isMobile ? '20px' : '16px', marginBottom: isMobile ? '16px' : '16px', fontSize: isMobile ? '15px' : '14px', color: '#1E40AF', lineHeight: '1.5' }}>
+          <div className="bg-blue-100 border border-blue-300 rounded-2xl p-4 md:p-4 mb-4 text-sm md:text-sm text-blue-800">
             🔄 轉錄中... {polling && '(檢查狀態中)'}
           </div>
         )}
 
         {transcript.status === 'error' && (
-          <div style={{ backgroundColor: '#FEE2E2', border: '1px solid #FCA5A5', borderRadius: isMobile ? '16px' : '12px', padding: isMobile ? '20px' : '16px', marginBottom: isMobile ? '16px' : '16px', fontSize: isMobile ? '15px' : '14px', color: '#991B1B', lineHeight: '1.5' }}>
+          <div className="bg-red-100 border border-red-300 rounded-2xl p-4 md:p-4 mb-4 text-sm md:text-sm text-red-800">
             ❌ 轉錄失敗，請重新上傳
           </div>
         )}
 
         {/* Segments */}
         {segments.length > 0 && (
-          <div style={{ backgroundColor: 'white', borderRadius: isMobile ? '16px' : '12px', border: '1px solid #f3f4f6', padding: isMobile ? '20px' : '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: isMobile ? '20px' : '16px', gap: '12px' }}>
-              <h2 style={{ fontSize: isMobile ? '15px' : '14px', fontWeight: 'bold', color: '#374151' }}>📝 逐字稿內容</h2>
+          <div className="bg-surface-0 border border-surface-3 rounded-2xl p-4 md:p-4">
+            <div className="flex justify-between items-center mb-4 md:mb-4 gap-3">
+              <h2 className="text-sm md:text-sm font-bold text-text-primary">📝 逐字稿內容</h2>
               <button
                 onClick={handleCorrect}
                 disabled={correcting}
-                style={{ 
-                  backgroundColor: '#7C3AED', 
-                  color: 'white', 
-                  padding: isMobile ? '10px 16px' : '6px 12px',
-                  borderRadius: '6px', 
-                  fontSize: isMobile ? '14px' : '12px',
-                  border: 'none', 
-                  cursor: correcting ? 'not-allowed' : 'pointer', 
-                  opacity: correcting ? 0.5 : 1,
-                  minHeight: '44px',
-                  whiteSpace: 'nowrap'
-                }}
+                className="bg-purple-600 text-white px-3 md:px-3 py-1.5 md:py-1.5 rounded-md text-xs md:text-sm border-none cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 min-h-11 whitespace-nowrap"
               >
                 {correcting ? '校正中...' : '📚 辭典校正'}
               </button>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '16px' : '12px' }}>
+            <div className="flex flex-col gap-3 md:gap-3">
               {segments.map(seg => {
                 const isActive = currentTime >= seg.start_ms && currentTime <= seg.end_ms
                 const isEditing = editingId === seg.id
@@ -620,80 +540,35 @@ export default function TranscriptDetailPage() {
                 return (
                   <div
                     key={seg.id}
-                    style={{
-                      padding: isMobile ? '16px' : '12px',
-                      borderRadius: isMobile ? '12px' : '8px',
-                      backgroundColor: isActive ? '#EFF6FF' : '#F9FAFB',
-                      border: isActive ? '2px solid #2563EB' : '1px solid #E5E7EB',
-                      transition: 'all 0.2s',
-                      minHeight: isMobile ? '80px' : 'auto'
-                    }}
+                    className={`p-3 md:p-3 rounded-xl border transition-all ${isActive ? 'bg-blue-50 border-blue-600' : 'bg-surface-1 border-surface-3'}`}
+                    style={{ minHeight: isMobile ? '80px' : 'auto' }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'start', gap: isMobile ? '12px' : '12px', flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
+                    <div className="flex items-start gap-3 flex-wrap md:flex-nowrap">
                       <button
                         onClick={() => seekToTime(seg.start_ms)}
-                        style={{ 
-                          color: '#2563EB', 
-                          fontSize: isMobile ? '14px' : '12px',
-                          fontFamily: 'monospace', 
-                          background: 'none', 
-                          border: 'none', 
-                          cursor: 'pointer', 
-                          flexShrink: 0,
-                          minHeight: '44px',
-                          padding: isMobile ? '8px 12px' : '4px 8px',
-                          fontWeight: '600'
-                        }}
+                        className="text-blue-600 text-xs md:text-xs font-mono bg-none border-none cursor-pointer shrink-0 min-h-11 px-2 py-2 font-semibold"
                       >
                         {formatTime(seg.start_ms)}
                       </button>
-                      <div style={{ position: 'relative', flexShrink: 0 }}>
+                      <div className="relative shrink-0">
                         <button
                           onClick={() => setEditingSpeakerId(editingSpeakerId === seg.id ? null : seg.id)}
-                          style={{ 
-                            fontSize: isMobile ? '14px' : '12px',
-                            fontWeight: '600', 
-                            color: '#7C3AED', 
-                            background: editingSpeakerId === seg.id ? '#EDE9FE' : 'none',
-                            border: '1px solid transparent',
-                            borderRadius: '4px',
-                            padding: isMobile ? '6px 10px' : '4px 8px',
-                            cursor: 'pointer',
-                            minHeight: isMobile ? '36px' : 'auto',
-                            whiteSpace: 'nowrap'
-                          }}
+                          className={`text-xs md:text-xs font-semibold text-purple-600 bg-none border border-transparent rounded px-2 py-1.5 cursor-pointer ${isMobile ? 'min-h-9' : ''}`}
+                          style={{ backgroundColor: editingSpeakerId === seg.id ? '#EDE9FE' : 'none' }}
                         >
                           {getSpeakerName(seg.speaker)} ▾
                         </button>
                         {editingSpeakerId === seg.id && allSpeakerLabels.length > 0 && (
-                          <div style={{
-                            position: 'absolute',
-                            top: '100%',
-                            left: 0,
-                            backgroundColor: 'white',
-                            border: '1px solid #E5E7EB',
-                            borderRadius: '8px',
-                            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                            zIndex: 40,
-                            minWidth: '140px',
-                            overflow: 'hidden'
-                          }}>
+                          <div className="absolute top-full left-0 bg-surface-0 border border-surface-3 rounded-lg shadow-lg z-40 min-w-36 overflow-hidden">
                             {allSpeakerLabels.map(label => (
                               <button
                                 key={label}
                                 onClick={() => reassignSpeaker(seg.id, label)}
-                                style={{
-                                  display: 'block',
-                                  width: '100%',
-                                  textAlign: 'left',
-                                  padding: isMobile ? '12px 16px' : '8px 12px',
-                                  fontSize: isMobile ? '15px' : '13px',
-                                  border: 'none',
+                                className={`block w-full text-left px-3 py-2 text-sm border-none cursor-pointer ${isMobile ? 'min-h-11' : ''}`}
+                                style={{ 
                                   backgroundColor: seg.speaker === label ? '#EDE9FE' : 'white',
                                   color: seg.speaker === label ? '#7C3AED' : '#374151',
-                                  fontWeight: seg.speaker === label ? '600' : '400',
-                                  cursor: 'pointer',
-                                  minHeight: isMobile ? '44px' : 'auto'
+                                  fontWeight: seg.speaker === label ? '600' : '400'
                                 }}
                               >
                                 {getSpeakerName(label)}
@@ -702,23 +577,15 @@ export default function TranscriptDetailPage() {
                           </div>
                         )}
                       </div>
-                      <div style={{ flex: 1, minWidth: isMobile ? '100%' : 'auto' }}>
+                      <div className="flex-1 min-w-full md:min-w-auto">
                         {isEditing ? (
                           <div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                              <span style={{ fontSize: isMobile ? '13px' : '12px', color: '#6B7280' }}>說話者：</span>
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-xs text-text-secondary">說話者：</span>
                               <select
                                 value={editingSpeaker}
                                 onChange={e => setEditingSpeaker(e.target.value)}
-                                style={{
-                                  border: '1px solid #D1D5DB',
-                                  borderRadius: '4px',
-                                  padding: isMobile ? '6px 10px' : '4px 8px',
-                                  fontSize: isMobile ? '14px' : '13px',
-                                  color: '#7C3AED',
-                                  fontWeight: '600',
-                                  minHeight: isMobile ? '36px' : 'auto'
-                                }}
+                                className="border border-surface-3 rounded px-2 py-1 text-xs text-purple-600 font-semibold min-h-9"
                               >
                                 {allSpeakerLabels.map(label => (
                                   <option key={label} value={label}>{getSpeakerName(label)}</option>
@@ -730,27 +597,13 @@ export default function TranscriptDetailPage() {
                               onChange={e => setEditingText(e.target.value)}
                               onBlur={() => handleEditSave(seg.id)}
                               autoFocus
-                              style={{ 
-                                width: '100%', 
-                                padding: isMobile ? '12px' : '8px',
-                                border: '1px solid #D1D5DB', 
-                                borderRadius: '4px', 
-                                fontSize: isMobile ? '16px' : '14px',
-                                lineHeight: '1.6', 
-                                minHeight: isMobile ? '100px' : '60px'
-                              }}
+                              className="w-full p-2 border border-surface-3 rounded text-sm leading-relaxed min-h-[100px] md:min-h-15"
                             />
                           </div>
                         ) : (
                           <div
                             onDoubleClick={() => handleEditStart(seg)}
-                            style={{ 
-                              fontSize: isMobile ? '15px' : '14px',
-                              lineHeight: '1.7', 
-                              color: '#111827', 
-                              cursor: 'text',
-                              padding: isMobile ? '4px 0' : '2px 0'
-                            }}
+                            className="text-sm leading-relaxed text-text-primary cursor-text py-1"
                             dangerouslySetInnerHTML={{ __html: highlightText(displayText) }}
                           />
                         )}
@@ -758,16 +611,7 @@ export default function TranscriptDetailPage() {
                       {!isEditing && (
                         <button
                           onClick={() => handleEditStart(seg)}
-                          style={{ 
-                            color: '#6B7280', 
-                            background: 'none', 
-                            border: 'none', 
-                            cursor: 'pointer', 
-                            fontSize: isMobile ? '20px' : '14px',
-                            minHeight: '44px',
-                            minWidth: '44px',
-                            flexShrink: 0
-                          }}
+                          className="text-text-secondary bg-none border-none cursor-pointer text-lg md:text-sm min-h-11 min-w-11 shrink-0"
                         >
                           ✏️
                         </button>
@@ -783,116 +627,55 @@ export default function TranscriptDetailPage() {
 
       {/* Toast Notification */}
       {toast && (
-        <div style={{
-          position: 'fixed',
-          top: '20px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          backgroundColor: '#111827',
-          color: 'white',
-          padding: isMobile ? '14px 24px' : '12px 20px',
-          borderRadius: '8px',
-          fontSize: isMobile ? '15px' : '14px',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-          zIndex: 50,
-          maxWidth: '90%',
-          textAlign: 'center'
-        }}>
+        <div className="fixed top-5 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-5 py-3 rounded-lg text-sm shadow-lg z-50 max-w-[90%] text-center">
           {toast}
         </div>
       )}
 
       {/* Replace Panel - 固定在底部工具列上方 */}
       {showReplace && segments.length > 0 && (
-        <div style={{
-          position: 'fixed',
-          bottom: isMobile ? '70px' : '80px',
-          left: 0,
-          right: 0,
-          backgroundColor: 'white',
-          borderTop: '2px solid #2563EB',
-          boxShadow: '0 -4px 12px rgba(0,0,0,0.1)',
-          zIndex: 25,
-          padding: isMobile ? '16px' : '16px'
-        }}>
-          <div style={{ maxWidth: '1024px', margin: '0 auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <h3 style={{ fontSize: isMobile ? '15px' : '14px', fontWeight: 'bold', color: '#111827' }}>🔍 批量取代</h3>
+        <div className="fixed bottom-[70px] md:bottom-20 left-0 right-0 bg-surface-0 border-t-2 border-blue-600 shadow-lg z-25 p-4">
+          <div className="max-w-5xl mx-auto">
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-sm font-bold text-text-primary">🔍 批量取代</h3>
               <button
                 onClick={() => setShowReplace(false)}
-                style={{ 
-                  background: 'none', 
-                  border: 'none', 
-                  fontSize: '20px', 
-                  cursor: 'pointer',
-                  minHeight: '44px',
-                  minWidth: '44px',
-                  color: '#6B7280'
-                }}
+                className="bg-none border-none text-xl cursor-pointer min-h-11 min-w-11 text-text-secondary"
               >
                 ✕
               </button>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div className="flex flex-col gap-3">
               <input
                 type="text"
                 placeholder="搜尋文字..."
                 value={searchText}
                 onChange={e => setSearchText(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: isMobile ? '12px' : '10px',
-                  border: '1px solid #D1D5DB',
-                  borderRadius: '6px',
-                  fontSize: isMobile ? '16px' : '14px',
-                  minHeight: '44px'
-                }}
+                className="w-full p-3 border border-surface-3 rounded-md text-sm min-h-11"
               />
               <input
                 type="text"
                 placeholder="替換為..."
                 value={replaceText}
                 onChange={e => setReplaceText(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: isMobile ? '12px' : '10px',
-                  border: '1px solid #D1D5DB',
-                  borderRadius: '6px',
-                  fontSize: isMobile ? '16px' : '14px',
-                  minHeight: '44px'
-                }}
+                className="w-full p-3 border border-surface-3 rounded-md text-sm min-h-11"
               />
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minHeight: '44px' }}>
+              <div className="flex items-center gap-2 min-h-11">
                 <input
                   type="checkbox"
                   id="addToDict"
                   checked={addToDict}
                   onChange={e => setAddToDict(e.target.checked)}
-                  style={{ 
-                    width: '20px', 
-                    height: '20px',
-                    cursor: 'pointer'
-                  }}
+                  className="w-5 h-5 cursor-pointer"
                 />
-                <label htmlFor="addToDict" style={{ fontSize: isMobile ? '14px' : '13px', color: '#374151', cursor: 'pointer' }}>
+                <label htmlFor="addToDict" className="text-sm text-text-primary cursor-pointer">
                   同時加入辭典
                 </label>
               </div>
               <button
                 onClick={handleReplace}
                 disabled={replacing || !searchText}
-                style={{
-                  backgroundColor: '#2563EB',
-                  color: 'white',
-                  padding: isMobile ? '12px' : '10px',
-                  borderRadius: '6px',
-                  fontSize: isMobile ? '15px' : '14px',
-                  fontWeight: '500',
-                  border: 'none',
-                  cursor: (replacing || !searchText) ? 'not-allowed' : 'pointer',
-                  opacity: (replacing || !searchText) ? 0.5 : 1,
-                  minHeight: '48px'
-                }}
+                className="bg-blue-600 text-white p-3 rounded-md text-sm font-medium border-none cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 min-h-12"
               >
                 {replacing ? '⏳ 取代中...' : '執行取代'}
               </button>
@@ -903,101 +686,38 @@ export default function TranscriptDetailPage() {
 
       {/* Bottom Toolbar - 固定底部 */}
       {segments.length > 0 && (
-        <div style={{ 
-          position: 'fixed', 
-          bottom: 0, 
-          left: 0, 
-          right: 0, 
-          backgroundColor: 'white', 
-          borderTop: '1px solid #E5E7EB', 
-          boxShadow: '0 -2px 8px rgba(0,0,0,0.1)', 
-          zIndex: 20 
-        }}>
-          <div style={{ 
-            maxWidth: '1024px', 
-            margin: '0 auto', 
-            padding: isMobile ? '12px' : '12px 16px'
-          }}>
+        <div className="fixed bottom-0 left-0 right-0 bg-surface-0 border-t border-surface-3 shadow-md z-20">
+          <div className="max-w-5xl mx-auto px-3 md:px-4 py-3">
             {!isMobile && (
-              <div style={{ fontSize: '12px', color: '#6B7280', marginBottom: '10px' }}>
+              <div className="text-xs text-text-secondary mb-2.5">
                 {segments.length} 個段落 · 點擊時間戳跳轉 · 雙擊文字編輯
               </div>
             )}
-            <div style={{
-              display: 'flex',
-              gap: '8px',
-              overflowX: 'auto',
-              WebkitOverflowScrolling: 'touch',
-              paddingBottom: '4px'
-            }}>
+            <div className="flex gap-2 overflow-x-auto pb-1">
               <button
                 onClick={handleCorrect}
                 disabled={correcting}
-                style={{ 
-                  backgroundColor: '#7C3AED', 
-                  color: 'white', 
-                  padding: isMobile ? '12px 16px' : '8px 16px',
-                  borderRadius: '8px', 
-                  fontSize: isMobile ? '15px' : '14px',
-                  fontWeight: '500', 
-                  border: 'none', 
-                  cursor: correcting ? 'not-allowed' : 'pointer', 
-                  opacity: correcting ? 0.5 : 1,
-                  minHeight: '48px',
-                  whiteSpace: 'nowrap',
-                  flexShrink: 0
-                }}
+                className="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium border-none cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 min-h-12 whitespace-nowrap shrink-0"
               >
                 {correcting ? '⏳ 校正中...' : '📚 辭典校正'}
               </button>
               <button
                 onClick={() => setShowReplace(!showReplace)}
-                style={{ 
-                  backgroundColor: showReplace ? '#2563EB' : '#F3F4F6',
-                  color: showReplace ? 'white' : '#374151',
-                  padding: isMobile ? '12px 16px' : '8px 16px',
-                  borderRadius: '8px', 
-                  fontSize: isMobile ? '15px' : '14px',
-                  fontWeight: '500', 
-                  border: 'none', 
-                  cursor: 'pointer',
-                  minHeight: '48px',
-                  whiteSpace: 'nowrap',
-                  flexShrink: 0
-                }}
+                className={`px-4 py-2 rounded-lg text-sm font-medium border-none cursor-pointer min-h-12 whitespace-nowrap shrink-0 ${showReplace ? 'bg-blue-600 text-white' : 'bg-surface-2 text-text-primary'}`}
               >
                 🔍 批量取代
               </button>
               <button
                 onClick={handlePolish}
                 disabled={polishing}
-                style={{ 
-                  background: polishing ? '#9CA3AF' : 'linear-gradient(135deg, #7C3AED 0%, #A855F7 100%)',
-                  color: 'white', 
-                  padding: isMobile ? '12px 16px' : '8px 16px',
-                  borderRadius: '8px', 
-                  fontSize: isMobile ? '15px' : '14px',
-                  fontWeight: '500', 
-                  border: 'none', 
-                  cursor: polishing ? 'not-allowed' : 'pointer',
-                  minHeight: '48px',
-                  whiteSpace: 'nowrap',
-                  flexShrink: 0,
-                  position: 'relative',
-                  overflow: 'hidden',
-                  minWidth: polishing ? '180px' : 'auto'
-                }}
+                className="bg-gradient-to-r from-purple-600 to-purple-500 text-white px-4 py-2 rounded-lg text-sm font-medium border-none cursor-pointer min-h-12 whitespace-nowrap shrink-0 relative overflow-hidden"
+                style={{ minWidth: polishing ? '180px' : 'auto', background: polishing ? '#9CA3AF' : 'linear-gradient(135deg, #7C3AED 0%, #A855F7 100%)' }}
               >
                 {polishing && (
-                  <div style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    height: '4px',
-                    backgroundColor: '#A855F7',
-                    width: `${polishProgress}%`,
-                    transition: 'width 0.5s ease'
-                  }} />
+                  <div
+                    className="absolute bottom-0 left-0 h-1 bg-purple-500 transition-all"
+                    style={{ width: `${polishProgress}%` }}
+                  />
                 )}
                 {polishing ? `⏳ ${polishProgress}% ${polishMessage}` : '✨ AI 潤稿'}
               </button>
