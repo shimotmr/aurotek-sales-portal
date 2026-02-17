@@ -37,7 +37,7 @@ export default function FunnelPage() {
   const [filterValue, setFilterValue] = useState<string>('')
 
   useEffect(() => {
-    fetch('/data/cases.json')
+    fetch('/api/cases')
       .then(res => res.json())
       .then(data => {
         setCases(data.cases || [])
