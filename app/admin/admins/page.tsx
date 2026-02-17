@@ -343,7 +343,7 @@ export default function AdminsManagementPage() {
           ))}
         </div>
 
-        <p className="text-center text-[11px] text-slate-300 mt-6 pb-20">
+        <p className="text-center text-[11px] text-slate-300 mt-6">
           Supabase 持久化存儲 · 部署不會遺失
         </p>
       </div>

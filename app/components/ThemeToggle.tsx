@@ -23,7 +23,20 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
-      className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+      className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200"
+      style={{ 
+        backgroundColor: 'var(--surface-1)', 
+        border: '1px solid var(--surface-3)',
+        color: 'var(--text-secondary)'
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.backgroundColor = 'var(--surface-hover)'
+        e.currentTarget.style.transform = 'scale(1.05)'
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.backgroundColor = 'var(--surface-1)'
+        e.currentTarget.style.transform = 'scale(1)'
+      }}
       aria-label={theme === 'light' ? '切換到深色模式' : '切換到淺色模式'}
       title={theme === 'light' ? '切換到深色模式' : '切換到淺色模式'}
     >
@@ -33,7 +46,7 @@ export default function ThemeToggle() {
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          className="w-5 h-5 text-slate-700 dark:text-slate-200"
+          className="w-5 h-5"
           strokeWidth={2}
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -46,7 +59,7 @@ export default function ThemeToggle() {
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          className="w-5 h-5 text-slate-700 dark:text-slate-200"
+          className="w-5 h-5"
           strokeWidth={2}
           strokeLinecap="round"
           strokeLinejoin="round"

@@ -342,26 +342,7 @@ export default function PrototypePage() {
         </div>
       </div>
 
-      {/* Mobile Bottom Tab Bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-lg border-t border-slate-200 z-50 pb-[env(safe-area-inset-bottom)]">
-        <div className="flex items-center justify-around h-16">
-          {TABS.map(tab => {
-            const isActive = tab.href === '/prototype' ? pathname === '/prototype' : pathname?.startsWith(tab.href)
-            return (
-              <Link
-                key={tab.id}
-                href={tab.href}
-                className={`flex flex-col items-center justify-center py-2 px-3 min-w-[60px] transition-colors ${
-                  isActive ? 'text-blue-600' : 'text-slate-400'
-                }`}
-              >
-                <span className="text-xl">{tab.icon}</span>
-                <span className="text-[10px] mt-0.5 font-medium">{tab.title}</span>
-              </Link>
-            )
-          })}
-        </div>
-      </nav>
+      {/* Note: 底部導航已移除，現在由 AppShell 的側邊欄/漢堡選單統一處理 */}
     </div>
   )
 }
