@@ -16,17 +16,19 @@ interface Transcript {
   created_at: string
 }
 
-const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
-  uploading: { label: '上傳中', color: '#D97706', bg: '#FEF3C7' },
-  processing: { label: '轉錄中', color: '#2563EB', bg: '#DBEAFE' },
-  ready: { label: '已完成', color: '#059669', bg: '#D1FAE5' },
-  reviewed: { label: '已校閱', color: '#7C3AED', bg: '#EDE9FE' },
-  error: { label: '錯誤', color: '#DC2626', bg: '#FEE2E2' },
+// 狀態映射 - 使用 CSS 變數
+const STATUS_MAP: Record<string, { label: string; className: string }> = {
+  uploading: { label: '上傳中', className: 'status-uploading' },
+  processing: { label: '轉錄中', className: 'status-processing' },
+  ready: { label: '已完成', className: 'status-ready' },
+  reviewed: { label: '已校閱', className: 'status-reviewed' },
+  error: { label: '錯誤', className: 'status-error' },
 }
 
 export default function TranscriptsPage() {
   const [transcripts, setTranscripts] = useState<Transcript[]>([])
   const [loading, setLoading] = useState(true)
+
   const loadTranscripts = useCallback(async () => {
     const { data } = await supabase
       .from('transcripts')
@@ -36,16 +38,16 @@ export default function TranscriptsPage() {
     setLoading(false)
   }, [])
 
-  // Estimate progress based on elapsed time (typical transcription ~30-60% of audio length)
+  // 根據已耗時時間估算進度（一般轉錄約為音頻時長的 30-60%）
   const getProgress = (t: Transcript) => {
     if (t.status !== 'processing' && t.status !== 'uploading') return 100
     const elapsed = (Date.now() - new Date(t.created_at).getTime()) / 1000
-    // Assume ~3 min for average transcription; logarithmic curve capping at 95%
+    // 假設平均轉錄約 3 分鐘；對數曲線，最高 95%
     const progress = Math.min(95, Math.round((1 - Math.exp(-elapsed / 120)) * 100))
     return Math.max(5, progress)
   }
 
-  // Poll processing transcripts
+  // 輪詢處理中的逐字稿
   const pollProgress = useCallback(async () => {
     const processing = transcripts.filter(t => t.status === 'processing' || t.status === 'uploading')
     if (processing.length === 0) return
@@ -69,18 +71,18 @@ export default function TranscriptsPage() {
     loadTranscripts()
   }, [loadTranscripts])
 
-  // Auto-refresh progress display + poll status
+  // 自動刷新進度顯示 + 輪詢狀態
   const [, setTick] = useState(0)
   useEffect(() => {
     const hasProcessing = transcripts.some(t => t.status === 'processing' || t.status === 'uploading')
     if (!hasProcessing) return
 
-    // Update display every 3s, poll API every 10s
+    // 每 3 秒更新顯示，每 10 秒輪詢 API
     let pollCount = 0
     const interval = setInterval(() => {
-      setTick(t => t + 1) // Force re-render to update time-based progress
+      setTick(t => t + 1) // 強制重新渲染以更新基於時間的進度
       pollCount++
-      if (pollCount % 3 === 0) pollProgress() // Poll every ~10s
+      if (pollCount % 3 === 0) pollProgress() // 每約 10 秒輪詢一次
     }, 3000)
     return () => clearInterval(interval)
   }, [transcripts, pollProgress])
@@ -103,41 +105,45 @@ export default function TranscriptsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
-      {/* Page Header */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 md:top-0 z-10">
-        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center text-white">
-              <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd"/></svg>
-            </div>
-            <span className="font-bold text-slate-800 text-sm sm:text-base">會議逐字稿</span>
+    <div className="transcripts-page">
+      {/* 頁面標題 */}
+      <header className="transcripts-header">
+        <div className="header-content">
+          <div className="header-icon-wrapper">
+            <svg viewBox="0 0 20 20" fill="currentColor" className="header-icon-svg">
+              <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd"/>
+            </svg>
           </div>
-          <Link
-            href="/transcripts/new"
-            style={{ backgroundColor: '#2563EB', color: 'white', padding: '8px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: '500', textDecoration: 'none' }}
-          >
-            + 新增
-          </Link>
+          <h1 className="header-title">會議逐字稿</h1>
         </div>
+        <Link href="/transcripts/new" className="btn-add">
+          <svg viewBox="0 0 20 20" fill="currentColor" className="btn-add-icon">
+            <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd"/>
+          </svg>
+          新增
+        </Link>
       </header>
 
-      <div style={{ maxWidth: '1024px', margin: '0 auto', padding: '16px' }}>
+      <div className="transcripts-container">
+        {/* 載入中狀態 */}
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '48px 0', color: '#9CA3AF' }}>載入中...</div>
+          <div className="loading-state">
+            <div className="loading-spinner"></div>
+            <p>載入中...</p>
+          </div>
         ) : transcripts.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '48px 0' }}>
-            <div style={{ fontSize: '48px', marginBottom: '12px' }}>🎤</div>
-            <p style={{ color: '#6B7280', marginBottom: '16px' }}>尚無逐字稿</p>
-            <Link
-              href="/transcripts/new"
-              style={{ display: 'inline-block', backgroundColor: '#2563EB', color: 'white', padding: '8px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: '500', textDecoration: 'none' }}
-            >
+          // 空狀態
+          <div className="empty-state">
+            <div className="empty-icon">🎤</div>
+            <h2 className="empty-title">尚無逐字稿</h2>
+            <p className="empty-description">上傳會議錄音，即可開始建立逐字稿</p>
+            <Link href="/transcripts/new" className="btn-primary empty-cta">
               建立第一個逐字稿
             </Link>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          // 逐字稿列表
+          <div className="transcripts-list">
             {transcripts.map(t => {
               const st = STATUS_MAP[t.status] || STATUS_MAP.ready
               const isProcessing = t.status === 'processing' || t.status === 'uploading'
@@ -147,47 +153,61 @@ export default function TranscriptsPage() {
                 <Link
                   key={t.id}
                   href={`/transcripts/${t.id}`}
-                  style={{ display: 'block', backgroundColor: 'white', borderRadius: '12px', border: '1px solid #f3f4f6', padding: '16px', textDecoration: 'none', transition: 'box-shadow 0.2s', overflow: 'hidden', position: 'relative' }}
-                  onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)'}
-                  onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}
+                  className="transcript-card"
                 >
-                  {/* Progress bar for processing items */}
+                  {/* 處理中項目的進度條 */}
                   {isProcessing && (
-                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', backgroundColor: '#E5E7EB' }}>
-                      <div style={{ 
-                        height: '100%', 
-                        backgroundColor: '#2563EB', 
-                        width: `${progress}%`,
-                        transition: 'width 1s ease-in-out',
-                        borderRadius: '0 2px 2px 0'
-                      }} />
+                    <div className="progress-bar">
+                      <div 
+                        className="progress-fill" 
+                        style={{ width: `${progress}%` }}
+                      />
                     </div>
                   )}
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <span style={{ fontSize: '16px', fontWeight: 'bold', color: '#111827' }}>
+                  <div className="transcript-content">
+                    <div className="transcript-main">
+                      <h3 className="transcript-title">
                         {t.title || `逐字稿 ${String(t.id).slice(0, 8)}`}
-                      </span>
-                      <span
-                        style={{ marginLeft: '8px', padding: '2px 8px', borderRadius: '9999px', fontSize: '12px', fontWeight: '500', backgroundColor: st.bg, color: st.color }}
-                      >
+                      </h3>
+                      <span className={`status-badge ${st.className}`}>
                         {isProcessing ? `${st.label} ${progress}%` : st.label}
                       </span>
                     </div>
-                    <span style={{ fontSize: '14px', color: '#2563EB', flexShrink: 0, marginLeft: '8px' }}>
-                      {formatDuration(t.duration_seconds)}
-                    </span>
+                    
+                    <div className="transcript-meta">
+                      <div className="transcript-info">
+                        {(t.status === 'ready' || t.status === 'reviewed') ? (
+                          <>
+                            <span className="meta-item">
+                              <svg viewBox="0 0 20 20" fill="currentColor" className="meta-icon">
+                                <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/>
+                              </svg>
+                              {getSpeakerCount(t.speakers)} 位說話者
+                            </span>
+                            <span className="meta-divider">·</span>
+                          </>
+                        ) : null}
+                        <span className="meta-item">
+                          <svg viewBox="0 0 20 20" fill="currentColor" className="meta-icon">
+                            <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd"/>
+                          </svg>
+                          {formatDate(t.meeting_date)}
+                        </span>
+                      </div>
+                      <div className="transcript-duration">
+                        <svg viewBox="0 0 20 20" fill="currentColor" className="duration-icon">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd"/>
+                        </svg>
+                        {formatDuration(t.duration_seconds)}
+                      </div>
+                    </div>
                   </div>
-                  
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#6B7280' }}>
-                    <span>
-                      {t.status === 'ready' || t.status === 'reviewed' 
-                        ? `${getSpeakerCount(t.speakers)} 位說話者 · ${formatDate(t.meeting_date)}`
-                        : formatDate(t.meeting_date)
-                      }
-                    </span>
-                    <span>{formatDate(t.created_at)}</span>
+
+                  <div className="transcript-arrow">
+                    <svg viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd"/>
+                    </svg>
                   </div>
                 </Link>
               )
@@ -195,6 +215,446 @@ export default function TranscriptsPage() {
           </div>
         )}
       </div>
+
+      {/* 內嵌樣式 */}
+      <style jsx>{`
+        /* ================================
+           頁面佈局
+           ================================ */
+        .transcripts-page {
+          min-height: 100vh;
+          background: linear-gradient(180deg, var(--surface-0) 0%, var(--surface-1) 100%);
+          padding-bottom: 24px;
+        }
+
+        /* ================================
+           頁面標題區域
+           ================================ */
+        .transcripts-header {
+          background: var(--surface-0);
+          backdrop-filter: blur(10px);
+          border-bottom: 1px solid var(--surface-3);
+          position: sticky;
+          top: 0;
+          z-index: 10;
+          padding: 16px 24px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .header-content {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .header-icon-wrapper {
+          width: 40px;
+          height: 40px;
+          border-radius: 12px;
+          background: linear-gradient(135deg, var(--accent-purple-500), var(--accent-pink-500));
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        }
+
+        .header-icon-svg {
+          width: 20px;
+          height: 20px;
+        }
+
+        .header-title {
+          font-size: 1.25rem;
+          font-weight: 600;
+          color: var(--text-primary);
+          margin: 0;
+        }
+
+        .btn-add {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+          color: white;
+          padding: 10px 20px;
+          border-radius: 12px;
+          font-weight: 600;
+          font-size: 0.875rem;
+          text-decoration: none;
+          transition: all 0.2s ease;
+          box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
+        }
+
+        .btn-add:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 16px rgba(239, 68, 68, 0.35);
+        }
+
+        .btn-add-icon {
+          width: 16px;
+          height: 16px;
+        }
+
+        /* ================================
+           主要內容容器
+           ================================ */
+        .transcripts-container {
+          max-width: 900px;
+          margin: 0 auto;
+          padding: 24px;
+        }
+
+        /* ================================
+           載入中狀態
+           ================================ */
+        .loading-state {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 64px 0;
+          color: var(--text-tertiary);
+        }
+
+        .loading-spinner {
+          width: 40px;
+          height: 40px;
+          border: 3px solid var(--surface-3);
+          border-top-color: var(--primary-500);
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+          margin-bottom: 16px;
+        }
+
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+
+        /* ================================
+           空狀態
+           ================================ */
+        .empty-state {
+          text-align: center;
+          padding: 64px 24px;
+          background: var(--surface-1);
+          border-radius: 20px;
+          border: 2px dashed var(--surface-3);
+        }
+
+        .empty-icon {
+          font-size: 64px;
+          margin-bottom: 16px;
+          line-height: 1;
+        }
+
+        .empty-title {
+          font-size: 1.25rem;
+          font-weight: 600;
+          color: var(--text-primary);
+          margin: 0 0 8px 0;
+        }
+
+        .empty-description {
+          color: var(--text-secondary);
+          margin: 0 0 24px 0;
+        }
+
+        .empty-cta {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+          color: white;
+          padding: 12px 24px;
+          border-radius: 12px;
+          font-weight: 600;
+          text-decoration: none;
+          transition: all 0.2s ease;
+          box-shadow: 0 4px 16px rgba(239, 68, 68, 0.25);
+        }
+
+        .empty-cta:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(239, 68, 68, 0.35);
+        }
+
+        /* ================================
+           逐字稿列表
+           ================================ */
+        .transcripts-list {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        /* ================================
+           逐字稿卡片
+           ================================ */
+        .transcript-card {
+          display: flex;
+          align-items: center;
+          background: var(--surface-1);
+          border-radius: 16px;
+          border: 1px solid var(--surface-3);
+          padding: 20px;
+          text-decoration: none;
+          transition: all 0.2s ease;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .transcript-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+          border-color: var(--primary-300);
+        }
+
+        [data-theme="dark"] .transcript-card:hover {
+          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        /* 進度條 */
+        .progress-bar {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 4px;
+          background: var(--surface-3);
+          border-radius: 16px 16px 0 0;
+        }
+
+        .progress-fill {
+          height: 100%;
+          background: linear-gradient(90deg, var(--accent-blue-500), var(--accent-purple-500));
+          border-radius: 0 2px 2px 0;
+          transition: width 1s ease-in-out;
+        }
+
+        .transcript-content {
+          flex: 1;
+          min-width: 0;
+        }
+
+        .transcript-main {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-bottom: 8px;
+          flex-wrap: wrap;
+        }
+
+        .transcript-title {
+          font-size: 1rem;
+          font-weight: 600;
+          color: var(--text-primary);
+          margin: 0;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        /* 狀態標籤 */
+        .status-badge {
+          padding: 4px 12px;
+          border-radius: 9999px;
+          font-size: 0.75rem;
+          font-weight: 600;
+          white-space: nowrap;
+        }
+
+        .status-uploading {
+          background: var(--accent-yellow-500);
+          background: rgba(234, 179, 8, 0.15);
+          color: var(--accent-yellow-500);
+        }
+
+        .status-processing {
+          background: var(--accent-blue-500);
+          background: rgba(14, 165, 233, 0.15);
+          color: var(--accent-blue-500);
+        }
+
+        .status-ready {
+          background: var(--status-success);
+          background: rgba(34, 197, 94, 0.15);
+          color: var(--status-success);
+        }
+
+        .status-reviewed {
+          background: var(--accent-purple-500);
+          background: rgba(139, 92, 246, 0.15);
+          color: var(--accent-purple-500);
+        }
+
+        .status-error {
+          background: var(--status-error);
+          background: rgba(239, 68, 68, 0.15);
+          color: var(--status-error);
+        }
+
+        /* 中繼資訊 */
+        .transcript-meta {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 16px;
+        }
+
+        .transcript-info {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          color: var(--text-secondary);
+          font-size: 0.875rem;
+        }
+
+        .meta-item {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+        }
+
+        .meta-icon {
+          width: 14px;
+          height: 14px;
+          color: var(--text-tertiary);
+        }
+
+        .meta-divider {
+          color: var(--text-tertiary);
+        }
+
+        .transcript-duration {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          font-size: 0.875rem;
+          font-weight: 600;
+          color: var(--primary-500);
+          background: var(--primary-50);
+          padding: 4px 10px;
+          border-radius: 8px;
+        }
+
+        [data-theme="dark"] .transcript-duration {
+          background: var(--primary-900);
+          color: var(--primary-400);
+        }
+
+        .duration-icon {
+          width: 14px;
+          height: 14px;
+        }
+
+        /* 箭頭圖示 */
+        .transcript-arrow {
+          width: 24px;
+          height: 24px;
+          color: var(--text-tertiary);
+          margin-left: 16px;
+          flex-shrink: 0;
+          transition: transform 0.2s ease;
+        }
+
+        .transcript-arrow svg {
+          width: 100%;
+          height: 100%;
+        }
+
+        .transcript-card:hover .transcript-arrow {
+          transform: translateX(4px);
+          color: var(--primary-500);
+        }
+
+        /* ================================
+           響應式設計
+           ================================ */
+        @media (max-width: 768px) {
+          .transcripts-header {
+            padding: 12px 16px;
+          }
+
+          .header-title {
+            font-size: 1rem;
+          }
+
+          .btn-add {
+            padding: 8px 16px;
+            font-size: 0.8125rem;
+          }
+
+          .transcripts-container {
+            padding: 16px;
+          }
+
+          .empty-state {
+            padding: 48px 16px;
+          }
+
+          .empty-icon {
+            font-size: 48px;
+          }
+
+          .transcript-card {
+            padding: 16px;
+            flex-direction: column;
+            align-items: flex-start;
+          }
+
+          .transcript-main {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+          }
+
+          .transcript-meta {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+            width: 100%;
+          }
+
+          .transcript-info {
+            flex-wrap: wrap;
+          }
+
+          .transcript-duration {
+            align-self: flex-start;
+          }
+
+          .transcript-arrow {
+            display: none;
+          }
+        }
+
+        /* ================================
+           深色模式適配
+           ================================ */
+        [data-theme="dark"] .transcripts-page {
+          background: linear-gradient(180deg, var(--surface-0) 0%, var(--surface-1) 100%);
+        }
+
+        [data-theme="dark"] .transcripts-header {
+          background: rgba(15, 23, 42, 0.9);
+        }
+
+        [data-theme="dark"] .empty-state {
+          background: var(--surface-1);
+          border-color: var(--surface-3);
+        }
+
+        [data-theme="dark"] .transcript-card {
+          background: var(--surface-1);
+        }
+
+        [data-theme="dark"] .progress-bar {
+          background: var(--surface-2);
+        }
+      `}</style>
     </div>
   )
 }
