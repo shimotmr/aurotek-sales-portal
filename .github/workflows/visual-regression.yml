@@ -1,0 +1,145 @@
+name: Visual Regression Testing
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  visual-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Install visual testing tools
+        run: |
+          npm install -D playwright pngjs pixelmatch
+          npx playwright install chromium
+        
+      - name: Build Next.js app
+        run: npm run build
+        
+      - name: Start development server
+        run: |
+          npm run dev &
+          echo $! > dev-server.pid
+          # 等待伺服器啟動
+          for i in {1..30}; do
+            if curl -s http://localhost:3000 > /dev/null; then
+              echo "伺服器已啟動"
+              break
+            fi
+            echo "等待伺服器... ($i/30)"
+            sleep 2
+          done
+        
+      - name: Restore baseline screenshots
+        uses: actions/cache@v4
+        with:
+          path: |
+            .visual-regression/baseline
+          key: visual-baseline-${{ github.ref_name }}
+          restore-keys: |
+            visual-baseline-main
+        
+      - name: Run visual regression tests
+        env:
+          PROJECT: aurotek-portal
+        run: |
+          mkdir -p .visual-regression/{baseline,current,diff}
+          node scripts/screenshot-diff.js || true
+        continue-on-error: true
+        
+      - name: Save baseline screenshots
+        if: github.ref == 'refs/heads/main'
+        uses: actions/cache@v4
+        with:
+          path: |
+            .visual-regression/baseline
+          key: visual-baseline-${{ github.ref_name }}-${{ github.sha }}
+        
+      - name: Upload diff artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-regression-diffs
+          path: |
+            .visual-regression/current/*.png
+            .visual-regression/diff/*.png
+            .visual-regression/report-*.json
+          retention-days: 7
+        
+      - name: Upload results to Supabase
+        if: always()
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: |
+          # 上傳視覺回歸測試結果到 Supabase
+          node scripts/upload-visual-regression-results.js
+        
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const reportFiles = fs.readdirSync('.visual-regression')
+              .filter(f => f.startsWith('report-') && f.endsWith('.json'));
+            
+            if (reportFiles.length === 0) {
+              console.log('無報告檔案');
+              return;
+            }
+            
+            const report = JSON.parse(
+              fs.readFileSync(`.visual-regression/${reportFiles[0]}`, 'utf8')
+            );
+            
+            const changed = report.results.filter(r => r.status === 'changed');
+            
+            let comment = '## 📸 Visual Regression Test Results\n\n';
+            comment += `- Total Screenshots: ${report.total_screenshots}\n`;
+            comment += `- Changed: ${report.total_diffs}\n`;
+            comment += `- Duration: ${(report.duration_ms / 1000).toFixed(1)}s\n\n`;
+            
+            if (changed.length > 0) {
+              comment += '### ⚠️ Visual Changes Detected\n\n';
+              changed.forEach(r => {
+                comment += `- **${r.filename}**: ${r.diff.toFixed(3)}% different\n`;
+              });
+            } else {
+              comment += '### ✅ No Visual Changes\n';
+            }
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+        
+      - name: Stop development server
+        if: always()
+        run: |
+          if [ -f dev-server.pid ]; then
+            kill $(cat dev-server.pid) || true
+            rm dev-server.pid
+          fi
