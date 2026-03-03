@@ -1,20 +1,20 @@
 {
   "summary": {
-    "totalCases": 891,
-    "activeCases": 340,
+    "totalCases": 915,
+    "activeCases": 347,
     "thisMonth": {
-      "month": 2,
-      "actual": 1533,
-      "forecast": 1946,
-      "target": 7700,
-      "gap": -4220,
-      "rate": 45,
+      "month": 3,
+      "actual": 202,
+      "forecast": 75048,
+      "target": 0,
+      "gap": 75249,
+      "rate": 0,
       "type": "forecast"
     },
     "ytd": {
-      "shipped": 10397,
-      "target": 17500,
-      "rate": 59
+      "shipped": 12968,
+      "target": 0,
+      "rate": 0
     }
   },
   "monthlyStats": [
@@ -22,137 +22,112 @@
       "month": 1,
       "actual": 8864,
       "forecast": 0,
-      "target": 9800,
-      "gap": -936,
-      "rate": 90,
+      "target": 0,
+      "gap": 8864,
+      "rate": 0,
       "type": "actual"
     },
     {
       "month": 2,
-      "actual": 1533,
-      "forecast": 1946,
-      "target": 7700,
-      "gap": -4220,
-      "rate": 45,
-      "type": "forecast"
+      "actual": 3902,
+      "forecast": 0,
+      "target": 0,
+      "gap": 3902,
+      "rate": 0,
+      "type": "actual"
     },
     {
       "month": 3,
-      "actual": 0,
-      "forecast": 75214,
-      "target": 8800,
-      "gap": 66414,
-      "rate": 855,
+      "actual": 202,
+      "forecast": 75048,
+      "target": 0,
+      "gap": 75249,
+      "rate": 0,
       "type": "forecast"
     },
     {
       "month": 4,
       "actual": 0,
-      "forecast": 6303,
-      "target": 11600,
-      "gap": -5297,
-      "rate": 54,
+      "forecast": 7449,
+      "target": 0,
+      "gap": 7449,
+      "rate": 0,
       "type": "forecast"
     },
     {
       "month": 5,
       "actual": 0,
       "forecast": 3650,
-      "target": 9950,
-      "gap": -6300,
-      "rate": 37,
+      "target": 0,
+      "gap": 3650,
+      "rate": 0,
       "type": "forecast"
     },
     {
       "month": 6,
       "actual": 0,
-      "forecast": 3162,
-      "target": 10600,
-      "gap": -7438,
-      "rate": 30,
+      "forecast": 4662,
+      "target": 0,
+      "gap": 4662,
+      "rate": 0,
       "type": "forecast"
     },
     {
       "month": 7,
       "actual": 0,
       "forecast": 7362,
-      "target": 12800,
-      "gap": -5438,
-      "rate": 58,
+      "target": 0,
+      "gap": 7362,
+      "rate": 0,
       "type": "forecast"
     },
     {
       "month": 8,
       "actual": 0,
       "forecast": 0,
-      "target": 12200,
-      "gap": -12200,
+      "target": 0,
+      "gap": 0,
       "rate": 0,
       "type": "forecast"
     },
     {
       "month": 9,
       "actual": 0,
-      "forecast": 588,
-      "target": 15100,
-      "gap": -14512,
-      "rate": 4,
+      "forecast": 1088,
+      "target": 0,
+      "gap": 1088,
+      "rate": 0,
       "type": "forecast"
     },
     {
       "month": 10,
       "actual": 0,
       "forecast": 1610,
-      "target": 14600,
-      "gap": -12990,
-      "rate": 11,
+      "target": 0,
+      "gap": 1610,
+      "rate": 0,
       "type": "forecast"
     },
     {
       "month": 11,
       "actual": 0,
       "forecast": 112,
-      "target": 17700,
-      "gap": -17588,
-      "rate": 1,
+      "target": 0,
+      "gap": 112,
+      "rate": 0,
       "type": "forecast"
     },
     {
       "month": 12,
       "actual": 0,
-      "forecast": 450,
-      "target": 18800,
-      "gap": -18350,
-      "rate": 2,
+      "forecast": 1825,
+      "target": 0,
+      "gap": 1825,
+      "rate": 0,
       "type": "forecast"
     }
   ],
-  "repStats": [
-    {
-      "rep": "喬紹恆 (u2625)",
-      "totalShipped": 10397,
-      "totalForecast": 100398,
-      "totalTarget": 52650,
-      "rate": 20,
-      "caseCount": 493
-    },
-    {
-      "rep": "張哲銘 (u2668)",
-      "totalShipped": 0,
-      "totalForecast": 0,
-      "totalTarget": 48700,
-      "rate": 0,
-      "caseCount": 0
-    },
-    {
-      "rep": "林奕丞 (u2671)",
-      "totalShipped": 0,
-      "totalForecast": 0,
-      "totalTarget": 48300,
-      "rate": 0,
-      "caseCount": 0
-    }
-  ],
+  "repStats": [],
   "dealerStats": [
     {
       "dealer": "阜爾運通",
@@ -161,8 +136,13 @@
     },
     {
       "dealer": "智領未來",
-      "shipped": 1164,
-      "caseCount": 14
+      "shipped": 1494,
+      "caseCount": 16
+    },
+    {
+      "dealer": "澎湃數位",
+      "shipped": 1341,
+      "caseCount": 6
     },
     {
       "dealer": "禾煜科技",
@@ -175,51 +155,46 @@
       "caseCount": 5
     },
     {
+      "dealer": "尚群環境",
+      "shipped": 732,
+      "caseCount": 4
+    },
+    {
       "dealer": "鋥承",
       "shipped": 592,
       "caseCount": 5
     },
     {
-      "dealer": "澎湃數位",
-      "shipped": 349,
-      "caseCount": 3
+      "dealer": "季河資訊",
+      "shipped": 520,
+      "caseCount": 7
+    },
+    {
+      "dealer": "谷得智能",
+      "shipped": 440,
+      "caseCount": 9
     },
     {
       "dealer": "和沂",
       "shipped": 348,
       "caseCount": 2
-    },
-    {
-      "dealer": "季河資訊",
-      "shipped": 328,
-      "caseCount": 4
-    },
-    {
-      "dealer": "鴻匠",
-      "shipped": 235,
-      "caseCount": 3
-    },
-    {
-      "dealer": "傑融科技",
-      "shipped": 220,
-      "caseCount": 11
     }
   ],
   "stageStats": [
     {
       "stage": "進行中",
-      "count": 328,
-      "amount": 202195
+      "count": 342,
+      "amount": 211615
     },
     {
       "stage": "待出貨",
-      "count": 12,
-      "amount": 2575
+      "count": 5,
+      "amount": 942
     },
     {
       "stage": "已出貨",
-      "count": 78,
-      "amount": 10397
+      "count": 95,
+      "amount": 12968
     },
     {
       "stage": "失敗",
@@ -227,6 +202,6 @@
       "amount": 0
     }
   ],
-  "updatedAt": "2026-02-16T12:18:56.353602",
-  "currentMonth": 2
+  "updatedAt": "2026-03-03T09:02:13.359903",
+  "currentMonth": 3
 }
