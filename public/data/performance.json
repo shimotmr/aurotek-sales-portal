@@ -5,9 +5,9 @@
     "thisMonth": {
       "month": 3,
       "actual": 202,
-      "forecast": 75048,
+      "forecast": 75071,
       "target": 0,
-      "gap": 75249,
+      "gap": 75273,
       "rate": 0,
       "type": "forecast"
     },
@@ -39,9 +39,9 @@
     {
       "month": 3,
       "actual": 202,
-      "forecast": 75048,
+      "forecast": 75071,
       "target": 0,
-      "gap": 75249,
+      "gap": 75273,
       "rate": 0,
       "type": "forecast"
     },
@@ -84,18 +84,18 @@
     {
       "month": 8,
       "actual": 0,
-      "forecast": 0,
+      "forecast": 150,
       "target": 0,
-      "gap": 0,
+      "gap": 150,
       "rate": 0,
       "type": "forecast"
     },
     {
       "month": 9,
       "actual": 0,
-      "forecast": 1088,
+      "forecast": 2338,
       "target": 0,
-      "gap": 1088,
+      "gap": 2338,
       "rate": 0,
       "type": "forecast"
     },
@@ -183,13 +183,13 @@
   "stageStats": [
     {
       "stage": "進行中",
-      "count": 342,
-      "amount": 211615
+      "count": 343,
+      "amount": 214115
     },
     {
       "stage": "待出貨",
-      "count": 5,
-      "amount": 942
+      "count": 4,
+      "amount": 366
     },
     {
       "stage": "已出貨",
@@ -202,6 +202,6 @@
       "amount": 0
     }
   ],
-  "updatedAt": "2026-03-03T09:02:13.359903",
+  "updatedAt": "2026-03-04T17:52:36.092091",
   "currentMonth": 3
 }
