@@ -1,18 +1,18 @@
 {
   "summary": {
-    "totalCases": 915,
-    "activeCases": 347,
+    "totalCases": 945,
+    "activeCases": 361,
     "thisMonth": {
       "month": 3,
-      "actual": 202,
-      "forecast": 75071,
+      "actual": 275,
+      "forecast": 59123,
       "target": 0,
-      "gap": 75273,
+      "gap": 59397,
       "rate": 0,
       "type": "forecast"
     },
     "ytd": {
-      "shipped": 12968,
+      "shipped": 13040,
       "target": 0,
       "rate": 0
     }
@@ -38,19 +38,19 @@
     },
     {
       "month": 3,
-      "actual": 202,
-      "forecast": 75071,
+      "actual": 275,
+      "forecast": 59123,
       "target": 0,
-      "gap": 75273,
+      "gap": 59397,
       "rate": 0,
       "type": "forecast"
     },
     {
       "month": 4,
       "actual": 0,
-      "forecast": 7449,
+      "forecast": 8956,
       "target": 0,
-      "gap": 7449,
+      "gap": 8956,
       "rate": 0,
       "type": "forecast"
     },
@@ -66,27 +66,27 @@
     {
       "month": 6,
       "actual": 0,
-      "forecast": 4662,
+      "forecast": 20612,
       "target": 0,
-      "gap": 4662,
+      "gap": 20612,
       "rate": 0,
       "type": "forecast"
     },
     {
       "month": 7,
       "actual": 0,
-      "forecast": 7362,
+      "forecast": 9238,
       "target": 0,
-      "gap": 7362,
+      "gap": 9238,
       "rate": 0,
       "type": "forecast"
     },
     {
       "month": 8,
       "actual": 0,
-      "forecast": 150,
+      "forecast": 400,
       "target": 0,
-      "gap": 150,
+      "gap": 400,
       "rate": 0,
       "type": "forecast"
     },
@@ -102,9 +102,9 @@
     {
       "month": 10,
       "actual": 0,
-      "forecast": 1610,
+      "forecast": 4110,
       "target": 0,
-      "gap": 1610,
+      "gap": 4110,
       "rate": 0,
       "type": "forecast"
     },
@@ -120,9 +120,9 @@
     {
       "month": 12,
       "actual": 0,
-      "forecast": 1825,
+      "forecast": 1925,
       "target": 0,
-      "gap": 1825,
+      "gap": 1925,
       "rate": 0,
       "type": "forecast"
     }
@@ -136,8 +136,8 @@
     },
     {
       "dealer": "智領未來",
-      "shipped": 1494,
-      "caseCount": 16
+      "shipped": 1522,
+      "caseCount": 22
     },
     {
       "dealer": "澎湃數位",
@@ -183,25 +183,25 @@
   "stageStats": [
     {
       "stage": "進行中",
-      "count": 343,
-      "amount": 214115
+      "count": 347,
+      "amount": 223115
     },
     {
       "stage": "待出貨",
-      "count": 4,
-      "amount": 366
+      "count": 14,
+      "amount": 1075
     },
     {
       "stage": "已出貨",
-      "count": 95,
-      "amount": 12968
+      "count": 105,
+      "amount": 13040
     },
     {
       "stage": "失敗",
-      "count": 473,
+      "count": 479,
       "amount": 0
     }
   ],
-  "updatedAt": "2026-03-04T17:52:36.092091",
+  "updatedAt": "2026-03-09T04:39:09.501140",
   "currentMonth": 3
 }
